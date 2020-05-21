@@ -1851,11 +1851,6 @@ amdefine@>=0.0.4:
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
   integrity sha1-SlKCrBZHKek2Gbz9OtFR+BfOkfU=
 
-anchorme@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/anchorme/-/anchorme-1.1.2.tgz#86112384219e530a531e5b380f16b2fe54ada08a"
-  integrity sha1-hhEjhCGeUwpTHls4Dxay/lStoIo=
-
 animation-bus@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/animation-bus/-/animation-bus-0.2.0.tgz#43854c2c9463fb82c664eff0e19b9733081150fa"
@@ -7187,6 +7182,11 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
+linkifyjs@^2.1.9:
+  version "2.1.9"
+  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-2.1.9.tgz#af06e45a2866ff06c4766582590d098a4d584702"
+  integrity sha512-74ivurkK6WHvHFozVaGtQWV38FzBwSTGNmJolEgFp7QgR2bl6ArUWlvT4GcHKbPe1z3nWYi+VUdDZk16zDOVug==
+
 listify@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/listify/-/listify-1.0.3.tgz#a9335ac351c3d1aea515494ed746976eeb92248b"
@@ -10786,10 +10786,10 @@ stream-browserify@^2.0.1, stream-browserify@^2.0.2:
     inherits "~2.0.1"
     readable-stream "^2.0.2"
 
-stream-chat@^1.7.4:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/stream-chat/-/stream-chat-1.9.0.tgz#4f32b7960a3647865ea15a80499a756ca42b6555"
-  integrity sha512-nc6wWqg5ln94tHHRgbzeILdZ2w9mK6mQ8z2zvZfQbi8MFUDGJAJJY1Sm0NPnmUrEGZb0dLNw2Z1GOn0EQoDUvQ==
+stream-chat@^1.10.2:
+  version "1.10.2"
+  resolved "https://registry.yarnpkg.com/stream-chat/-/stream-chat-1.10.2.tgz#aa44f9e6e8a15651bfcda5cc281ff2aadb19a445"
+  integrity sha512-+7y+2UTBd5bD/pP+XsB+lROLOzYT3aOzTVP8IalAqvBg9BCD1PsklUIeNNgnkEFugpwkfWG73Qk3WXjazoHXag==
   dependencies:
     "@babel/runtime" "^7.3.1"
     "@types/seamless-immutable" "7.1.10"
