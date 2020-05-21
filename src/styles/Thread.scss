@@ -148,11 +148,13 @@
     .str-chat {
       &__thread {
         background: white;
+        max-width: 400px;
+        height: 900px;
       }
       @media screen and (max-width: 960px) {
         &__thread {
           position: fixed;
-          top: 0;
+          top: 36px;
           right: 0;
           height: 100vh;
           background: white;
@@ -163,7 +165,7 @@
         }
       }
       &__thread-header {
-        height: 80px;
+        height: 77px;
       }
     }
     &.dark {
