@@ -1,5 +1,12 @@
 {
-  "name": "stream-chat-react",
+  "name": "@ugr00p/stream-chat-react",
+  "repository": {
+    "url": "git://github.com/ugr00p/stream-chat-react.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/ugr00p",
+    "access": "public"
+  },
   "version": "1.0.0",
   "description": "React components to create chat conversations or livestream style chat",
   "author": "GetStream",
