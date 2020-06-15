@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Streami18n } from '../src/Streami18n';
 import { v4 as uuidv4 } from 'uuid';
 import { default as Dayjs } from 'dayjs';
@@ -55,6 +56,12 @@ const customDayjsLocaleConfig = {
     doy: 4, // The week that contains Jan 4th is the first week of the year.
   },
 };
+
+describe('Jest Timezone', () => {
+  it('global config should set the timezone to UTC', () => {
+    expect(new Date().getTimezoneOffset()).toBe(0);
+  });
+});
 
 describe('Streami18n instance - default', () => {
   const streami18nOptions = { logger: () => null };

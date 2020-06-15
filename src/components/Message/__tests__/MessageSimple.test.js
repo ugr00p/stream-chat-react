@@ -1,29 +1,23 @@
 import React from 'react';
-import {
-  cleanup,
-  render,
-  fireEvent,
-  queryByTestId,
-  getByText,
-} from '@testing-library/react';
+import { cleanup, render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Message from '../Message';
-import MessageSimple from '../MessageSimple';
-import { Modal as ModalMock } from '../../Modal';
-import { Avatar as AvatarMock } from '../../Avatar';
-import { MessageInput as MessageInputMock } from '../../MessageInput';
-import { MessageActionsBox as MessageActionsBoxMock } from '../../MessageActions';
-import {
-  EditMessageForm as EditMessageFormMock,
-  EditMessageForm,
-} from '../../EditMessageForm';
 import {
   generateChannel,
   getTestClientWithUser,
   generateUser,
   generateMessage,
-  generateMember,
-} from '../../../mock-builders';
+  generateReaction,
+} from 'mock-builders';
+
+import Message from '../Message';
+import MessageSimple from '../MessageSimple';
+import { Modal as ModalMock } from '../../Modal';
+import { Avatar as AvatarMock } from '../../Avatar';
+import {
+  MessageInput as MessageInputMock,
+  EditMessageForm,
+} from '../../MessageInput';
+import { MessageActionsBox as MessageActionsBoxMock } from '../../MessageActions';
 
 const alice = generateUser();
 const bob = generateUser({ name: 'bob', image: 'bob-avatar.jpg' });
@@ -33,16 +27,13 @@ jest.mock('../../Avatar', () => ({
   Avatar: jest.fn(() => <div />),
 }));
 
-jest.mock('../../EditMessageForm', () => ({
-  EditMessageForm: jest.fn(() => <div />),
-}));
-
 jest.mock('../../MessageActions', () => ({
   MessageActionsBox: jest.fn(() => <div />),
 }));
 
 jest.mock('../../MessageInput', () => ({
   MessageInput: jest.fn(() => <div />),
+  EditMessageForm: jest.fn(() => <div />),
 }));
 
 jest.mock('../../Modal', () => ({
@@ -83,6 +74,11 @@ function generateBobMessage(messageOptions) {
   });
 }
 
+const messageInputWrapperTestId = 'message-simple-inner-wrapper';
+const reactionSelectorTestId = 'reaction-selector';
+const simpleMessageReactionActionTestId = 'simple-message-reaction-action';
+const threadActionTestId = 'thread-action';
+
 describe('<MessageSimple />', () => {
   afterEach(cleanup);
   beforeEach(jest.clearAllMocks);
@@ -109,7 +105,7 @@ describe('<MessageSimple />', () => {
 
   it('should render deleted message with custom component when message was deleted and a custom delete message component was passed', async () => {
     const deletedMessage = generateAliceMessage({
-      deleted_at: new Date('2019-12-17T03:24:00'),
+      deleted_at: new Date('2019-12-25T03:24:00'),
     });
     const CustomMessageDeletedComponent = () => (
       <p data-testid="custom-message-deleted">Gone!</p>
@@ -124,7 +120,7 @@ describe('<MessageSimple />', () => {
     const message = generateAliceMessage();
     const clearEditingState = jest.fn();
     const updateMessage = jest.fn();
-    const { getByTestId } = await renderMessageSimple(message, {
+    await renderMessageSimple(message, {
       editing: true,
       clearEditingState,
       updateMessage,
@@ -220,7 +216,7 @@ describe('<MessageSimple />', () => {
     });
     expect(retrySendMessage).not.toHaveBeenCalled();
     fireEvent.click(getByTestId('message-inner'));
-    expect(retrySendMessage).toHaveBeenCalled();
+    expect(retrySendMessage).toHaveBeenCalledWith(message);
   });
 
   it.each([
@@ -280,7 +276,7 @@ describe('<MessageSimple />', () => {
   it('should display thread actions when message is not displayed on a thread list and channel has replies configured', async () => {
     const message = generateAliceMessage();
     const { getByTestId } = await renderMessageSimple(message);
-    expect(getByTestId('thread-action')).toBeInTheDocument();
+    expect(getByTestId(threadActionTestId)).toBeInTheDocument();
   });
 
   it('should not display thread actions when message is in a thread list', async () => {
@@ -288,7 +284,7 @@ describe('<MessageSimple />', () => {
     const { queryByTestId } = await renderMessageSimple(message, {
       threadList: true,
     });
-    expect(queryByTestId('thread-action')).toBeNull();
+    expect(queryByTestId(threadActionTestId)).toBeNull();
   });
 
   it('should not display thread actions when channel does not have replies enabled', async () => {
@@ -298,7 +294,7 @@ describe('<MessageSimple />', () => {
       { threadList: false },
       { replies: false },
     );
-    expect(queryByTestId('thread-action')).toBeNull();
+    expect(queryByTestId(threadActionTestId)).toBeNull();
   });
 
   it('should trigger open thread handler when thread action is clicked', async () => {
@@ -311,7 +307,10 @@ describe('<MessageSimple />', () => {
     );
     expect(openThread).not.toHaveBeenCalled();
     fireEvent.click(getByTestId('thread-action'));
-    expect(openThread).toHaveBeenCalled();
+    expect(openThread).toHaveBeenCalledWith(
+      message,
+      expect.any(Object), // The click event
+    );
   });
 
   it('should display reactions action when channel has reactions enabled', async () => {
@@ -321,7 +320,7 @@ describe('<MessageSimple />', () => {
       {},
       { reactions: true },
     );
-    expect(getByTestId('simple-message-reaction-action')).toBeInTheDocument();
+    expect(getByTestId(simpleMessageReactionActionTestId)).toBeInTheDocument();
   });
 
   it('should not display reactions action when channel has reactions disabled', async () => {
@@ -331,7 +330,7 @@ describe('<MessageSimple />', () => {
       {},
       { reactions: false },
     );
-    expect(queryByTestId('simple-message-reaction-action')).toBeNull();
+    expect(queryByTestId(simpleMessageReactionActionTestId)).toBeNull();
   });
 
   it('should display detailed reactions when reactions action is clicked', async () => {
@@ -341,9 +340,9 @@ describe('<MessageSimple />', () => {
       {},
       { reactions: true },
     );
-    expect(queryByTestId('reaction-selector')).toBeNull();
-    fireEvent.click(getByTestId('simple-message-reaction-action'));
-    expect(queryByTestId('reaction-selector')).toBeInTheDocument();
+    expect(queryByTestId(reactionSelectorTestId)).toBeNull();
+    fireEvent.click(getByTestId(simpleMessageReactionActionTestId));
+    expect(queryByTestId(reactionSelectorTestId)).toBeInTheDocument();
   });
 
   it('should display non image attachments in Attachment component when message has attachments that are not images', async () => {
@@ -355,7 +354,7 @@ describe('<MessageSimple />', () => {
       attachments: [attachment, attachment, attachment],
     });
     const { queryAllByTestId } = await renderMessageSimple(message);
-    expect(queryAllByTestId('attachment-file').length).toBe(3);
+    expect(queryAllByTestId('attachment-file')).toHaveLength(3);
   });
 
   it('should display image attachments in gallery when message has image attachments', async () => {
@@ -367,7 +366,7 @@ describe('<MessageSimple />', () => {
       attachments: [attachment, attachment, attachment],
     });
     const { queryAllByTestId } = await renderMessageSimple(message);
-    expect(queryAllByTestId('gallery-image').length).toBe(3);
+    expect(queryAllByTestId('gallery-image')).toHaveLength(3);
   });
 
   it('should set attachments css class modifier when message has text and is focused', async () => {
@@ -379,7 +378,7 @@ describe('<MessageSimple />', () => {
       attachments: [attachment, attachment, attachment],
     });
     const { getByTestId } = await renderMessageSimple(message);
-    expect(getByTestId('message-simple-inner-wrapper').className).toContain(
+    expect(getByTestId(messageInputWrapperTestId).className).toContain(
       '--has-attachment',
     );
   });
@@ -387,31 +386,31 @@ describe('<MessageSimple />', () => {
   it('should set emoji css class when message has text that is only emojis', async () => {
     const message = generateAliceMessage({ text: '🤖🤖🤖🤖' });
     const { getByTestId } = await renderMessageSimple(message);
-    expect(getByTestId('message-simple-inner-wrapper').className).toContain(
+    expect(getByTestId(messageInputWrapperTestId).className).toContain(
       '--is-emoji',
     );
   });
 
   it('should handle message mention mouse hover event', async () => {
-    const message = generateAliceMessage();
+    const message = generateAliceMessage({ mentioned_users: [bob] });
     const onMentionsHover = jest.fn();
     const { getByTestId } = await renderMessageSimple(message, {
       onMentionsHover,
     });
     expect(onMentionsHover).not.toHaveBeenCalled();
-    fireEvent.mouseOver(getByTestId('message-simple-inner-wrapper'));
-    expect(onMentionsHover).toHaveBeenCalled();
+    fireEvent.mouseOver(getByTestId(messageInputWrapperTestId));
+    expect(onMentionsHover).toHaveBeenCalledTimes(1);
   });
 
   it('should handle message mentions mouse click event', async () => {
-    const message = generateAliceMessage();
+    const message = generateAliceMessage({ mentioned_users: [bob] });
     const onMentionsClick = jest.fn();
     const { getByTestId } = await renderMessageSimple(message, {
       onMentionsClick,
     });
     expect(onMentionsClick).not.toHaveBeenCalled();
-    fireEvent.click(getByTestId('message-simple-inner-wrapper'));
-    expect(onMentionsClick).toHaveBeenCalled();
+    fireEvent.click(getByTestId(messageInputWrapperTestId));
+    expect(onMentionsClick).toHaveBeenCalledTimes(1);
   });
 
   it('should inform that message was not sent when message is has type "error"', async () => {
@@ -446,26 +445,7 @@ describe('<MessageSimple />', () => {
   });
 
   it('should show reaction list if message has reactions and detailed reactions are not displayed', async () => {
-    const bobReaction = {
-      type: 'love',
-      user_id: bob.user_id,
-      user: bob,
-      created_at: new Date('2019-12-17T03:24:00'),
-    };
-    const message = generateAliceMessage({
-      latest_reactions: [bobReaction],
-    });
-    const { getByTestId } = await renderMessageSimple(message);
-    expect(getByTestId('reaction-list')).toBeInTheDocument();
-  });
-
-  it('should show reaction list if message has reactions and detailed reactions are not displayed', async () => {
-    const bobReaction = {
-      type: 'love',
-      user_id: bob.user_id,
-      user: bob,
-      created_at: new Date('2019-12-17T03:24:00'),
-    };
+    const bobReaction = generateReaction({ user: bob });
     const message = generateAliceMessage({
       latest_reactions: [bobReaction],
     });
@@ -474,19 +454,14 @@ describe('<MessageSimple />', () => {
   });
 
   it('should show reaction selector when message has reaction and reaction list is clicked', async () => {
-    const bobReaction = {
-      type: 'love',
-      user_id: bob.user_id,
-      user: bob,
-      created_at: new Date('2019-12-17T03:24:00'),
-    };
+    const bobReaction = generateReaction({ user: bob });
     const message = generateAliceMessage({
       latest_reactions: [bobReaction],
     });
-    const { getByTestId } = await renderMessageSimple(message);
-    expect(() => getByTestId('reaction-selector')).toThrow();
+    const { getByTestId, queryByTestId } = await renderMessageSimple(message);
+    expect(queryByTestId(reactionSelectorTestId)).toBeNull();
     fireEvent.click(getByTestId('reaction-list'));
-    expect(getByTestId('reaction-selector')).toBeInTheDocument();
+    expect(getByTestId(reactionSelectorTestId)).toBeInTheDocument();
   });
 
   it('should display reply count and handle replies count button click when not in thread list and reply count is not 0', async () => {
@@ -505,7 +480,10 @@ describe('<MessageSimple />', () => {
     const { getByTestId } = await renderMessageSimple(message, { openThread });
     expect(openThread).not.toHaveBeenCalled();
     fireEvent.click(getByTestId('replies-count-button'));
-    expect(openThread).toHaveBeenCalled();
+    expect(openThread).toHaveBeenCalledWith(
+      message,
+      expect.any(Object), // The event object
+    );
   });
 
   it("should display message's user name when message not from the current user", async () => {
@@ -520,7 +498,7 @@ describe('<MessageSimple />', () => {
     const message = generateAliceMessage({
       created_at: messageDate,
     });
-    const customTDateTimeParser = jest.fn((createdAt) => ({
+    const customTDateTimeParser = jest.fn(() => ({
       calendar: () => parsedDateText,
     }));
     const { getByText } = await renderMessageSimple(message, {
