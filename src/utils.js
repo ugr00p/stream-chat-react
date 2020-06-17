@@ -168,14 +168,13 @@ export const renderText = (message) => {
 
   let newText = message.text;
   let markdownLinks = matchMarkdownLinks(newText);
-
   // extract all valid links/emails within text and replace it with proper markup
   linkifyFind(newText).forEach(({ type, href, value }) => {
     // check if message is already  markdown
     const noParsingNeeded =
       markdownLinks &&
       markdownLinks.filter((text) => text.indexOf(href) !== -1);
-    if (noParsingNeeded) return;
+    if (noParsingNeeded.length > 0) return;
 
     const displayLink =
       type === 'email'
@@ -247,13 +246,6 @@ export const smartRender = (ElementOrComponentOrLiteral, props, fallback) => {
     return ComponentOrLiteral;
   }
   return <ComponentOrLiteral {...props} />;
-};
-
-export const MESSAGE_ACTIONS = {
-  edit: 'edit',
-  delete: 'delete',
-  flag: 'flag',
-  mute: 'mute',
 };
 
 export const filterEmoji = (emoji) => {

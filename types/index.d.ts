@@ -24,6 +24,7 @@ export interface ChatContextValue {
   openMobileNav?(): void;
   closeMobileNav?(): void;
   theme?: string;
+  mutes?: Client.Mute[];
 }
 
 export interface ChannelContextValue extends ChatContextValue {
@@ -68,7 +69,7 @@ export interface ChannelContextValue extends ChatContextValue {
   /** Via Context: The function to update a message, handled by the Channel component */
   updateMessage?(
     updatedMessage: Client.MessageResponse,
-    extraState: object,
+    extraState?: object,
   ): void;
   /** Function executed when user clicks on link to open thread */
   retrySendMessage?(message: Client.Message): void;
@@ -323,7 +324,7 @@ export interface EmptyStateIndicatorProps extends TranslationContextValue {
 
 export interface SendButtonProps {
   /** Function that gets triggered on click */
-  sendMessage?(message: Client.Message): void;
+  sendMessage(e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void;
 }
 
 export interface MessageListProps
@@ -377,7 +378,7 @@ export interface MessageInputProps {
   parent?: Client.MessageResponse | null;
 
   /** The component handling how the input is rendered */
-  Input?: React.ElementType<MessageInputUIComponentProps>;
+  Input?: React.ElementType<MessageInputProps>;
 
   /** Change the SendButton component */
   SendButton?: React.ElementType<SendButtonProps>;
@@ -449,26 +450,18 @@ export interface MessageInputState {
   numberOfUploads: number;
 }
 
-export interface MessageInputUIComponentProps
-  extends MessageInputProps,
-    MessageInputState,
-    TranslationContextValue {
-  uploadNewFiles?(files: File[]): void;
+export interface MessageInputUploadsProps extends MessageInputState {
+  uploadNewFiles?(files: FileList): void;
   removeImage?(id: string): void;
   uploadImage?(id: string): void;
   removeFile?(id: string): void;
   uploadFile?(id: string): void;
-  emojiPickerRef?: React.RefObject<any>;
-  panelRef?: React.RefObject<any>;
-  textareaRef?: React.RefObject<any>;
-  onSelectEmoji?(emoji: object): void;
-  getUsers?(): Client.User[];
-  getCommands?(): [];
-  handleSubmit?(event: React.FormEvent): void;
-  handleChange?(event: React.ChangeEvent<HTMLTextAreaElement>): void;
-  onPaste?: React.ClipboardEventHandler;
-  onSelectItem?(item: Client.UserResponse): void;
-  openEmojiPicker?(): void;
+}
+
+export interface MessageInputEmojiPickerProps extends MessageInputState {
+  onSelectEmoji(emoji: object): void;
+  emojiPickerRef: React.RefObject<HTMLDivElement>;
+  small?: boolean;
 }
 
 export interface AttachmentUIComponentProps {
@@ -640,10 +633,9 @@ export interface ReactionSelectorProps {
   /** Enable the avatar display */
   detailedView?: boolean;
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
-  reactionOptions?: MinimalEmojiInterface;
+  reactionOptions?: MinimalEmojiInterface[];
   reverse?: boolean;
   handleReaction?(reactionType: string, event?: React.BaseSyntheticEvent): void;
-  emojiSetDef?: EnojiSetDef;
 }
 
 export interface EnojiSetDef {
@@ -752,7 +744,7 @@ export interface CommandItemProps {
 }
 
 export interface EditMessageFormProps
-  extends MessageInputUIComponentProps,
+  extends MessageInputProps,
     TranslationContextValue {}
 export interface EmoticonItemProps {
   entity: {
@@ -796,26 +788,8 @@ export interface InfiniteScrollProps {
   element?: React.ElementType;
   loader?: React.ReactNode;
   threshold?: number;
-}
-
-export interface ReverseInfiniteScrollProps {
-  loadMore(): any;
-  hasMore?: boolean;
-  initialLoad?: boolean;
-  isReverse?: boolean;
-  pageStart?: number;
-  isLoading?: boolean;
-  useCapture?: boolean;
-  useWindow?: boolean;
-  element?: React.ElementType;
-  loader?: React.ReactNode;
-  threshold?: number;
-  className?: string;
-  /** The function is called when the list scrolls */
-  listenToScroll?(
-    standardOffset: string | number,
-    reverseOffset: string | number,
-  ): any;
+  listenToScroll?(standardOffset: number, reverseOffset: number): void;
+  [elementAttribute: string]: any; // any other prop is applied as attribute to element
 }
 
 export interface LoadMoreButtonProps {
@@ -922,7 +896,7 @@ export const MessageNotification: React.FC<MessageNotificationProps>;
 export const MessageRepliesCountButton: React.FC<MessageRepliesCountButtonProps>;
 export class Modal extends React.PureComponent<ModalProps, any> {}
 export class ReverseInfiniteScroll extends React.PureComponent<
-  ReverseInfiniteScrollProps,
+  InfiniteScrollProps,
   any
 > {}
 export class SafeAnchor extends React.PureComponent<SafeAnchorProps, any> {}
@@ -940,15 +914,15 @@ export class MessageList extends React.PureComponent<MessageListProps, any> {}
 export const ChannelHeader: React.FC<ChannelHeaderProps>;
 export class MessageInput extends React.PureComponent<MessageInputProps, any> {}
 export class MessageInputLarge extends React.PureComponent<
-  MessageInputUIComponentProps,
+  MessageInputProps,
   any
 > {}
 export class MessageInputFlat extends React.PureComponent<
-  MessageInputUIComponentProps,
+  MessageInputProps,
   any
 > {}
 export class MessageInputSmall extends React.PureComponent<
-  MessageInputUIComponentProps,
+  MessageInputProps,
   any
 > {}
 
@@ -1144,8 +1118,8 @@ declare function withTranslationContext<T>(
 export interface TranslationContext
   extends React.Context<TranslationContextValue> {}
 export interface TranslationContextValue {
-  t?: i18next.TFunction;
-  tDateTimeParser?(datetime: string | number): Dayjs.Dayjs;
+  t: i18next.TFunction;
+  tDateTimeParser(datetime: string | number): Dayjs.Dayjs;
 }
 
 export interface Streami18nOptions {
