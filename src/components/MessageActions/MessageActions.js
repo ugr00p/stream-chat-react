@@ -1,139 +1,113 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-
+// @ts-check
+import React, { useCallback, useEffect, useState } from 'react';
 import MessageActionsBox from './MessageActionsBox';
+import {
+  useDeleteHandler,
+  useUserRole,
+  useFlagHandler,
+  useEditHandler,
+  useMuteHandler,
+} from '../Message/hooks';
+import { isUserMuted } from '../Message/utils';
 
-class MessageActions extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      actionBox: false,
-      reactionBox: false,
+/**
+ * @type { React.FC<import('types').MessageActionsProps> }
+ */
+export const MessageActions = ({
+  addNotification,
+  message,
+  mutes,
+  getMessageActions,
+  messageListRect,
+  messageWrapperRef,
+  setEditingState,
+  getMuteUserSuccessNotification,
+  getMuteUserErrorNotification,
+  getFlagMessageErrorNotification,
+  getFlagMessageSuccessNotification,
+  handleFlag: propHandleFlag,
+  handleMute: propHandleMute,
+  handleEdit: propHandleEdit,
+  handleDelete: propHandleDelete,
+}) => {
+  const messageActions = getMessageActions();
+  const [actionsBoxOpen, setActionsBoxOpen] = useState(false);
+  const { isMyMessage } = useUserRole(message);
+  const handleDelete = useDeleteHandler(message);
+  const handleEdit = useEditHandler(message, setEditingState);
+  const handleFlag = useFlagHandler(message, {
+    notify: addNotification,
+    getSuccessNotification: getMuteUserSuccessNotification,
+    getErrorNotification: getMuteUserErrorNotification,
+  });
+  const handleMute = useMuteHandler(message, {
+    notify: addNotification,
+    getErrorNotification: getFlagMessageErrorNotification,
+    getSuccessNotification: getFlagMessageSuccessNotification,
+  });
+  const isMuted = useCallback(() => {
+    return isUserMuted(message, mutes);
+  }, [message, mutes]);
+
+  /** @type {() => void} Typescript syntax */
+  const hideOptions = useCallback(() => setActionsBoxOpen(false), []);
+  const messageDeletedAt = !!message?.deleted_at;
+  useEffect(() => {
+    if (messageWrapperRef?.current) {
+      messageWrapperRef.current.addEventListener('onMouseLeave', hideOptions);
+    }
+  }, [messageWrapperRef, hideOptions]);
+  useEffect(() => {
+    if (messageDeletedAt) {
+      document.removeEventListener('click', hideOptions);
+    }
+  }, [messageDeletedAt, hideOptions]);
+
+  useEffect(() => {
+    if (actionsBoxOpen) {
+      document.addEventListener('click', hideOptions);
+    } else {
+      document.removeEventListener('click', hideOptions);
+    }
+    return () => {
+      document.removeEventListener('click', hideOptions);
     };
-    this.reactionsBox = React.createRef();
-    this.actionsRef = React.createRef();
+  }, [actionsBoxOpen, hideOptions]);
+  /** @type {() => void} Typescript syntax */
+  const onClickOptionsAction = () => setActionsBoxOpen(true);
+
+  if (messageActions.length === 0) {
+    return null;
   }
 
-  _openActionBox = () => {
-    this.setState(
-      {
-        actionBox: true,
-      },
-      () => {
-        document.addEventListener('click', this._closeActionBox);
-      },
-    );
-  };
-
-  _closeActionBox = () => {
-    this.setState(
-      {
-        actionBox: false,
-      },
-      () => {
-        document.removeEventListener('click', this._closeActionBox);
-      },
-    );
-  };
-
-  componentWillUnmount() {
-    document.removeEventListener('click', this._closeActionBox);
-  }
-
-  render() {
-    return (
-      <div ref={this.actionsRef} className="str-chat__message-actions">
-        <div
-          className="str-chat__message-actions-reactions"
-          onClick={this.props.onClickReact}
-        >
-          <svg
-            width="20"
-            height="18"
-            viewBox="0 0 20 18"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M16.5 4.5H15a.5.5 0 1 1 0-1h1.5V2a.5.5 0 1 1 1 0v1.5H19a.5.5 0 1 1 0 1h-1.5V6a.5.5 0 1 1-1 0V4.5zM9 13c-1.773 0-3.297-.82-4-2h8c-.703 1.18-2.227 2-4 2zm4.057-11.468a.5.5 0 1 1-.479.878A7.45 7.45 0 0 0 9 1.5C4.865 1.5 1.5 4.865 1.5 9s3.365 7.5 7.5 7.5 7.5-3.365 7.5-7.5c0-.315-.02-.628-.058-.937a.5.5 0 1 1 .992-.124c.044.35.066.704.066 1.06 0 4.688-3.813 8.501-8.5 8.501C4.313 17.5.5 13.687.5 9 .5 4.312 4.313.5 9 .5a8.45 8.45 0 0 1 4.057 1.032zM7.561 5.44a1.5 1.5 0 1 1-2.123 2.122 1.5 1.5 0 0 1 2.123-2.122zm5 0a1.5 1.5 0 1 1-2.122 2.122 1.5 1.5 0 0 1 2.122-2.122z"
-              fillRule="evenodd"
-            />
-          </svg>
-        </div>
-        <div
-          className="str-chat__message-actions-options"
-          onClick={() => this._openActionBox()}
-        >
-          <svg
-            width="11"
-            height="3"
-            viewBox="0 0 11 3"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M1.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
-              fillRule="nonzero"
-            />
-          </svg>
-        </div>
-        {/* ActionsBox */}
-        <MessageActionsBox {...this.props} open={this.state.actionBox} />
-      </div>
-    );
-  }
-}
-
-MessageActions.propTypes = {
-  onClickReact: PropTypes.func,
-  /** If the message actions box should be open or not */
-  open: PropTypes.bool.isRequired,
-  /**
-   * @deprecated
-   *
-   *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitly:
-   *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessage`, `canEditMessage`, `isMyMessage`, `isAdmin`
-   */
-  Message: PropTypes.oneOfType([
-    PropTypes.node,
-    PropTypes.func,
-    PropTypes.object,
-  ]).isRequired,
-  /** If message belongs to current user. */
-  mine: PropTypes.bool,
-  /** DOMRect object for parent MessageList component */
-  messageListRect: PropTypes.object,
-  /**
-   * Handler for flaging a current message
-   *
-   * @param event React's MouseEventHandler event
-   * @returns void
-   * */
-  handleFlag: PropTypes.func,
-  /**
-   * Handler for muting a current message
-   *
-   * @param event React's MouseEventHandler event
-   * @returns void
-   * */
-  handleMute: PropTypes.func,
-  /**
-   * Handler for editing a current message
-   *
-   * @param event React's MouseEventHandler event
-   * @returns void
-   * */
-  handleEdit: PropTypes.func,
-  /**
-   * Handler for deleting a current message
-   *
-   * @param event React's MouseEventHandler event
-   * @returns void
-   * */
-  handleDelete: PropTypes.func,
-  /**
-   * Returns array of avalable message actions for current message.
-   * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
-   */
-  getMessageActions: PropTypes.func,
+  return (
+    <div
+      data-testid="message-actions"
+      onClick={onClickOptionsAction}
+      className="str-chat__message-simple__actions__action str-chat__message-simple__actions__action--options"
+    >
+      <MessageActionsBox
+        getMessageActions={getMessageActions}
+        open={actionsBoxOpen}
+        messageListRect={messageListRect}
+        handleFlag={propHandleFlag || handleFlag}
+        isUserMuted={isMuted}
+        handleMute={propHandleMute || handleMute}
+        handleEdit={propHandleEdit || handleEdit}
+        handleDelete={propHandleDelete || handleDelete}
+        mine={isMyMessage}
+      />
+      <svg
+        width="11"
+        height="4"
+        viewBox="0 0 11 4"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M1.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm4 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+          fillRule="nonzero"
+        />
+      </svg>
+    </div>
+  );
 };
-
-export default MessageActions;

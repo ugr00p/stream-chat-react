@@ -13,7 +13,7 @@ import * as i18next from 'i18next';
 import * as Dayjs from 'dayjs';
 
 export interface ChatContextValue {
-  client?: Client.StreamChat;
+  client?: Client.StreamChat | null;
   channel?: Client.Channel;
   setActiveChannel?(
     channel: Client.Channel,
@@ -72,12 +72,12 @@ export interface ChannelContextValue extends ChatContextValue {
     extraState?: object,
   ): void;
   /** Function executed when user clicks on link to open thread */
-  retrySendMessage?(message: Client.Message): void;
+  retrySendMessage?(message: Client.Message): Promise<void>;
   removeMessage?(updatedMessage: Client.MessageResponse): void;
   /** Function to be called when a @mention is clicked. Function has access to the DOM event and the target user object */
-  onMentionsClick?(e: React.MouseEvent, user: Client.UserResponse): void;
+  onMentionsClick?(e: React.MouseEvent, user: Client.UserResponse[]): void;
   /** Function to be called when hovering over a @mention. Function has access to the DOM event and the target user object */
-  onMentionsHover?(e: React.MouseEvent, user: Client.UserResponse): void;
+  onMentionsHover?(e: React.MouseEvent, user: Client.UserResponse[]): void;
   openThread?(
     message: Client.MessageResponse,
     event: React.SyntheticEvent,
@@ -150,7 +150,7 @@ export interface ChannelListProps extends ChatContextValue {
   LoadingErrorIndicator?: React.ElementType<LoadingErrorIndicatorProps>;
   List?: React.ElementType<ChannelListUIComponentProps>;
   Paginator?: React.ElementType<PaginatorProps>;
-
+  lockChannelOrder?: boolean;
   onMessageNew?(
     thisArg: React.Component<ChannelListProps>,
     e: Client.Event<Client.MessageNewEvent>,
@@ -211,9 +211,7 @@ export interface ChannelListUIComponentProps extends ChatContextValue {
   LoadingErrorIndicator?: React.ElementType<ChatDownProps>;
 }
 
-export interface ChannelPreviewProps
-  extends TranslationContextValue,
-    ChatContextValue {
+export interface ChannelPreviewProps {
   /** **Available from [chat context](https://getstream.github.io/stream-chat-react/#chat)** */
   channel: Client.Channel;
   /** Current selected channel object */
@@ -295,7 +293,7 @@ export interface LoadingErrorIndicatorProps extends TranslationContextValue {
 
 export interface AvatarProps {
   /** image url */
-  image?: string;
+  image?: string | null;
   /** name of the picture, used for title tag fallback */
   name?: string;
   /** shape of the avatar, circle, rounded or square */
@@ -336,6 +334,7 @@ export interface MessageListProps
   HeaderComponent?: React.ElementType;
   /** Component to render at the top of the MessageList */
   EmptyStateIndicator?: React.ElementType<EmptyStateIndicatorProps>;
+  LoadingIndicator?: React.ElementType<LoadingIndicatorProps>;
   /** Date separator component to render  */
   dateSeparator?: React.ElementType<DateSeparatorProps>;
   /** Turn off grouping of messages by user */
@@ -354,10 +353,7 @@ export interface MessageListProps
   additionalMessageInputProps?: object;
 }
 
-export interface ChannelHeaderProps
-  extends ChannelContextValue,
-    TranslationContextValue,
-    ChatContextValue {
+export interface ChannelHeaderProps {
   /** Set title manually */
   title?: string;
   /** Show a little indicator that the channel is live right now */
@@ -506,6 +502,11 @@ export interface MessageProps extends TranslationContextValue {
   ): void;
   additionalMessageInputProps?: object;
   clearEditingState?(e?: React.MouseEvent): void;
+  getFlagMessageSuccessNotification?(message: MessageResponse): string;
+  getFlagMessageErrorNotification?(message: MessageResponse): string;
+  getMuteUserSuccessNotification?(message: MessageResponse): string;
+  getMuteUserErrorNotification?(message: MessageResponse): string;
+  setEditingState?(message: Client.MessageResponse): any;
 }
 
 export type MessageComponentState = {
@@ -532,13 +533,8 @@ export interface MessageComponentProps
   /** Function to be called when hovering the user that posted the message. Function has access to the DOM event and the target user object */
   onUserHover?(e: React.MouseEvent, user: Client.User): void;
   messageActions?: Array<string>;
-  getFlagMessageSuccessNotification?(message: MessageResponse): string;
-  getFlagMessageErrorNotification?(message: MessageResponse): string;
-  getMuteUserSuccessNotification?(message: MessageResponse): string;
-  getMuteUserErrorNotification?(message: MessageResponse): string;
   members?: SeamlessImmutable.Immutable<{ [user_id: string]: Client.Member }>;
   addNotification?(notificationText: string, type: string): any;
-  setEditingState?(message: Client.MessageResponse): any;
   retrySendMessage?(message: Client.Message): void;
   removeMessage?(updatedMessage: Client.MessageResponse): void;
   mutes?: Client.Mute[];
@@ -582,7 +578,7 @@ export interface MessageUIComponentProps
 export interface MessageDeletedProps extends TranslationContextValue {
   /** The message object */
   message: Client.MessageResponse;
-  isMyMessage(message: Client.MessageResponse): boolean;
+  isMyMessage?(message: Client.MessageResponse): boolean;
 }
 
 export interface ThreadProps
@@ -619,7 +615,7 @@ export interface ReactionSelectorProps {
    * }
    * ```
    * */
-  latest_reactions: Client.ReactionResponse[];
+  latest_reactions?: Client.ReactionResponse[];
   /**
    * {
    *  'like': 9,
@@ -627,7 +623,7 @@ export interface ReactionSelectorProps {
    *  'haha': 2
    * }
    */
-  reaction_counts: {
+  reaction_counts?: {
     [reaction_type: string]: number;
   };
   /** Enable the avatar display */
@@ -662,7 +658,7 @@ export interface ReactionsListProps {
    * }
    * ```
    * */
-  reactions: Client.ReactionResponse[];
+  reactions?: Client.ReactionResponse[];
   /**
    * {
    *  'like': 9,
@@ -670,11 +666,11 @@ export interface ReactionsListProps {
    *  'haha': 2
    * }
    */
-  reaction_counts: {
+  reaction_counts?: {
     [reaction_type: string]: number;
   };
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
-  reactionOptions?: MinimalEmojiInterface;
+  reactionOptions?: MinimalEmojiInterface[];
   onClick?(): void;
   reverse?: boolean;
   emojiSetDef?: EnojiSetDef;
@@ -708,6 +704,7 @@ export interface CardProps extends TranslationContextValue {
   image_url?: string;
   thumb_url?: string;
   text?: string;
+  type?: string;
 }
 
 export interface ChatAutoCompleteProps {
@@ -730,16 +727,16 @@ export interface ChatAutoCompleteProps {
 }
 
 export interface ChatDownProps extends TranslationContextValue {
-  image: string;
+  image?: string;
   type: string;
-  text: string;
+  text?: string;
 }
 
 export interface CommandItemProps {
   entity: {
-    name: string;
-    args: string;
-    description: string;
+    name?: string | null;
+    args?: string | null;
+    description?: string | null;
   };
 }
 
@@ -756,9 +753,9 @@ export interface EmoticonItemProps {
 
 export interface UserItemProps {
   entity: {
-    name: string;
-    id: string;
-    image: string;
+    name?: string | null;
+    id?: string | null;
+    image?: string | null;
   };
 }
 
@@ -771,9 +768,16 @@ export interface GalleryProps {
 }
 
 export interface ImageProps {
-  image_url: string;
-  thumb_url: string;
-  fallback: string;
+  image_url?: string;
+  thumb_url?: string;
+  fallback?: string;
+}
+
+export interface ModalWrapperProps {
+  images: { src: string; source: string }[];
+  toggleModal: (selectedIndex?: number) => void;
+  index?: number;
+  modalIsOpen: boolean;
 }
 
 export interface InfiniteScrollProps {
@@ -788,6 +792,32 @@ export interface InfiniteScrollProps {
   element?: React.ElementType;
   loader?: React.ReactNode;
   threshold?: number;
+  children?: any;
+  listenToScroll?: (offset: number, reverseOffset: number) => void;
+}
+
+export interface ModalImageProps {
+  data: { src: string };
+}
+
+export interface ReverseInfiniteScrollProps {
+  loadMore(): any;
+  hasMore?: boolean;
+  initialLoad?: boolean;
+  isReverse?: boolean;
+  pageStart?: number;
+  isLoading?: boolean;
+  useCapture?: boolean;
+  useWindow?: boolean;
+  element?: React.ElementType;
+  loader?: React.ReactNode;
+  threshold?: number;
+  className?: string;
+  /** The function is called when the list scrolls */
+  listenToScroll?(
+    standardOffset: string | number,
+    reverseOffset: string | number,
+  ): any;
   listenToScroll?(standardOffset: number, reverseOffset: number): void;
   [elementAttribute: string]: any; // any other prop is applied as attribute to element
 }
@@ -797,21 +827,12 @@ export interface LoadMoreButtonProps {
   refreshing: boolean;
 }
 export interface LoadingChannelsProps {}
-export interface MessageActionsProps extends TranslationContextValue {
-  onClickReact: React.MouseEventHandler;
+export interface MessageActionsBoxProps {
   /** If the message actions box should be open or not */
-  open: boolean;
-  /**
-   * @deprecated
-   *
-   *  The message component, most logic is delegated to this component and MessageActionsBox uses the following functions explicitly:
-   *  `handleFlag`, `handleMute`, `handleEdit`, `handleDelete`, `canDeleteMessage`, `canEditMessage`, `isMyMessage`, `isAdmin`
-   */
-  Message?: React.ElementType<MessageProps>;
+  open?: boolean;
   /** If message belongs to current user. */
   mine?: boolean;
   isUserMuted?(): boolean;
-  mutes: Client.Mute[];
   /** DOMRect object for parent MessageList component */
   messageListRect?: DOMRect;
   handleEdit?(event?: React.BaseSyntheticEvent): void;
@@ -820,25 +841,24 @@ export interface MessageActionsProps extends TranslationContextValue {
   handleMute?(event?: React.BaseSyntheticEvent): void;
   getMessageActions(): Array<string>;
 }
-export interface MessageActionsBoxProps extends MessageActionsProps {}
 export interface MessageNotificationProps {
   showNotification: boolean;
   onClick: React.MouseEventHandler;
 }
 export interface MessageRepliesCountButtonProps
   extends TranslationContextValue {
-  labelSingle: string;
-  labelPlural: string;
-  reply_count: number;
-  onClick: React.MouseEventHandler;
+  labelSingle?: string;
+  labelPlural?: string;
+  reply_count?: number;
+  onClick?: React.MouseEventHandler;
 }
 export interface ModalProps {
-  onClose(): void;
+  onClose?(): void;
   open: boolean;
 }
 export interface SafeAnchorProps {}
 export interface SimpleReactionsListProps {
-  reactions: Client.ReactionResponse[];
+  reactions?: Client.ReactionResponse[];
   /**
    * {
    *  'like': 9,
@@ -846,19 +866,18 @@ export interface SimpleReactionsListProps {
    *  'haha': 2
    * }
    */
-  reaction_counts: {
+  reaction_counts?: {
     [reaction_type: string]: number;
   };
-  showTooltip?: boolean;
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
-  reactionOptions?: MinimalEmojiInterface;
+  reactionOptions?: MinimalEmojiInterface[];
   handleReaction?(reactionType: string): void;
 }
 export interface TooltipProps {}
 
 export const AttachmentActions: React.FC<AttachmentActionsProps>;
 export class Audio extends React.PureComponent<AudioProps, any> {}
-export class Card extends React.PureComponent<CardProps, any> {}
+export const Card: React.FC<CardProps>;
 export class ChatAutoComplete extends React.PureComponent<
   ChatAutoCompleteProps,
   any
@@ -873,9 +892,10 @@ export class EditMessageForm extends React.PureComponent<
 > {}
 export const EmoticonItem: React.FC<EmoticonItemProps>;
 export const EmptyStateIndicator: React.FC<EmptyStateIndicatorProps>;
+export const Gallery: React.FC<GalleryProps>;
+export const Image: React.FC<ImageProps>;
+export const ImageModal: React.FC<ModalWrapperProps>;
 export const EventComponent: React.FC<EventComponentProps>;
-export class Gallery extends React.PureComponent<GalleryProps, any> {}
-export class Image extends React.PureComponent<ImageProps, any> {}
 export class InfiniteScroll extends React.PureComponent<
   InfiniteScrollProps,
   any
@@ -884,10 +904,7 @@ export class InfiniteScroll extends React.PureComponent<
 export const LoadMoreButton: React.FC<LoadMoreButtonProps>;
 export const LoadingChannels: React.FC<LoadingChannelsProps>;
 export const LoadingErrorIndicator: React.FC<LoadingErrorIndicatorProps>;
-export class MessageActions extends React.PureComponent<
-  MessageActionsProps,
-  any
-> {}
+
 export class MessageActionsBox extends React.PureComponent<
   MessageActionsBoxProps,
   any
@@ -895,6 +912,8 @@ export class MessageActionsBox extends React.PureComponent<
 export const MessageNotification: React.FC<MessageNotificationProps>;
 export const MessageRepliesCountButton: React.FC<MessageRepliesCountButtonProps>;
 export class Modal extends React.PureComponent<ModalProps, any> {}
+export const ModalImage: React.FC<ModalImageProps>;
+
 export class ReverseInfiniteScroll extends React.PureComponent<
   InfiniteScrollProps,
   any
@@ -940,24 +959,12 @@ export class ChannelListTeam extends React.PureComponent<
   any
 > {}
 
-export class ChannelPreview extends React.PureComponent<
-  ChannelPreviewProps,
-  any
-> {}
+export const ChannelPreview: React.FC<ChannelPreviewProps>;
 
-export class ChannelPreviewCompact extends React.PureComponent<
-  ChannelPreviewUIComponentProps,
-  any
-> {}
-export class ChannelPreviewMessenger extends React.PureComponent<
-  ChannelPreviewUIComponentProps,
-  any
-> {}
+export const ChannelPreviewCompact: React.FC<ChannelPreviewUIComponentProps>;
+export const ChannelPreviewMessenger: React.FC<ChannelPreviewUIComponentProps>;
 export const ChannelPreviewCountOnly: React.FC<ChannelPreviewUIComponentProps>;
-export class ChannelPreviewLastMessage extends React.PureComponent<
-  ChannelPreviewUIComponentProps,
-  any
-> {}
+export const ChannelPreviewLastMessage: React.FC<ChannelPreviewUIComponentProps>;
 export const ChannelSearch: React.FC<any>;
 export const LoadMorePaginator: React.FC<LoadMorePaginatorProps>;
 export const InfiniteScrollPaginator: React.FC<InfiniteScrollPaginatorProps>;
@@ -993,16 +1000,47 @@ export class MessageTeam extends React.PureComponent<
 > {}
 
 export interface MessageSimpleProps extends MessageUIComponentProps {}
+export interface MessageTextProps extends MessageSimpleProps {
+  customOptionProps?: Partial<MessageOptionsProps>;
+  customWrapperClass?: string;
+  onReactionListClick?: () => void;
+  showDetailedReactions?: boolean;
+  messageWrapperRef?: React.RefObject<HTMLElement>;
+}
 
-export type MessageSimpleState = {
-  isFocused: boolean;
-  actionsBoxOpen: boolean;
-  showDetailedReactions: boolean;
-};
-export class MessageSimple extends React.PureComponent<
-  MessageSimpleProps,
-  MessageSimpleState
-> {}
+export interface MessageActionsProps {
+  addNotification?(notificationText: string, type: string): any;
+  handleEdit?(event?: React.BaseSyntheticEvent): void;
+  handleDelete?(event?: React.BaseSyntheticEvent): void;
+  handleFlag?(event?: React.BaseSyntheticEvent): void;
+  handleMute?(event?: React.BaseSyntheticEvent): void;
+  mutes?: Client.Mute[];
+  getMessageActions(): Array<string>;
+  getFlagMessageSuccessNotification?(message: MessageResponse): string;
+  getFlagMessageErrorNotification?(message: MessageResponse): string;
+  getMuteUserSuccessNotification?(message: MessageResponse): string;
+  getMuteUserErrorNotification?(message: MessageResponse): string;
+  setEditingState?(message: Client.MessageResponse): any;
+  messageListRect?: DOMRect;
+  message?: Client.MessageResponse;
+  messageWrapperRef?: React.RefObject<HTMLElement>;
+}
+
+export interface MessageOptionsProps {
+  getMessageActions(): Array<string>;
+  handleOpenThread?(event: React.BaseSyntheticEvent): void;
+  initialMessage?: boolean;
+  message?: Client.MessageResponse;
+  messageWrapperRef?: React.RefObject<HTMLElement>;
+  onReactionListClick?: () => void;
+  threadList?: boolean;
+  displayLeft?: boolean;
+  displayReplies?: boolean;
+  displayActions?: boolean;
+  theme?: string;
+}
+
+export const MessageSimple: React.FC<MessageSimpleProps>;
 
 export class MessageDeleted extends React.PureComponent<
   MessageDeletedProps,
@@ -1118,8 +1156,8 @@ declare function withTranslationContext<T>(
 export interface TranslationContext
   extends React.Context<TranslationContextValue> {}
 export interface TranslationContextValue {
-  t: i18next.TFunction;
-  tDateTimeParser(datetime: string | number): Dayjs.Dayjs;
+  t?: i18next.TFunction;
+  tDateTimeParser?(datetime: string | number): Dayjs.Dayjs;
 }
 
 export interface Streami18nOptions {
