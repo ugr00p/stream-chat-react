@@ -5,7 +5,6 @@ import {
   useDeleteHandler,
   useUserRole,
   useFlagHandler,
-  useEditHandler,
   useMuteHandler,
 } from '../Message/hooks';
 import { isUserMuted } from '../Message/utils';
@@ -13,37 +12,38 @@ import { isUserMuted } from '../Message/utils';
 /**
  * @type { React.FC<import('types').MessageActionsProps> }
  */
-export const MessageActions = ({
-  addNotification,
-  message,
-  mutes,
-  getMessageActions,
-  messageListRect,
-  messageWrapperRef,
-  setEditingState,
-  getMuteUserSuccessNotification,
-  getMuteUserErrorNotification,
-  getFlagMessageErrorNotification,
-  getFlagMessageSuccessNotification,
-  handleFlag: propHandleFlag,
-  handleMute: propHandleMute,
-  handleEdit: propHandleEdit,
-  handleDelete: propHandleDelete,
-}) => {
+export const MessageActions = (props) => {
+  const {
+    addNotification,
+    message,
+    mutes,
+    getMessageActions,
+    messageListRect,
+    messageWrapperRef,
+    setEditingState,
+    getMuteUserSuccessNotification,
+    getMuteUserErrorNotification,
+    getFlagMessageErrorNotification,
+    getFlagMessageSuccessNotification,
+    handleFlag: propHandleFlag,
+    handleMute: propHandleMute,
+    handleDelete: propHandleDelete,
+    inline,
+    customWrapperClass,
+  } = props;
   const messageActions = getMessageActions();
   const [actionsBoxOpen, setActionsBoxOpen] = useState(false);
   const { isMyMessage } = useUserRole(message);
   const handleDelete = useDeleteHandler(message);
-  const handleEdit = useEditHandler(message, setEditingState);
   const handleFlag = useFlagHandler(message, {
     notify: addNotification,
-    getSuccessNotification: getMuteUserSuccessNotification,
-    getErrorNotification: getMuteUserErrorNotification,
+    getSuccessNotification: getFlagMessageErrorNotification,
+    getErrorNotification: getFlagMessageSuccessNotification,
   });
   const handleMute = useMuteHandler(message, {
     notify: addNotification,
-    getErrorNotification: getFlagMessageErrorNotification,
-    getSuccessNotification: getFlagMessageSuccessNotification,
+    getErrorNotification: getMuteUserSuccessNotification,
+    getSuccessNotification: getMuteUserErrorNotification,
   });
   const isMuted = useCallback(() => {
     return isUserMuted(message, mutes);
@@ -73,18 +73,15 @@ export const MessageActions = ({
       document.removeEventListener('click', hideOptions);
     };
   }, [actionsBoxOpen, hideOptions]);
-  /** @type {() => void} Typescript syntax */
-  const onClickOptionsAction = () => setActionsBoxOpen(true);
-
   if (messageActions.length === 0) {
     return null;
   }
 
   return (
-    <div
-      data-testid="message-actions"
-      onClick={onClickOptionsAction}
-      className="str-chat__message-simple__actions__action str-chat__message-simple__actions__action--options"
+    <MessageActionsWrapper
+      inline={inline}
+      customWrapperClass={customWrapperClass}
+      setActionsBoxOpen={setActionsBoxOpen}
     >
       <MessageActionsBox
         getMessageActions={getMessageActions}
@@ -93,7 +90,7 @@ export const MessageActions = ({
         handleFlag={propHandleFlag || handleFlag}
         isUserMuted={isMuted}
         handleMute={propHandleMute || handleMute}
-        handleEdit={propHandleEdit || handleEdit}
+        handleEdit={setEditingState}
         handleDelete={propHandleDelete || handleDelete}
         mine={isMyMessage}
       />
@@ -108,6 +105,32 @@ export const MessageActions = ({
           fillRule="nonzero"
         />
       </svg>
-    </div>
+    </MessageActionsWrapper>
   );
+};
+
+/**
+ * This is a workaround to encompass the different styles message actions can have at the moment
+ * while allowing for sharing the component's stateful logic.
+ * @type { React.FC<import('types').MessageActionsWrapperProps> }
+ */
+const MessageActionsWrapper = (props) => {
+  const { children, customWrapperClass, inline, setActionsBoxOpen } = props;
+  const defaultWrapperClass =
+    'str-chat__message-simple__actions__action str-chat__message-simple__actions__action--options';
+  const wrapperClass =
+    typeof customWrapperClass === 'string'
+      ? customWrapperClass
+      : defaultWrapperClass;
+  /** @type {() => void} Typescript syntax */
+  const onClickOptionsAction = () => setActionsBoxOpen(true);
+  const wrapperProps = {
+    'data-testid': 'message-actions',
+    onClick: onClickOptionsAction,
+    className: wrapperClass,
+  };
+  if (inline) {
+    return <span {...wrapperProps}>{children}</span>;
+  }
+  return <div {...wrapperProps}>{children}</div>;
 };

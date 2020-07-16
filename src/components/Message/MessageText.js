@@ -4,12 +4,12 @@ import { isOnlyEmojis, renderText } from '../../utils';
 import { TranslationContext } from '../../context';
 import { ReactionsList, ReactionSelector } from '../Reactions';
 import {
-  useMentionsHandler,
   useReactionHandler,
   useReactionClick,
+  useMentionsUIHandler,
 } from './hooks';
 import { messageHasReactions, messageHasAttachments } from './utils';
-import { MessageOptions } from './MessageOptions';
+import MessageOptions from './MessageOptions';
 
 /**
  * @type { React.FC<import('types').MessageTextProps> }
@@ -18,25 +18,34 @@ const MessageTextComponent = (props) => {
   const {
     onMentionsClickMessage: propOnMentionsClick,
     onMentionsHoverMessage: propOnMentionsHover,
-    actionsEnabled,
-    message,
-    messageListRect,
-    unsafeHTML,
     customWrapperClass,
+    customInnerClass,
+    theme = 'simple',
+    message,
+    unsafeHTML,
     customOptionProps,
   } = props;
-  const reactionSelectorRef = useRef(null);
-  const { onMentionsClick, onMentionsHover } = useMentionsHandler(message);
+  const reactionSelectorRef = useRef(
+    /** @type {HTMLDivElement | null} */ (null),
+  );
+  const { onMentionsClick, onMentionsHover } = useMentionsUIHandler(message, {
+    onMentionsClick: propOnMentionsClick,
+    onMentionsHover: propOnMentionsHover,
+  });
   const { onReactionListClick, showDetailedReactions } = useReactionClick(
-    reactionSelectorRef,
     message,
+    reactionSelectorRef,
   );
   const { t } = useContext(TranslationContext);
   const hasReactions = messageHasReactions(message);
   const hasAttachment = messageHasAttachments(message);
   const handleReaction = useReactionHandler(message);
   const wrapperClass = customWrapperClass || 'str-chat__message-text';
-  if (!message || !message.text) {
+  const innerClass =
+    customInnerClass ||
+    `str-chat__message-text-inner str-chat__message-${theme}-text-inner`;
+
+  if (!message?.text) {
     return null;
   }
 
@@ -45,24 +54,28 @@ const MessageTextComponent = (props) => {
       <div
         data-testid="message-text-inner-wrapper"
         className={`
-          str-chat__message-text-inner str-chat__message-simple-text-inner
-          ${hasAttachment ? 'str-chat__message-text-inner--has-attachment' : ''}
+          ${innerClass}
+          ${
+            hasAttachment
+              ? ` str-chat__message-${theme}-text-inner--has-attachment`
+              : ''
+          }
           ${
             isOnlyEmojis(message.text)
-              ? 'str-chat__message-simple-text-inner--is-emoji'
+              ? ` str-chat__message-${theme}-text-inner--is-emoji`
               : ''
           }
         `.trim()}
-        onMouseOver={propOnMentionsHover || onMentionsHover}
-        onClick={propOnMentionsClick || onMentionsClick}
+        onMouseOver={onMentionsHover}
+        onClick={onMentionsClick}
       >
         {message.type === 'error' && (
-          <div className="str-chat__simple-message--error-message">
+          <div className={`str-chat__${theme}-message--error-message`}>
             {t && t('Error · Unsent')}
           </div>
         )}
         {message.status === 'failed' && (
-          <div className="str-chat__simple-message--error-message">
+          <div className={`str-chat__${theme}-message--error-message`}>
             {t && t('Message Failed · Click to try again')}
           </div>
         )}
@@ -85,12 +98,9 @@ const MessageTextComponent = (props) => {
         {showDetailedReactions && (
           <ReactionSelector
             handleReaction={handleReaction}
-            actionsEnabled={actionsEnabled}
             detailedView
             reaction_counts={message.reaction_counts}
             latest_reactions={message.latest_reactions}
-            messageList={messageListRect}
-            // @ts-ignore
             ref={reactionSelectorRef}
           />
         )}
@@ -104,4 +114,4 @@ const MessageTextComponent = (props) => {
   );
 };
 
-export const MessageText = React.memo(MessageTextComponent);
+export default React.memo(MessageTextComponent);

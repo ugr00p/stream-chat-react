@@ -1,5 +1,5 @@
 // @ts-check
-import deepequal from 'deep-equal';
+import deepequal from 'react-fast-compare';
 import PropTypes from 'prop-types';
 
 /**
@@ -87,7 +87,8 @@ export const getMessageActions = (
 };
 
 /**
- * @type {(nextProps: import('types').MessageComponentProps, props: import('types').MessageComponentProps ) => boolean} Typescript syntax
+ * @typedef {Pick<import('types').MessageComponentProps, 'message' | 'readBy' | 'groupStyles' | 'lastReceivedId' | 'messageListRect'>} MessageEqualProps
+ * @type {(props: MessageEqualProps, nextProps: MessageEqualProps) => boolean} Typescript syntax
  */
 export const areMessagePropsEqual = (props, nextProps) => {
   return (
@@ -100,6 +101,7 @@ export const areMessagePropsEqual = (props, nextProps) => {
     // Last message received in the channel changes
     deepequal(nextProps.lastReceivedId, props.lastReceivedId) &&
     // User toggles edit state
+    // @ts-ignore // TODO: fix
     nextProps.editing === props.editing &&
     // Message wrapper layout changes
     nextProps.messageListRect === props.messageListRect
@@ -136,6 +138,20 @@ export const getImages = (message) => {
     (item) => item.type === 'image',
   );
 };
+
+/**
+ * @type {(message: import('stream-chat').MessageResponse | undefined) => import('stream-chat').Attachment[] }
+ */
+export const getNonImageAttachments = (message) => {
+  if (!message?.attachments) {
+    return [];
+  }
+  return message.attachments.filter(
+    /** @type {(item: import('stream-chat').Attachment) => boolean} Typescript syntax */
+    (item) => item.type !== 'image',
+  );
+};
+
 export const MessagePropTypes = PropTypes.shape({
   id: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,

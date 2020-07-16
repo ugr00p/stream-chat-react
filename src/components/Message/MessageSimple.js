@@ -9,11 +9,11 @@ import { Avatar } from '../Avatar';
 import { Gallery } from '../Gallery';
 import { Modal } from '../Modal';
 import { MessageInput, EditMessageForm } from '../MessageInput';
-import { MessageOptions } from './MessageOptions';
-import { MessageText } from './MessageText';
 import { Tooltip } from '../Tooltip';
 import { LoadingIndicator } from '../Loading';
 import { ReactionsList, ReactionSelector } from '../Reactions';
+import MessageOptions from './MessageOptions';
+import MessageText from './MessageText';
 import DefaultMessageDeleted from './MessageDeleted';
 import {
   useActionHandler,
@@ -42,7 +42,6 @@ const MessageSimple = (props) => {
     clearEditingState,
     editing,
     message,
-    messageListRect,
     threadList,
     updateMessage: propUpdateMessage,
     handleAction: propHandleAction,
@@ -53,9 +52,6 @@ const MessageSimple = (props) => {
     onUserHover: onUserHoverCustomHandler,
     tDateTimeParser: propTDateTimeParser,
   } = props;
-  /**
-   *@type {import('types').ChannelContextValue}
-   */
   const { updateMessage: channelUpdateMessage } = useContext(ChannelContext);
   const updateMessage = propUpdateMessage || channelUpdateMessage;
   const { tDateTimeParser } = useContext(TranslationContext);
@@ -64,18 +60,15 @@ const MessageSimple = (props) => {
   const handleReaction = useReactionHandler(message);
   const handleAction = useActionHandler(message);
   const handleRetry = useRetryHandler();
-  const { onUserClick, onUserHover } = useUserHandler(
-    {
-      onUserClickHandler: onUserClickCustomHandler,
-      onUserHoverHandler: onUserHoverCustomHandler,
-    },
-    message,
-  );
+  const { onUserClick, onUserHover } = useUserHandler(message, {
+    onUserClickHandler: onUserClickCustomHandler,
+    onUserHoverHandler: onUserHoverCustomHandler,
+  });
   const reactionSelectorRef = React.createRef();
   const messageWrapperRef = useRef(null);
   const { onReactionListClick, showDetailedReactions } = useReactionClick(
-    reactionSelectorRef,
     message,
+    reactionSelectorRef,
   );
   const {
     Attachment = DefaultAttachment,
@@ -187,7 +180,6 @@ const MessageSimple = (props) => {
                     detailedView
                     reaction_counts={message.reaction_counts}
                     latest_reactions={message.latest_reactions}
-                    messageList={messageListRect}
                     ref={reactionSelectorRef}
                   />
                 )}
@@ -262,9 +254,6 @@ const MessageSimpleStatus = ({
   lastReceivedId,
 }) => {
   const { t } = useContext(TranslationContext);
-  /**
-   * @type {import('types').ChannelContextValue}
-   */
   const { client } = useContext(ChannelContext);
   const { isMyMessage } = useUserRole(message);
   if (!isMyMessage || message?.type === 'error') {
@@ -341,14 +330,13 @@ const MessageSimpleStatus = ({
 
 MessageSimple.propTypes = {
   /** The [message object](https://getstream.io/chat/docs/#message_format) */
-  // @ts-ignore
-  message: PropTypes.object,
+  message: /** @type {PropTypes.Validator<import('stream-chat').MessageResponse>} */ (PropTypes
+    .object.isRequired),
   /**
    * The attachment UI component.
    * Default: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
    * */
-  // @ts-ignore
-  Attachment: PropTypes.elementType,
+  Attachment: /** @type {PropTypes.Validator<React.ElementType<import('types').AttachmentUIComponentProps>>} */ (PropTypes.elementType),
   /**
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
@@ -356,12 +344,9 @@ MessageSimple.propTypes = {
    * @see See [Message HOC](https://getstream.github.io/stream-chat-react/#message) for example
    *
    * */
-  // @ts-ignore
-  Message: PropTypes.oneOfType([
-    PropTypes.node,
-    PropTypes.func,
-    PropTypes.object,
-  ]),
+  Message: /** @type {PropTypes.Validator<React.ElementType<import('types').MessageUIComponentProps>>} */ (PropTypes.oneOfType(
+    [PropTypes.node, PropTypes.func, PropTypes.object],
+  ).isRequired),
   /** render HTML instead of markdown. Posting HTML is only allowed server-side */
   unsafeHTML: PropTypes.bool,
   /** Client object */
@@ -370,8 +355,8 @@ MessageSimple.propTypes = {
   /** If its parent message in thread. */
   initialMessage: PropTypes.bool,
   /** Channel config object */
-  // @ts-ignore
-  channelConfig: PropTypes.object,
+  channelConfig: /** @type {PropTypes.Validator<import('stream-chat').ChannelConfig>} */ (PropTypes
+    .object.isRequired),
   /** If component is in thread list */
   threadList: PropTypes.bool,
   /**
@@ -390,8 +375,7 @@ MessageSimple.propTypes = {
    * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
    * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
    * */
-  // @ts-ignore
-  getMessageActions: PropTypes.func,
+  getMessageActions: PropTypes.func.isRequired,
   /**
    * Function to publish updates on message to channel
    *
@@ -474,8 +458,7 @@ MessageSimple.propTypes = {
    * The component that will be rendered if the message has been deleted.
    * All of Message's props are passed into this component.
    */
-  // @ts-ignore
-  MessageDeleted: PropTypes.elementType,
+  MessageDeleted: /** @type {PropTypes.Validator<React.ElementType<import('types').MessageDeletedProps>>} */ (PropTypes.elementType),
 };
 
 export default React.memo(MessageSimple, areMessagePropsEqual);

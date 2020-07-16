@@ -14,9 +14,7 @@ import SendButtonComponent from './SendButton';
 /** @type {React.FC<import("types").MessageInputProps>} */
 const MessageInputSmall = (props) => {
   const messageInput = useMessageInput(props);
-  /** @type {import("types").ChannelContextValue} */
   const channelContext = useContext(ChannelContext);
-  /** @type {import("types").TranslationContextValue} */
   const { t } = useContext(TranslationContext);
   const { SendButton } = props;
 
@@ -38,11 +36,11 @@ const MessageInputSmall = (props) => {
               : null
           }`}
         >
-          <UploadsPreview {...messageInput} />
           <EmojiPicker {...messageInput} small />
           <div className="str-chat__small-message-input--textarea-wrapper">
+            <UploadsPreview {...messageInput} />
+
             <ChatAutoComplete
-              users={messageInput.getUsers()}
               commands={messageInput.getCommands()}
               innerRef={messageInput.textareaRef}
               handleSubmit={messageInput.handleSubmit}
@@ -53,6 +51,7 @@ const MessageInputSmall = (props) => {
               onSelectItem={messageInput.onSelectItem}
               placeholder={t('Type your message')}
               onPaste={messageInput.onPaste}
+              triggers={props.autocompleteTriggers}
               grow={props.grow}
               disabled={props.disabled}
               additionalTextareaProps={props.additionalTextareaProps}
@@ -121,10 +120,16 @@ MessageInputSmall.propTypes = {
   maxRows: PropTypes.number.isRequired,
   /** Make the textarea disabled */
   disabled: PropTypes.bool,
+  /** enable/disable firing the typing event */
+  publishTypingEvent: PropTypes.bool,
   /**
    * Any additional attrubutes that you may want to add for underlying HTML textarea element.
    */
   additionalTextareaProps: PropTypes.object,
+  /**
+   * Override the default triggers of the ChatAutoComplete component
+   */
+  autocompleteTriggers: PropTypes.object,
   /**
    * @param message: the Message object to be sent
    * @param cid: the channel id
@@ -146,6 +151,7 @@ MessageInputSmall.propTypes = {
 MessageInputSmall.defaultProps = {
   focus: false,
   disabled: false,
+  publishTypingEvent: true,
   grow: true,
   maxRows: 10,
   SendButton: SendButtonComponent,
