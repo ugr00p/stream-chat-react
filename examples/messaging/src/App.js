@@ -1,6 +1,8 @@
 /* eslint-disable */
 import React, { Component } from 'react';
+import Grid from '@material-ui/core/Grid';
 import { StreamChat } from 'stream-chat';
+import ReactResizeDetector from 'react-resize-detector';
 import {
   Chat,
   Channel,
@@ -30,6 +32,9 @@ const theme = urlParams.get('theme') || 'light';
 //   process.env.REACT_APP_CHAT_API_DEFAULT_USER_TOKEN;
 
 class App extends Component {
+  state = {
+    width: -1,
+  }
   constructor(props) {
     super(props);
     this.chatClient = new StreamChat('qk4nn7rpcn75');
@@ -44,8 +49,14 @@ class App extends Component {
     );
   }
 
+  onResize = (parentWidth)=>{
+    this.setState({
+      width: parentWidth
+    });
+  }
+
   render() {
-    const filters = { type: 'messaging', example: 1 };
+    const filters = { type: 'messaging' };
     const sort = {
       last_message_at: -1,
       updated_at: -1,
@@ -54,26 +65,37 @@ class App extends Component {
     const options = { state: true, watch: true, presence: true };
 
     return (
-      <Chat client={this.chatClient} theme={`messaging ${theme}`}>
-        <ChannelList
-          List={ChannelListMessenger}
-          Preview={ChannelPreviewMessenger}
-          filters={filters}
-          sort={sort}
-          options={options}
-          Paginator={(props) => (
-            <InfiniteScrollPaginator threshold={300} {...props} />
-          )}
-        />
-        <Channel>
-          <Window>
-            <ChannelHeader />
-            <MessageList TypingIndicator={TypingIndicator} />
-            <MessageInput Input={MessageInputFlat} focus />
-          </Window>
-          <Thread Message={MessageSimple} />
-        </Channel>
-      </Chat>
+      <Grid container direction={'column'}>
+        <Grid>
+          Header
+        </Grid>
+        <Grid>
+          Menu
+        </Grid>
+        <Grid>
+          <ReactResizeDetector handleWidth handleHeight onResize={this.onResize} />
+          <Chat client={this.chatClient} theme={`messaging ${theme}`}>
+            <ChannelList
+              List={ChannelListMessenger}
+              Preview={ChannelPreviewMessenger}
+              filters={filters}
+              sort={sort}
+              options={options}
+              Paginator={(props) => (
+                <InfiniteScrollPaginator threshold={300} {...props} />
+              )}
+            />
+            <Channel>
+              <Window>
+                <ChannelHeader />
+                <MessageList TypingIndicator={TypingIndicator} />
+                <MessageInput Input={MessageInputFlat} focus />
+              </Window>
+              <Thread Message={MessageSimple} />
+            </Channel>
+          </Chat>
+        </Grid>
+      </Grid>
     );
   }
 }
