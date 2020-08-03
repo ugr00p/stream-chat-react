@@ -1,7 +1,6 @@
 // @ts-check
-import React, { useContext, useRef } from 'react';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
-import { TranslationContext } from '../../context';
 import { smartRender } from '../../utils';
 import { Attachment as DefaultAttachment } from '../Attachment';
 import { Avatar } from '../Avatar';
@@ -24,6 +23,7 @@ import {
   useOpenThreadHandler,
   useUserHandler,
 } from './hooks';
+import MessageTimestamp from './MessageTimestamp';
 
 /**
  * MessageCommerce - Render component, should be used together with the Message component
@@ -34,6 +34,7 @@ import {
 const MessageCommerce = (props) => {
   const {
     message,
+    formatDate,
     groupStyles,
     actionsEnabled,
     threadList,
@@ -51,7 +52,6 @@ const MessageCommerce = (props) => {
   const handleAction = useActionHandler(message);
   const handleReaction = useReactionHandler(message);
   const handleOpenThread = useOpenThreadHandler(message);
-  const { tDateTimeParser } = useContext(TranslationContext);
   const reactionSelectorRef = useRef(null);
   const { onReactionListClick, showDetailedReactions } = useReactionClick(
     message,
@@ -61,11 +61,6 @@ const MessageCommerce = (props) => {
     onUserClickHandler: propOnUserClick,
     onUserHoverHandler: propOnUserHover,
   });
-  const dateTimeParser = propTDateTimeParser || tDateTimeParser;
-  const when =
-    message &&
-    dateTimeParser &&
-    dateTimeParser(message.created_at).format('LT');
   const { isMyMessage } = useUserRole(message);
   const messageClasses = `str-chat__message-commerce str-chat__message-commerce--${
     isMyMessage ? 'right' : 'left'
@@ -195,7 +190,13 @@ const MessageCommerce = (props) => {
                 {message?.user?.name || message?.user?.id}
               </span>
             ) : null}
-            <span className="str-chat__message-commerce-timestamp">{when}</span>
+            <MessageTimestamp
+              formatDate={formatDate}
+              customClass="str-chat__message-commerce-timestamp"
+              message={message}
+              tDateTimeParser={propTDateTimeParser}
+              format="LT"
+            />
           </div>
         </div>
       </div>
@@ -253,8 +254,6 @@ MessageCommerce.propTypes = {
   /** If actions such as edit, delete, flag, mute are enabled on message */
   actionsEnabled: PropTypes.bool,
   /**
-   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
-   *
    * @param name {string} Name of action
    * @param value {string} Value of action
    * @param event Dom event that triggered this handler

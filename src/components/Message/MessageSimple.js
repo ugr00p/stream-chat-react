@@ -29,6 +29,8 @@ import {
   messageHasReactions,
   messageHasAttachments,
 } from './utils';
+import { DeliveredCheckIcon } from './icons';
+import MessageTimestamp from './MessageTimestamp';
 
 /**
  * MessageSimple - Render component, should be used together with the Message component
@@ -43,6 +45,7 @@ const MessageSimple = (props) => {
     editing,
     message,
     threadList,
+    formatDate,
     updateMessage: propUpdateMessage,
     handleAction: propHandleAction,
     handleOpenThread: propHandleOpenThread,
@@ -54,7 +57,6 @@ const MessageSimple = (props) => {
   } = props;
   const { updateMessage: channelUpdateMessage } = useContext(ChannelContext);
   const updateMessage = propUpdateMessage || channelUpdateMessage;
-  const { tDateTimeParser } = useContext(TranslationContext);
   const { isMyMessage } = useUserRole(message);
   const handleOpenThread = useOpenThreadHandler(message);
   const handleReaction = useReactionHandler(message);
@@ -75,12 +77,6 @@ const MessageSimple = (props) => {
     MessageDeleted = DefaultMessageDeleted,
   } = props;
 
-  const dateTimeParser = propTDateTimeParser || tDateTimeParser;
-  const when =
-    dateTimeParser &&
-    message &&
-    dateTimeParser(message.created_at).calendar &&
-    dateTimeParser(message.created_at).calendar();
   const hasReactions = messageHasReactions(message);
   const hasAttachment = messageHasAttachments(message);
 
@@ -237,7 +233,13 @@ const MessageSimple = (props) => {
                   {message.user.name || message.user.id}
                 </span>
               ) : null}
-              <span className="str-chat__message-simple-timestamp">{when}</span>
+              <MessageTimestamp
+                customClass="str-chat__message-simple-timestamp"
+                tDateTimeParser={propTDateTimeParser}
+                formatDate={formatDate}
+                message={message}
+                calendar
+              />
             </div>
           </div>
         </div>
@@ -315,13 +317,7 @@ const MessageSimpleStatus = ({
         data-testid="message-status-received"
       >
         <Tooltip>{t && t('Delivered')}</Tooltip>
-        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.72 6.633a.955.955 0 1 0-1.352-1.352L6.986 8.663 5.633 7.31A.956.956 0 1 0 4.28 8.663l2.029 2.028a.956.956 0 0 0 1.353 0l4.058-4.058z"
-            fill="#006CFF"
-            fillRule="evenodd"
-          />
-        </svg>
+        <DeliveredCheckIcon />
       </span>
     );
   }
@@ -411,8 +407,6 @@ MessageSimple.propTypes = {
     toJSON: PropTypes.func.isRequired,
   }),
   /**
-   * Handler for actions. Actions in combination with attachments can be used to build [commands](https://getstream.io/chat/docs/#channel_commands).
-   *
    * @param name {string} Name of action
    * @param value {string} Value of action
    * @param event Dom event that triggered this handler
