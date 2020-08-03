@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.1.3](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.3) 2020-07-27
+
+- Fix empty reaction showing bubble [#473](https://github.com/GetStream/stream-chat-react/pull/473)
+
+## [2.1.2](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.2) 2020-07-27
+
+- Add formatDate to docs [#469](https://github.com/GetStream/stream-chat-react/pull/469)
+- Allow reaction override in Message components [#470](https://github.com/GetStream/stream-chat-react/pull/470)
+- Fix runtime require in browser bundle [#472](https://github.com/GetStream/stream-chat-react/pull/472)
+
+## [2.1.1](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.1) 2020-07-22
+
+- Bumped `react-file-utils` to `0.3.15` which includes an upgraded version of `blueimp-load-image` which makes it easier to use this library in SSR apps.
+
+## [2.1.0](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.0) 2020-07-22
+
+- Rename exported component `File` to `FileAttachment` to avoid overriding `window.File` in bundled release
+
+## [2.0.4](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.4) 2020-07-21
+
+- Fixed type issues
+- Fixed an issue with the mobile navigation
+- Added the ability to customize the datetime stamp on Message components using the `formatDate` prop
+
 ## [2.0.3](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.3) 2020-07-20
 
 - All components using mutes get them using the useContext hook.
@@ -141,7 +165,7 @@ We’re bumping `stream-chat-react` to version 2.0.1 because over the past three
 
 We've already been on a v1 release for a while but never updated our versioning. Right now we're in the process of rewriting our components to be more future proof and we started using hooks, hence the v1.0.0 today.
 
-**Breaking change:** `stream-chat-react` no relies on hooks and will need at least `v16.8.x` of `react` to work.
+**Breaking change:** `stream-chat-react` now relies on hooks and will need at least `v16.8.x` of `react` to work.
 
 - Fixed some issues with mutes
 - Fixed issues with attachments

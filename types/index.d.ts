@@ -130,6 +130,9 @@ export interface ChannelProps {
     channelId: string,
     message: Client.Message,
   ): Promise<Client.MessageResponse> | void;
+  doMarkReadRequest?(
+    channel: Client.Channel,
+  ): Promise<Client.MessageResponse> | void;
   /** Override update(edit) message request (Advanced usage only) */
   doUpdateMessageRequest?(
     channelId: string,
@@ -552,7 +555,7 @@ export interface MessageInputEmojiPickerProps extends MessageInputState {
   small?: boolean;
 }
 
-export interface FileProps {
+export interface FileAttachmentProps {
   attachment: Client.Attachment & { asset_url?: string };
 }
 
@@ -574,7 +577,7 @@ export interface AttachmentUIComponentProps {
     event: React.BaseSyntheticEvent,
   ): void;
   Card?: React.ComponentType<CardProps>;
-  File?: React.ComponentType<FileProps>;
+  File?: React.ComponentType<FileAttachmentProps>;
   Image?: React.ComponentType<ImageProps>;
   Audio?: React.ComponentType<AudioProps>;
   Media?: React.ComponentType<ReactPlayerProps>;
@@ -596,6 +599,9 @@ export interface MessageProps extends TranslationContextValue {
   Message?: React.ElementType<MessageUIComponentProps>;
   /** Message Deleted rendering component. Optional; if left undefined, the default of the Message rendering component is used */
   MessageDeleted?: React.ElementType<MessageDeletedProps>;
+
+  ReactionSelector?: React.ElementType<ReactionSelectorProps>;
+  ReactionsList?: React.ElementType<ReactionsListProps>;
   /** Allows you to overwrite the attachment component */
   Attachment?: React.ElementType<AttachmentUIComponentProps>;
   /** render HTML instead of markdown. Posting HTML is only allowed server-side */
@@ -1086,14 +1092,7 @@ export const InfiniteScrollPaginator: React.FC<InfiniteScrollPaginatorProps>;
 export const LoadingIndicator: React.FC<LoadingIndicatorProps>;
 
 export interface MessageCommerceProps extends MessageUIComponentProps {}
-export type MessageCommerceState = {
-  isFocused: boolean;
-  showDetailedReactions: boolean;
-};
-export class MessageCommerce extends React.PureComponent<
-  MessageCommerceProps,
-  MessageCommerceState
-> {}
+export const MessageCommerce: React.FC<MessageCommerceProps>;
 
 export interface MessageLivestreamProps extends MessageUIComponentProps {}
 export interface MessageLivestreamActionProps {
