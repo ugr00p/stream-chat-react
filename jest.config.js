@@ -1,6 +1,7 @@
 module.exports = {
   verbose: true,
   maxConcurrency: 15,
+  globalSetup: './jest-global-setup.js',
   testRegex: [
     /**
      * If you want to test single file, mention it here
@@ -10,7 +11,7 @@ module.exports = {
      */
   ],
   transformIgnorePatterns: ['/node_modules'],
-  testPathIgnorePatterns: ['/node_modules/', '/examples/'],
+  testPathIgnorePatterns: ['/node_modules/', '/examples/', '__snapshots__'],
   transform: {
     '^.+\\.jsx?$': 'babel-jest',
   },
@@ -19,4 +20,5 @@ module.exports = {
       '<rootDir>/assetsTransformer.js',
     'mock-builders(.*)$': '<rootDir>/src/mock-builders$1',
   },
+  setupFiles: ['core-js'],
 };

@@ -1,3 +1,4 @@
+// @ts-check
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
@@ -5,8 +6,17 @@ import PropTypes from 'prop-types';
  * Avatar - A round avatar image with fallback to username's first letter
  *
  * @example ../../docs/Avatar.md
+ * @typedef {import('types').AvatarProps} Props
+ * @type { React.FC<Props>}
  */
-const Avatar = ({ size, name, shape, image, onClick, onMouseOver }) => {
+const Avatar = ({
+  size = 32,
+  name,
+  shape = 'circle',
+  image,
+  onClick = () => {},
+  onMouseOver = () => {},
+}) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -23,11 +33,11 @@ const Avatar = ({ size, name, shape, image, onClick, onMouseOver }) => {
       className={`str-chat__avatar str-chat__avatar--${shape}`}
       title={name}
       style={{
-        width: size,
-        height: size,
-        flexBasis: size,
+        width: `${size}px`,
+        height: `${size}px`,
+        flexBasis: `${size}px`,
         lineHeight: `${size}px`,
-        fontSize: size / 2,
+        fontSize: `${size / 2}px`,
       }}
       onClick={onClick}
       onMouseOver={onMouseOver}
@@ -41,9 +51,9 @@ const Avatar = ({ size, name, shape, image, onClick, onMouseOver }) => {
             loaded ? ' str-chat__avatar-image--loaded' : ''
           }`}
           style={{
-            width: size,
-            height: size,
-            flexBasis: size,
+            width: `${size}px`,
+            height: `${size}px`,
+            flexBasis: `${size}px`,
             objectFit: 'cover',
           }}
           onLoad={() => setLoaded(true)}
@@ -59,13 +69,6 @@ const Avatar = ({ size, name, shape, image, onClick, onMouseOver }) => {
       )}
     </div>
   );
-};
-
-Avatar.defaultProps = {
-  size: 32,
-  shape: 'circle',
-  onClick: () => {},
-  onMouseOver: () => {},
 };
 
 Avatar.propTypes = {

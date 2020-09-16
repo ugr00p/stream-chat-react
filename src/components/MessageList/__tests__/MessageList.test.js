@@ -1,7 +1,5 @@
-/* eslint-disable sonarjs/no-unused-collection */
 import React from 'react';
-import axios from 'axios';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, render, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -13,18 +11,15 @@ import {
   generateUser,
   dispatchMessageNewEvent,
   getTestClientWithUser,
-} from 'mock-builders';
+} from '../../../mock-builders';
 
 import { Chat } from '../../Chat';
 import MessageList from '../MessageList';
 import { Channel } from '../../Channel';
 
-// eslint-disable-next-line no-undef
-afterEach(cleanup);
-
-jest.mock('axios');
-
 describe('MessageList', () => {
+  afterEach(cleanup);
+
   let chatClientVishal;
 
   it('should add new message at bottom of the list', async () => {
@@ -41,9 +36,8 @@ describe('MessageList', () => {
       ],
     });
 
-    useMockedApis(axios, [getOrCreateChannelApi(mockedChannel)]);
-
     chatClientVishal = await getTestClientWithUser({ id: 'vishal' });
+    useMockedApis(chatClientVishal, [getOrCreateChannelApi(mockedChannel)]);
     const channel = chatClientVishal.channel('messaging', mockedChannel.id);
     await channel.query();
 
@@ -59,10 +53,12 @@ describe('MessageList', () => {
     });
 
     const newMessage = generateMessage({ user: user2 });
-    dispatchMessageNewEvent(
-      chatClientVishal,
-      newMessage,
-      mockedChannel.channel,
+    act(() =>
+      dispatchMessageNewEvent(
+        chatClientVishal,
+        newMessage,
+        mockedChannel.channel,
+      ),
     );
 
     await waitFor(() => {

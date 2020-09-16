@@ -49,6 +49,7 @@
 
   &--textarea-wrapper {
     display: flex;
+    flex-wrap: wrap;
     flex: 1 0;
     position: relative;
 
@@ -74,6 +75,10 @@
   &--emojipicker {
     position: absolute;
     bottom: calc(100%);
+  }
+
+  .rfu-file-previewer {
+    width: 100%;
   }
 
   .rfu-file-upload-button {

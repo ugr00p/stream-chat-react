@@ -11,7 +11,7 @@ import builtins from '@stream-io/rollup-plugin-node-builtins';
 import globals from 'rollup-plugin-node-globals';
 import PropTypes from 'prop-types';
 
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 
 import process from 'process';
 import pkg from './package.json';
@@ -41,7 +41,8 @@ const normalBundle = {
     },
   ],
   external: [
-    'anchorme',
+    'linkifyjs',
+    'linkifyjs/lib/linkify',
     'dayjs',
     'dayjs/plugin/calendar',
     'dayjs/plugin/updateLocale',
@@ -50,8 +51,8 @@ const normalBundle = {
     'dayjs/plugin/relativeTime',
     'stream-chat-client',
     'react-images',
-    'lodash/debounce',
-    'lodash/throttle',
+    'lodash.debounce',
+    'lodash.throttle',
     'lodash/truncate',
     'i18next',
     'moment',
@@ -65,22 +66,19 @@ const normalBundle = {
     'dayjs/locale/en',
     'lodash/uniq',
     'lodash.uniqby',
+    'lodash.truncate',
     'emoji-mart',
     'emoji-mart/data/all.json',
     'emoji-regex',
     'seamless-immutable',
     'isomorphic-ws',
-    'visibilityjs',
     'custom-event',
     'textarea-caret',
     '@braintree/sanitize-url',
-    '@webscopeio/react-textarea-autocomplete',
-    '@webscopeio/react-textarea-autocomplete/style.css',
     'emoji-mart/css/emoji-mart.css',
     'react-dropzone',
     'react-markdown',
-    'deep-equal',
-    'shallow-diff',
+    'react-fast-compare',
     'immutable',
     'url-parse',
     'stream-chat',
@@ -116,6 +114,10 @@ const normalBundle = {
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),
+    }),
+    replace({
+      "import('types')": "import('../types')",
+      delimiters: ['', ''],
     }),
     external(),
     babel({
@@ -161,6 +163,10 @@ const fullBrowserBundle = {
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),
+    }),
+    replace({
+      "import('types')": "import('../types')",
+      delimiters: ['', ''],
     }),
     external(),
     babel({

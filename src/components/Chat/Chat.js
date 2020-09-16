@@ -1,8 +1,14 @@
-import React, { PureComponent } from 'react';
+// @ts-check
+
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
+import Dayjs from 'dayjs';
 import { ChatContext, TranslationContext } from '../../context';
-import { Streami18n } from '../../Streami18n';
+import { Streami18n } from '../../i18n';
+
+import { version } from '../../../package.json';
+
 /**
  * Chat - Wrapper component for Chat. The needs to be placed around any other chat components.
  * This Chat component provides the ChatContext to all other components.
@@ -17,153 +23,154 @@ import { Streami18n } from '../../Streami18n';
  * It also exposes the withChatContext HOC which you can use to consume the ChatContext
  *
  * @example ../../docs/Chat.md
- * @extends PureComponent
+ * @typedef {import('stream-chat').Channel | undefined} ChannelState
+ * @type {React.FC<{ client: import('types').StreamChatReactClient, theme?: string, i18nInstance?: Streami18n, initialNavOpen?: boolean }>}
  */
-class Chat extends PureComponent {
-  static propTypes = {
-    /** The StreamChat client object */
-    client: PropTypes.object.isRequired,
-    /**
-     *
-     * Theme could be used for custom styling of the components.
-     *
-     * You can override the classes used in our components under parent theme class.
-     *
-     * e.g. If you want to build a theme where background of message is black
-     *
-     * ```
-     *  <Chat client={client} theme={demo}>
-     *    <Channel>
-     *      <MessageList />
-     *    </Channel>
-     *  </Chat>
-     * ```
-     *
-     * ```scss
-     *  .demo.str-chat {
-     *    .str-chat__message-simple {
-     *      &-text-inner {
-     *        background-color: black;
-     *      }
-     *    }
-     *  }
-     * ```
-     *
-     * Built in available themes:
-     *
-     *  - `messaging light`
-     *  - `messaging dark`
-     *  - `team light`
-     *  - `team dark`
-     *  - `commerce light`
-     *  - `commerce dark`
-     *  - `livestream light`
-     *  - `livestream dark`
-     */
-    theme: PropTypes.string,
-  };
+const Chat = ({
+  client,
+  theme = 'messaging light',
+  i18nInstance,
+  initialNavOpen = true,
+  children,
+}) => {
+  const [translators, setTranslators] = useState(
+    /** @type { Required<import('types').TranslationContextValue>} */ ({
+      t: /** @param {string} key */ (key) => key,
+      tDateTimeParser: (input) => Dayjs(input),
+    }),
+  );
+  const [mutes, setMutes] = useState(
+    /** @type {import('stream-chat').Mute[]} */ ([]),
+  );
+  const [navOpen, setNavOpen] = useState(initialNavOpen);
+  const [channel, setChannel] = useState(
+    /** @type {ChannelState} */ (undefined),
+  );
 
-  static defaultProps = {
-    theme: 'messaging light',
-  };
+  const openMobileNav = () => setTimeout(() => setNavOpen(true), 100);
+  const closeMobileNav = () => setNavOpen(false);
+  const clientMutes = client?.user?.mutes;
 
-  constructor(props) {
-    super(props);
+  useEffect(() => {
+    const userAgent = client.getUserAgent();
+    if (!userAgent.includes('stream-chat-react')) {
+      // should result in something like:
+      // 'stream-chat-react-2.3.2-stream-chat-javascript-client-browser-2.2.2'
+      client.setUserAgent(`stream-chat-react-${version}-${userAgent}`);
+    }
+    // don't want client in dep array because it is a required
+    // prop for this component and we only want this run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    this.state = {
-      // currently active channel
-      channel: {},
-      navOpen: true,
-      error: false,
-      mutes: [],
+  useEffect(() => {
+    setMutes(clientMutes || []);
+
+    /** @param {import('stream-chat').Event} e */
+    const handleEvent = (e) => {
+      if (e.type === 'notification.mutes_updated') setMutes(e.me?.mutes || []);
     };
-  }
+    if (client) client.on(handleEvent);
+    return () => client && client.off(handleEvent);
+  }, [client, clientMutes]);
 
-  async componentDidMount() {
-    const { i18nInstance } = this.props;
+  useEffect(() => {
     let streami18n;
+    if (i18nInstance instanceof Streami18n) streami18n = i18nInstance;
+    else streami18n = new Streami18n({ language: 'en' });
 
-    if (i18nInstance && i18nInstance instanceof Streami18n) {
-      streami18n = i18nInstance;
-    } else {
-      streami18n = new Streami18n({ language: 'en' });
-    }
-
-    streami18n.registerSetLanguageCallback((t) => {
-      this.setState({ t });
-    });
-
-    const { t, tDateTimeParser } = await streami18n.getTranslators();
-    this.setState({
-      t,
-      tDateTimeParser,
-      mutes: this.props.client?.user?.mutes || [],
-    });
-    this.props.client.on(this.handleEvent);
-  }
-
-  handleEvent = (e) => {
-    if (e.type === 'notification.mutes_updated') {
-      this.setState({ mutes: e.me.mutes || [] });
-    }
-  };
-
-  setActiveChannel = async (channel, watchers = {}, e) => {
-    if (e !== undefined && e.preventDefault) {
-      e.preventDefault();
-    }
-    if (Object.keys(watchers).length) {
-      await channel.query({ watch: true, watchers });
-    }
-    this.setState(() => ({
-      channel,
-    }));
-    if (this.state.navOpen) {
-      this.closeMobileNav();
-    }
-  };
-
-  openMobileNav = () => {
-    setTimeout(() => {
-      this.setState({
-        navOpen: true,
-      });
-    }, 100);
-  };
-
-  closeMobileNav = () => {
-    this.setState({
-      navOpen: false,
-    });
-  };
-
-  getContext = () => ({
-    client: this.props.client,
-    channel: this.state.channel,
-    setActiveChannel: this.setActiveChannel,
-    openMobileNav: this.openMobileNav,
-    closeMobileNav: this.closeMobileNav,
-    mutes: this.state.mutes,
-    navOpen: this.state.navOpen,
-    theme: this.props.theme,
-  });
-
-  render() {
-    if (!this.state.t) return null;
-
-    return (
-      <ChatContext.Provider value={this.getContext()}>
-        <TranslationContext.Provider
-          value={{
-            t: this.state.t,
-            tDateTimeParser: this.state.tDateTimeParser,
-          }}
-        >
-          {this.props.children}
-        </TranslationContext.Provider>
-      </ChatContext.Provider>
+    streami18n.registerSetLanguageCallback((t) =>
+      setTranslators((prevTranslator) => ({ ...prevTranslator, t })),
     );
-  }
-}
+    streami18n.getTranslators().then((translator) => {
+      if (translator) setTranslators(translator);
+    });
+  }, [i18nInstance]);
+
+  const setActiveChannel = useCallback(
+    /**
+     * @param {ChannelState} activeChannel
+     * @param {{ limit?: number; offset?: number }} [watchers]
+     * @param {React.BaseSyntheticEvent} [e]
+     */
+    async (activeChannel, watchers = {}, e) => {
+      if (e && e.preventDefault) e.preventDefault();
+
+      if (activeChannel && Object.keys(watchers).length) {
+        await activeChannel.query({ watch: true, watchers });
+      }
+      setChannel(activeChannel);
+      closeMobileNav();
+    },
+    [],
+  );
+
+  if (!translators.t) return null;
+
+  return (
+    <ChatContext.Provider
+      value={{
+        client,
+        theme,
+        channel,
+        mutes,
+        navOpen,
+        setActiveChannel,
+        openMobileNav,
+        closeMobileNav,
+      }}
+    >
+      <TranslationContext.Provider value={translators}>
+        {children}
+      </TranslationContext.Provider>
+    </ChatContext.Provider>
+  );
+};
+
+Chat.propTypes = {
+  /** The StreamChat client object */
+  client: /** @type {PropTypes.Validator<import('stream-chat').StreamChat>} */ (PropTypes
+    .object.isRequired),
+  /**
+   *
+   * Theme could be used for custom styling of the components.
+   *
+   * You can override the classes used in our components under parent theme class.
+   *
+   * e.g. If you want to build a theme where background of message is black
+   *
+   * ```
+   *  <Chat client={client} theme={demo}>
+   *    <Channel>
+   *      <MessageList />
+   *    </Channel>
+   *  </Chat>
+   * ```
+   *
+   * ```scss
+   *  .demo.str-chat {
+   *    .str-chat__message-simple {
+   *      &-text-inner {
+   *        background-color: black;
+   *      }
+   *    }
+   *  }
+   * ```
+   *
+   * Built in available themes:
+   *
+   *  - `messaging light`
+   *  - `messaging dark`
+   *  - `team light`
+   *  - `team dark`
+   *  - `commerce light`
+   *  - `commerce dark`
+   *  - `livestream light`
+   *  - `livestream dark`
+   */
+  theme: PropTypes.string,
+  /** navOpen initial status */
+  initialNavOpen: PropTypes.bool,
+};
 
 export default Chat;

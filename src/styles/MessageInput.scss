@@ -25,6 +25,7 @@
   }
   &--textarea-wrapper {
     display: flex;
+    flex-wrap: wrap;
     flex: 1 0;
     position: relative;
     .str-chat__textarea {
@@ -118,6 +119,8 @@
   z-index: -1;
   border-radius: 4px 4px 0 0;
   margin: 0 10px;
+  max-height: 360px;
+  overflow-y: auto;
 
   &__list {
     margin: 0;

@@ -1,15 +1,17 @@
-import React from 'react';
+// @ts-check
+import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
+import { TranslationContext } from '../../context';
+import { ReplyIcon } from './icons';
 
-import { withTranslationContext } from '../../context';
-
+/** @type {React.FC<import("types").MessageRepliesCountButtonProps>} */
 const MessageRepliesCountButton = ({
   reply_count,
   labelSingle,
   labelPlural,
   onClick,
-  t,
 }) => {
+  const { t } = useContext(TranslationContext);
   let singleReplyText;
   let pluralReplyText;
 
@@ -21,7 +23,7 @@ const MessageRepliesCountButton = ({
     }
   }
 
-  if (reply_count > 1) {
+  if (reply_count && reply_count > 1) {
     if (labelPlural) {
       pluralReplyText = `${reply_count} ${labelPlural}`;
     } else {
@@ -34,15 +36,11 @@ const MessageRepliesCountButton = ({
   if (reply_count && reply_count !== 0) {
     return (
       <button
+        data-testid="replies-count-button"
         className="str-chat__message-replies-count-button"
         onClick={onClick}
       >
-        <svg width="18" height="15" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M.56 10.946H.06l-.002-.498L.025.92a.5.5 0 1 1 1-.004l.032 9.029H9.06v-4l9 4.5-9 4.5v-4H.56z"
-            fillRule="nonzero"
-          />
-        </svg>
+        <ReplyIcon />
         {reply_count === 1 ? singleReplyText : pluralReplyText}
       </button>
     );
@@ -69,4 +67,4 @@ MessageRepliesCountButton.propTypes = {
   onClick: PropTypes.func,
 };
 
-export default withTranslationContext(React.memo(MessageRepliesCountButton));
+export default React.memo(MessageRepliesCountButton);

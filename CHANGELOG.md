@@ -1,5 +1,207 @@
 # Changelog
 
+## [2.3.2](https://github.com/GetStream/stream-chat-react/releases/tag/v2.3.2) 2020-09-10
+
+- Upgrading stream-chat to 2.2.2
+
+## [2.3.1](https://github.com/GetStream/stream-chat-react/releases/tag/v2.3.1) 2020-09-10
+
+- Upgrading stream-chat to 2.2.1
+
+## [2.3.0](https://github.com/GetStream/stream-chat-react/releases/tag/v2.3.0) 2020-09-10
+
+- Upgraded `stream-chat` package to `v2.2.0`
+
+  - `stream-chat` package has been migrated to complete typescript in 2.x.x. There were no breaking change with underlying
+    javascript api and also typescript except for [Event type](https://github.com/GetStream/stream-chat-js/blob/master/CHANGELOG.md#august-26-2020---200). We recommend you to check the changelog for stream-chat-js repository as well for more details
+    if you are planning to upgrade from `stream-chat-react@2.2.x` to `stream-chat-react@2.3.x`
+  - This PR which contains typescript related changes in stream-chat-react for given upgrade - https://github.com/GetStream/stream-chat-react/pull/499/files
+
+## [2.2.2](https://github.com/GetStream/stream-chat-react/releases/tag/v2.2.2) 2020-08-21
+
+- Separated ConnectionStatus component from MessageList [82c8927](https://github.com/GetStream/stream-chat-react/commit/82c892773cd4aebed275259c93829ba6cb34b0be)
+- Bug fix: When Channel component is standalone used (without ChannelList), mentions feature wouldn't work [4f64abc](https://github.com/GetStream/stream-chat-react/commit/4f64abcda95c77344a973b2972965a70b0cd8295)
+
+## [2.2.1](https://github.com/GetStream/stream-chat-react/releases/tag/v2.2.1) 2020-07-31
+
+- Added listener for channel.hidden event and prop to override the default behaviour onChannelHidden [643af50](https://github.com/GetStream/stream-chat-react/commit/33739bd730f61da62e6fbe305a2807575643af50)
+- Added listener for channel.visible event and prop to override the default behaviour onChannelVisible [56e1208](https://github.com/GetStream/stream-chat-react/commit/5066052d0948310582c74476d3981965b56e1208)
+
+## [2.2.0](https://github.com/GetStream/stream-chat-react/releases/tag/v2.2.0) 2020-07-31
+
+- Added doMarkReadRequest prop to Channel component, to override markRead api calls [49a058b8](https://github.com/GetStream/stream-chat-react/commit/49a058b8489699fb3de4fc5f7041a4d09d9acd39)
+
+## [2.1.3](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.3) 2020-07-27
+
+- Fix empty reaction showing bubble [#473](https://github.com/GetStream/stream-chat-react/pull/473)
+
+## [2.1.2](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.2) 2020-07-27
+
+- Add formatDate to docs [#469](https://github.com/GetStream/stream-chat-react/pull/469)
+- Allow reaction override in Message components [#470](https://github.com/GetStream/stream-chat-react/pull/470)
+- Fix runtime require in browser bundle [#472](https://github.com/GetStream/stream-chat-react/pull/472)
+
+## [2.1.1](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.1) 2020-07-22
+
+- Bumped `react-file-utils` to `0.3.15` which includes an upgraded version of `blueimp-load-image` which makes it easier to use this library in SSR apps.
+
+## [2.1.0](https://github.com/GetStream/stream-chat-react/releases/tag/v2.1.0) 2020-07-22
+
+- Rename exported component `File` to `FileAttachment` to avoid overriding `window.File` in bundled release
+
+## [2.0.4](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.4) 2020-07-21
+
+- Fixed type issues
+- Fixed an issue with the mobile navigation
+- Added the ability to customize the datetime stamp on Message components using the `formatDate` prop
+
+## [2.0.3](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.3) 2020-07-20
+
+- All components using mutes get them using the useContext hook.
+- Performance updates
+- Fix for document.title when read_events are disabled
+- Added docs on using included hooks
+
+## [2.0.2](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.2) 2020-07-16
+
+- Fixed some issues with editing messages
+- Fixed some issues with muting/unmuting messages
+
+## [2.0.1](https://github.com/GetStream/stream-chat-react/releases/tag/v2.0.1) 2020-07-15
+
+We’re bumping `stream-chat-react` to version 2.0.1 because over the past three months we’ve been doing a major refactor of our codebase. The foundational work includes:
+
+- Major refactor and code cleanup
+- Components have been rewritten to use React Hooks
+- Added tests for all components
+- Performance improvements on MessageList
+- Upgraded dependencies
+
+### Breaking changes
+
+- Drop node 11, 13
+- Deprecating context HOC’s
+  Since we moved our library to rely on React Hooks moved the following HOC’s to use `useContext` :
+  - `withChannelContext`
+  - `withChatContext`
+  - `withTranslationContext`
+    This means we now directly use the context values from the context and they’re not passed down from the props anymore.
+- The `updateMessage` on the channel context does not support extraState anymore.
+- There no longer is a ref inside a ref in ReactionsList. Instead, the ref of the container div is directly forwarded by the component.
+
+### Addidtions
+
+- Triggers on MessageInput can now be overwritten using the autocompleteTriggers prop on `MessageInput`
+
+### Fixes
+
+- Fixed styling on autocomplete suggestions
+- Fixed YouTube video rendering in messages
+- Fixed an issue that allowed you to send empty messages
+- Bugfix in groupStyles calculations
+
+## [1.2.5](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.5) 2020-06-30
+
+- Added `LoadingIndicator` prop to MessageList
+- Fixed some minor styling issues with SafeAnchor
+
+## [1.2.4](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.4) 2020-06-30
+
+- Refactor and improvements to the Gallery Modal component
+
+## [1.2.3](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.3) 2020-06-30
+
+- Fixing types
+
+## [1.2.2](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.2) 2020-06-22
+
+- Fixing types
+
+## [1.2.1](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.1) 2020-06-17
+
+- Fixed an issue with our type definitions introduced in `1.2.0`
+
+## [1.2.0](https://github.com/GetStream/stream-chat-react/releases/tag/v1.2.0) 2020-06-16
+
+- @mentions now use the queryMembers endpoint enabling mentions in channels of more that 100 members
+- Fix for .mov videos
+- Refactors and a lot of new tests
+- Some small bug fixes
+
+## [1.1.2](https://github.com/GetStream/stream-chat-react/releases/tag/v1.1.2) 2020-06-11
+
+- Fixes issue with File uploads on MessageInputLarge
+- Make sure to only render videos if the browser supports it
+
+## [1.1.1](https://github.com/GetStream/stream-chat-react/releases/tag/v1.1.1) 2020-06-09
+
+- Fixes links when written as markdown
+- Allows app:// protocol in markdown links
+
+## [1.1.0](https://github.com/GetStream/stream-chat-react/releases/tag/v1.1.0) 2020-06-08
+
+**Breaking Change**
+
+- Migrated ChannelList component to functional component.
+
+  `ChannelList` component comes with some default handlers for following events.
+
+  1. notification.message_new
+  2. notification.added_to_channel
+  3. notification.removed_from_channel
+  4. channel.updated
+  5. channel.deleted
+  6. channel.truncated
+
+  But these default event handlers can be overriden by providing corresponding
+  prop functions for handling the event. For example, to override `notification.message_new` event,
+  you can provide prop function - `onMessageNew`, to ChannelList component.
+
+  Until now, ChannelList component was class based, so function prop (e.g., `onMessageNew`) used to accept
+  following 2 parameters:
+
+  1. thisArg - `this` reference of component. You could use this to update the state of the
+     component as well. e.g., `thisArg.setState({ ... })`
+  2. event - Event object
+
+  In this release, we have migrated ChannelList component to functional component and thus
+  `thisArg` is no longer accessible. Instead we provide the setter (from `useState` hook) for channels.
+  So updated params to these custom event handlers (prop functions) is as follow:
+
+  1. setChannels {function} Setter for channels.
+  2. event {object} Event object
+
+  And same applies to all the rest of the custom event handlers:
+
+  - onMessageNew
+  - onAddedToChannel
+  - onRemovedFromChannel
+  - onChannelUpdated
+  - onChannelTruncated
+  - onChannelDeleted
+
+**Fixes:**
+
+- Correctly set attachment type based on mime type
+- Fixes to audio component
+- Mentions: filter out no-longer-mentioned users on submit
+
+**Other:**
+
+- Type fixes
+- Tests
+- Refactors
+
+## [1.0.0](https://github.com/GetStream/stream-chat-react/releases/tag/v1.0.0) 2020-05-15
+
+We've already been on a v1 release for a while but never updated our versioning. Right now we're in the process of rewriting our components to be more future proof and we started using hooks, hence the v1.0.0 today.
+
+**Breaking change:** `stream-chat-react` now relies on hooks and will need at least `v16.8.x` of `react` to work.
+
+- Fixed some issues with mutes
+- Fixed issues with attachments
+- Added tests
+
 ## [0.12.1](https://github.com/GetStream/stream-chat-react/releases/tag/v0.12.1) 2020-05-12
 
 - Render video uploads as videos, not files
