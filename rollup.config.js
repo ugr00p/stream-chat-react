@@ -42,7 +42,6 @@ const normalBundle = {
   ],
   external: [
     'linkifyjs',
-    'linkifyjs/lib/linkify',
     'dayjs',
     'dayjs/plugin/calendar',
     'dayjs/plugin/updateLocale',
@@ -80,6 +79,7 @@ const normalBundle = {
     'react-markdown',
     'react-fast-compare',
     'immutable',
+    'react-virtuoso',
     'url-parse',
     'stream-chat',
     'pretty-bytes',
@@ -187,6 +187,7 @@ const fullBrowserBundle = {
       namedExports: {
         'prop-types': Object.keys(PropTypes),
         'node_modules/react-is/index.js': ['isValidElementType'],
+        'node_modules/linkifyjs/index.js': ['find'],
       },
     }),
     json(),
