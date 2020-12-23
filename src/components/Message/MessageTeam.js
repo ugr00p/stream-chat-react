@@ -6,7 +6,8 @@ import MessageRepliesCountButton from './MessageRepliesCountButton';
 import { isOnlyEmojis, renderText, smartRender } from '../../utils';
 import { ChannelContext, TranslationContext } from '../../context';
 import { Attachment as DefaultAttachment } from '../Attachment';
-import { Avatar } from '../Avatar';
+import { Avatar as DefaultAvatar } from '../Avatar';
+import { MML } from '../MML';
 import { MessageInput, EditMessageForm } from '../MessageInput';
 import { MessageActions } from '../MessageActions';
 import { Tooltip } from '../Tooltip';
@@ -53,6 +54,7 @@ const MessageTeam = (props) => {
     initialMessage,
     unsafeHTML,
     getMessageActions,
+    Avatar = DefaultAvatar,
     MessageDeleted,
     ReactionsList = DefaultReactionsList,
     ReactionSelector = DefaultReactionSelector,
@@ -94,7 +96,9 @@ const MessageTeam = (props) => {
   const clearEdit = propClearEdit || ownClearEditing;
   const handleOpenThread = useOpenThreadHandler(message);
   const handleReaction = useReactionHandler(message);
+  const handleAction = useActionHandler(message);
   const retryHandler = useRetryHandler();
+
   const retry = propHandleRetry || retryHandler;
   const { onMentionsClick, onMentionsHover } = useMentionsUIHandler(message, {
     onMentionsClick: propOnMentionsClick,
@@ -225,6 +229,7 @@ const MessageTeam = (props) => {
                       handleReaction={propHandleReaction || handleReaction}
                       latest_reactions={message.latest_reactions}
                       reaction_counts={message.reaction_counts || undefined}
+                      own_reactions={message.own_reactions}
                       detailedView={true}
                       ref={reactionSelectorRef}
                     />
@@ -299,11 +304,19 @@ const MessageTeam = (props) => {
               </span>
             )}
 
+            {message?.mml && (
+              <MML
+                source={message.mml}
+                actionHandler={handleAction}
+                align="left"
+              />
+            )}
+
             {message && message.text === '' && (
               <MessageTeamAttachments
                 Attachment={props.Attachment}
                 message={message}
-                handleAction={propHandleAction}
+                handleAction={propHandleAction || handleAction}
               />
             )}
 
@@ -315,6 +328,7 @@ const MessageTeam = (props) => {
                   reaction_counts={message.reaction_counts || undefined}
                   handleReaction={propHandleReaction || handleReaction}
                   reactions={message.latest_reactions}
+                  own_reactions={message.own_reactions}
                 />
               )}
             {message?.status === 'failed' && (
@@ -337,6 +351,7 @@ const MessageTeam = (props) => {
             )}
           </div>
           <MessageTeamStatus
+            Avatar={Avatar}
             readBy={props.readBy}
             message={message}
             threadList={threadList}
@@ -347,7 +362,7 @@ const MessageTeam = (props) => {
             <MessageTeamAttachments
               Attachment={props.Attachment}
               message={message}
-              handleAction={propHandleAction}
+              handleAction={propHandleAction || handleAction}
             />
           )}
           {message?.latest_reactions &&
@@ -358,6 +373,7 @@ const MessageTeam = (props) => {
                 reaction_counts={message.reaction_counts || undefined}
                 handleReaction={propHandleReaction || handleReaction}
                 reactions={message.latest_reactions}
+                own_reactions={message.own_reactions}
               />
             )}
           {!threadList && message && (
@@ -374,7 +390,14 @@ const MessageTeam = (props) => {
 
 /** @type {(props: import('types').MessageTeamStatusProps) => React.ReactElement | null} */
 const MessageTeamStatus = (props) => {
-  const { readBy, message, threadList, lastReceivedId, t: propT } = props;
+  const {
+    Avatar = DefaultAvatar,
+    readBy,
+    message,
+    threadList,
+    lastReceivedId,
+    t: propT,
+  } = props;
   const { client } = useContext(ChannelContext);
   const { t: contextT } = useContext(TranslationContext);
   const t = propT || contextT;
@@ -446,17 +469,13 @@ const MessageTeamStatus = (props) => {
 
 /** @type {(props: import('types').MessageTeamAttachmentsProps) => React.ReactElement | null} Typescript syntax */
 const MessageTeamAttachments = (props) => {
-  const {
-    Attachment = DefaultAttachment,
-    message,
-    handleAction: propHandleAction,
-  } = props;
-  const handleAction = useActionHandler(message);
+  const { Attachment = DefaultAttachment, message, handleAction } = props;
+
   if (message?.attachments && Attachment) {
     return (
       <Attachment
         attachments={message.attachments}
-        actionHandler={propHandleAction || handleAction}
+        actionHandler={handleAction}
       />
     );
   }
@@ -472,6 +491,12 @@ MessageTeam.propTypes = {
    * Default: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
    * */
   Attachment: /** @type {PropTypes.Validator<React.ElementType<import('types').WrapperAttachmentUIComponentProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to display user avatar
+   *
+   * Defaults to and accepts same props as: [Avatar](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Avatar/Avatar.js)
+   * */
+  Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
    *
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.

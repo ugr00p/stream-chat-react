@@ -1,5 +1,64 @@
 # Changelog
 
+## [3.4.3](https://github.com/GetStream/stream-chat-react/releases/tag/v3.4.3) 2020-12-16
+
+## Fix
+
+- Browser bundle undefined variable
+
+## [3.4.2](https://github.com/GetStream/stream-chat-react/releases/tag/v3.4.2) 2020-12-16
+
+## Adjustment
+
+- Changes default smiley face icon for reaction selector. [#645](https://github.com/GetStream/stream-chat-react/pull/645)
+
+## [3.4.1](https://github.com/GetStream/stream-chat-react/releases/tag/v3.4.1) 2020-12-15
+
+## Feature
+
+- Adds custom UI component prop `ThreadHeader` to `Thread` to override the default header. [#642](https://github.com/GetStream/stream-chat-react/pull/642)
+
+## [3.4.0](https://github.com/GetStream/stream-chat-react/releases/tag/v3.4.0) 2020-12-14
+
+## Feature
+
+- MML is supported by default in all Message components except `MessageLiveStream`. [#562](https://github.com/GetStream/stream-chat-react/pull/562)
+
+  For more detail about how to use MML please refer to [mml-react](https://getstream.github.io/mml-react/) docs.
+
+## [3.3.2](https://github.com/GetStream/stream-chat-react/releases/tag/v3.3.2) 2020-12-11
+
+## Fix
+
+- Add error handling for `loadMoreThread` API request [#627](https://github.com/GetStream/stream-chat-react/pull/627)
+
+## [3.3.1](https://github.com/GetStream/stream-chat-react/releases/tag/v3.3.1) 2020-12-9
+
+## Fix
+
+- Add additional user role check for `isModerator` boolean [#625](https://github.com/GetStream/stream-chat-react/pull/625)
+
+## [3.3.0](https://github.com/GetStream/stream-chat-react/releases/tag/v3.3.0) 2020-12-3
+
+## Feature
+
+- Allow all instances of Avatar to be overridden with a custom component via props [#610](https://github.com/GetStream/stream-chat-react/pull/610)
+
+## [3.2.4](https://github.com/GetStream/stream-chat-react/releases/tag/v3.2.4) 2020-11-19
+
+## Fix
+
+- Prevent firing LoadMore requests when browser is offline [#614](https://github.com/GetStream/stream-chat-react/pull/614)
+- Support muted channels in ChannelPreview [#608](https://github.com/GetStream/stream-chat-react/pull/608)
+- `ChannelContext.sendMessage` type accepts missing text [#613](https://github.com/GetStream/stream-chat-react/pull/613)
+
+## [3.2.3](https://github.com/GetStream/stream-chat-react/releases/tag/v3.2.3) 2020-11-13
+
+## Fix
+
+- Email links are clickable [#607](https://github.com/GetStream/stream-chat-react/pull/607)
+- `message.own_reactions` passed into Reaction components [#604](https://github.com/GetStream/stream-chat-react/pull/604)
+
 ## [3.2.2](https://github.com/GetStream/stream-chat-react/releases/tag/v3.2.2) 2020-11-05
 
 ## Fix

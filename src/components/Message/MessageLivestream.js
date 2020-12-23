@@ -14,7 +14,7 @@ import MessageRepliesCountButton from './MessageRepliesCountButton';
 import { isOnlyEmojis, renderText, smartRender } from '../../utils';
 import { ChannelContext, TranslationContext } from '../../context';
 
-import { Avatar } from '../Avatar';
+import { Avatar as DefaultAvatar } from '../Avatar';
 import { Attachment as DefaultAttachment } from '../Attachment';
 import { MessageInput, EditMessageForm } from '../MessageInput';
 import {
@@ -68,6 +68,7 @@ const MessageLivestreamComponent = (props) => {
     onMentionsClickMessage: propOnMentionsClick,
     onMentionsHoverMessage: propOnMentionsHover,
     Attachment = DefaultAttachment,
+    Avatar = DefaultAvatar,
     t: propT,
     tDateTimeParser: propTDateTimeParser,
     MessageDeleted,
@@ -174,6 +175,7 @@ const MessageLivestreamComponent = (props) => {
             detailedView
             latest_reactions={message?.latest_reactions}
             reaction_counts={message?.reaction_counts || undefined}
+            own_reactions={message.own_reactions}
             ref={reactionSelectorRef}
           />
         )}
@@ -276,6 +278,7 @@ const MessageLivestreamComponent = (props) => {
               <ReactionsList
                 reaction_counts={message.reaction_counts || undefined}
                 reactions={message.latest_reactions}
+                own_reactions={message.own_reactions}
                 handleReaction={propHandleReaction || handleReaction}
               />
             )}
@@ -402,6 +405,12 @@ MessageLivestreamComponent.propTypes = {
    * Default: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
    * */
   Attachment: /** @type {PropTypes.Validator<React.ElementType<import('types').WrapperAttachmentUIComponentProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to display user avatar
+   *
+   * Defaults to and accepts same props as: [Avatar](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Avatar/Avatar.js)
+   * */
+  Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
    *
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.

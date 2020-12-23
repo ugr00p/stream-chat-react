@@ -13,6 +13,7 @@ import {
 import { ChannelContext } from '../../../context';
 import MessageTeam from '../MessageTeam';
 import { Avatar as AvatarMock } from '../../Avatar';
+import { MML as MMLMock } from '../../MML';
 import { MessageInput as MessageInputMock } from '../../MessageInput';
 import { MessageActions as MessageActionsMock } from '../../MessageActions';
 
@@ -27,6 +28,8 @@ jest.mock('../../MessageInput', () => ({
 jest.mock('../../MessageActions', () => ({
   MessageActions: jest.fn(() => <div />),
 }));
+
+jest.mock('../../MML', () => ({ MML: jest.fn(() => <div />) }));
 
 const alice = generateUser({ name: 'alice', image: 'alice-avatar.jpg' });
 const bob = generateUser({ name: 'bob', image: 'bob-avatar.jpg' });
@@ -148,6 +151,15 @@ describe('<MessageTeam />', () => {
     expect(getByTestId('custom-reaction-list')).toBeInTheDocument();
   });
 
+  it('should render custom avatar component when one is given', async () => {
+    const message = generateAliceMessage();
+    const CustomAvatar = () => <div data-testid="custom-avatar">Avatar</div>;
+    const { getByTestId } = await renderMessageTeam(message, {
+      Avatar: CustomAvatar,
+    });
+    expect(getByTestId('custom-avatar')).toBeInTheDocument();
+  });
+
   it('should render message input when in edit mode', async () => {
     const message = generateAliceMessage();
     const updateMessage = jest.fn();
@@ -163,6 +175,16 @@ describe('<MessageTeam />', () => {
         updateMessage,
         clearEditingState,
       }),
+      {},
+    );
+  });
+
+  it('should render MML', async () => {
+    const mml = '<mml>text</mml>';
+    const message = generateAliceMessage({ mml });
+    await renderMessageTeam(message);
+    expect(MMLMock).toHaveBeenCalledWith(
+      expect.objectContaining({ source: mml, align: 'left' }),
       {},
     );
   });

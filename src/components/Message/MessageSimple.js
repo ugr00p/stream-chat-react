@@ -5,7 +5,8 @@ import MessageRepliesCountButton from './MessageRepliesCountButton';
 import { smartRender } from '../../utils';
 import { TranslationContext, ChannelContext } from '../../context';
 import { Attachment as DefaultAttachment } from '../Attachment';
-import { Avatar } from '../Avatar';
+import { Avatar as DefaultAvatar } from '../Avatar';
+import { MML } from '../MML';
 import { Modal } from '../Modal';
 import { MessageInput, EditMessageForm } from '../MessageInput';
 import { Tooltip } from '../Tooltip';
@@ -78,6 +79,7 @@ const MessageSimple = (props) => {
   } = useReactionClick(message, reactionSelectorRef);
   const {
     Attachment = DefaultAttachment,
+    Avatar = DefaultAvatar,
     MessageDeleted = DefaultMessageDeleted,
     ReactionSelector = DefaultReactionSelector,
     ReactionsList = DefaultReactionList,
@@ -167,6 +169,7 @@ const MessageSimple = (props) => {
                     <ReactionsList
                       reactions={message.latest_reactions}
                       reaction_counts={message.reaction_counts || undefined}
+                      own_reactions={message.own_reactions}
                       onClick={onReactionListClick}
                       reverse={true}
                     />
@@ -177,6 +180,7 @@ const MessageSimple = (props) => {
                     detailedView
                     reaction_counts={message.reaction_counts || undefined}
                     latest_reactions={message.latest_reactions}
+                    own_reactions={message.own_reactions}
                     ref={reactionSelectorRef}
                   />
                 )}
@@ -203,6 +207,15 @@ const MessageSimple = (props) => {
                 reactionSelectorRef={reactionSelectorRef}
               />
             )}
+
+            {message.mml && (
+              <MML
+                source={message.mml}
+                actionHandler={handleAction}
+                align={isMyMessage ? 'right' : 'left'}
+              />
+            )}
+
             {!threadList && message.reply_count !== 0 && (
               <div className="str-chat__message-simple-reply-button">
                 <MessageRepliesCountButton
@@ -236,6 +249,7 @@ const MessageSimple = (props) => {
 
 /** @type { React.FC<import('types').MessageSimpleProps> } */
 const MessageSimpleStatus = ({
+  Avatar = DefaultAvatar,
   readBy,
   message,
   threadList,
@@ -319,6 +333,12 @@ MessageSimple.propTypes = {
    * Default: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
    * */
   Attachment: /** @type {PropTypes.Validator<React.ElementType<import('types').WrapperAttachmentUIComponentProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to display user avatar
+   *
+   * Defaults to and accepts same props as: [Avatar](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Avatar/Avatar.js)
+   * */
+  Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *

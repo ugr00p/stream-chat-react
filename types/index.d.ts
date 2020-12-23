@@ -154,7 +154,7 @@ export interface ChannelContextValue extends ChatContextValue {
   acceptedFiles?: string[];
   maxNumberOfFiles?: number;
   sendMessage?(message: {
-    text: string;
+    text?: string;
     attachments?: (
       | Client.Attachment<Record<string, unknown>>
       | {
@@ -311,6 +311,7 @@ export interface ChannelOptions {
 }
 
 export interface ChannelListProps {
+  Avatar?: React.ElementType<AvatarProps>;
   EmptyStateIndicator?: React.ElementType<EmptyStateIndicatorProps>;
   /** The Preview to use, defaults to ChannelPreviewLastMessage */
   Preview?: React.ElementType<ChannelPreviewUIComponentProps>;
@@ -374,6 +375,7 @@ export interface ChannelListUIComponentProps {
   loading?: boolean;
   sidebarImage?: string | null;
   showSidebar?: boolean;
+  Avatar?: React.ElementType<AvatarProps>;
   /**
    * Loading indicator UI Component. It will be displayed if `loading` prop is true.
    *
@@ -397,6 +399,7 @@ export interface ChannelPreviewProps {
   channel: Client.Channel;
   /** Current selected channel object */
   activeChannel?: Client.Channel;
+  Avatar?: React.ElementType<AvatarProps>;
   /**
    * Available built-in options (also accepts the same props as):
    *
@@ -490,6 +493,18 @@ export interface LoadingErrorIndicatorProps extends TranslationContextValue {
   error?: Error | null;
 }
 
+export interface MMLProps {
+  /** mml source string */
+  source: string;
+  /**
+   * submit handler for mml actions
+   * @param data {object}
+   */
+  actionHandler?(data: Record<string, any>): void;
+  /** align mml components to left/right */
+  align?: 'left' | 'right';
+}
+
 export interface AvatarProps {
   /** image url */
   image?: string | null;
@@ -560,7 +575,7 @@ export interface VirtualizedMessageListInternalProps {
   MessageDeleted?: React.ElementType<MessageDeletedProps>;
   /** Custom UI component to display system messages */
   MessageSystem?: React.ElementType<EventComponentProps>;
-  /** The UI Indicator to use when MessagerList or ChannelList is empty */
+  /** The UI Indicator to use when MessageList or ChannelList is empty */
   EmptyStateIndicator?: React.ElementType<EmptyStateIndicatorProps>;
   /** The UI Indicator to use when someone is typing, default to null */
   TypingIndicator?: React.ElementType<TypingIndicatorProps>;
@@ -636,6 +651,7 @@ export interface MessageListProps {
   removeMessage?(updatedMessage: Client.MessageResponse): void;
   Message?: React.ElementType;
   Attachment?: React.ElementType;
+  Avatar?: React.ElementType<AvatarProps>;
   onMentionsClick?(
     e: React.MouseEvent,
     mentioned_users: Client.UserResponse[],
@@ -648,6 +664,7 @@ export interface MessageListProps {
 }
 
 export interface ChannelHeaderProps {
+  Avatar?: React.ElementType<AvatarProps>;
   /** Set title manually */
   title?: string;
   /** Show a little indicator that the channel is live right now */
@@ -807,9 +824,9 @@ export interface BaseAttachmentUIComponentProps {
 		Examples include canceling a \/giphy command or shuffling the results.
 		*/
   actionHandler?(
-    name: string,
-    value: string,
-    event: React.BaseSyntheticEvent,
+    name: string | Record<string, any>,
+    value?: string,
+    event?: React.BaseSyntheticEvent,
   ): void;
   Card?: React.ComponentType<CardProps>;
   File?: React.ComponentType<FileAttachmentProps>;
@@ -850,6 +867,7 @@ export interface MessageProps extends TranslationContextValue {
   ReactionsList?: React.ElementType<ReactionsListProps>;
   /** Allows you to overwrite the attachment component */
   Attachment?: React.ElementType<WrapperAttachmentUIComponentProps>;
+  Avatar?: React.ElementType<AvatarProps>;
   /** render HTML instead of markdown. Posting HTML is only allowed server-side */
   unsafeHTML?: boolean;
   lastReceivedId?: string | null;
@@ -963,13 +981,22 @@ export interface ThreadProps {
   additionalMessageListProps?: object;
   additionalMessageInputProps?: object;
   MessageInput?: React.ElementType<MessageInputProps>;
+  ThreadHeader?: React.ElementType<ThreadHeaderProps>;
+}
+
+export interface ThreadHeaderProps {
+  closeThread?(event: React.SyntheticEvent): void;
+  t?: i18next.TFunction;
+  thread?: ReturnType<StreamChatChannelState['messageToImmutable']> | null;
 }
 
 export interface TypingIndicatorProps {
+  Avatar?: React.ElementType<AvatarProps>;
   avatarSize?: number;
 }
 
 export interface ReactionSelectorProps {
+  Avatar?: React.ElementType<AvatarProps>;
   /**
    * Array of latest reactions.
    * Reaction object has following structure:
@@ -996,6 +1023,7 @@ export interface ReactionSelectorProps {
   reaction_counts?: {
     [reaction_type: string]: number;
   };
+  own_reactions?: StreamChatReactMessageResponse['own_reactions'];
   /** Enable the avatar display */
   detailedView?: boolean;
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
@@ -1039,6 +1067,7 @@ export interface ReactionsListProps {
   reaction_counts?: {
     [reaction_type: string]: number;
   };
+  own_reactions?: StreamChatReactMessageResponse['own_reactions'];
   /** Provide a list of reaction options [{name: 'angry', emoji: 'angry'}] */
   reactionOptions?: MinimalEmojiInterface[];
   onClick?(): void;
@@ -1127,10 +1156,12 @@ export interface UserItemProps {
     id?: string | null;
     image?: string | null;
   };
+  Avatar?: React.ElementType<AvatarProps>;
 }
 
 export interface EventComponentProps {
   message: StreamChatReactMessageResponse;
+  Avatar?: React.ElementType<AvatarProps>;
 }
 
 export interface GalleryProps {
@@ -1320,9 +1351,7 @@ export class MessageInputSmall extends React.PureComponent<
   any
 > {}
 
-export class Attachment extends React.PureComponent<
-  WrapperAttachmentUIComponentProps
-> {}
+export class Attachment extends React.PureComponent<WrapperAttachmentUIComponentProps> {}
 
 export class ChannelList extends React.PureComponent<ChannelListProps> {}
 export class ChannelListMessenger extends React.PureComponent<
@@ -1379,6 +1408,7 @@ export interface MessageTeamAttachmentsProps {
   ): void;
 }
 export interface MessageTeamStatusProps {
+  Avatar?: React.ElementType<AvatarProps>;
   t?: i18next.TFunction;
   threadList?: boolean;
   lastReceivedId?: string | null;
@@ -1461,9 +1491,9 @@ export class MessageDeleted extends React.PureComponent<
 export function useActionHandler(
   message: Client.MessageResponse | undefined,
 ): (
-  name: string,
-  value: string,
-  event: React.MouseEvent<HTMLElement>,
+  dataOrName: string | Record<string, any>,
+  value?: string,
+  event?: BaseSyntheticEvent,
 ) => Promise<void>;
 
 export function useDeleteHandler(

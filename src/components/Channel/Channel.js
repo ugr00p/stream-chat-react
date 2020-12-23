@@ -198,7 +198,10 @@ const ChannelInner = ({
         ) {
           if (!document.hidden) {
             markReadThrottled();
-          } else if (channel.getConfig()?.read_events) {
+          } else if (
+            channel.getConfig()?.read_events &&
+            !channel.muteStatus().muted
+          ) {
             const unread = channel.countUnread(lastRead.current);
             document.title = `(${unread}) ${originalTitle.current}`;
           }
@@ -290,7 +293,7 @@ const ChannelInner = ({
 
   const loadMore = useCallback(
     async (limit = 100) => {
-      if (!online.current) return 0;
+      if (!online.current || !window.navigator.onLine) return 0;
       // prevent duplicate loading events...
       const oldestMessage = state.messages[0];
       if (state.loadingMore || oldestMessage?.status !== 'received') return 0;
@@ -485,20 +488,25 @@ const ChannelInner = ({
       dispatch({ type: 'closeThread' });
       return;
     }
+
     const oldMessages = channel.state.threads[parentID] || [];
     const oldestMessageID = oldMessages[0]?.id;
     const limit = 50;
-    const queryResponse = await channel.getReplies(parentID, {
-      limit,
-      id_lt: oldestMessageID,
-    });
 
-    const threadHasMoreMessages = queryResponse.messages.length === limit;
+    try {
+      const queryResponse = await channel.getReplies(parentID, {
+        limit,
+        id_lt: oldestMessageID,
+      });
 
-    const newThreadMessages = channel.state.threads[parentID] || [];
+      const threadHasMoreMessages = queryResponse.messages.length === limit;
+      const newThreadMessages = channel.state.threads[parentID] || [];
 
-    // next set loadingMore to false so we can start asking for more data...
-    loadMoreThreadFinished(threadHasMoreMessages, newThreadMessages);
+      // next set loadingMore to false so we can start asking for more data...
+      loadMoreThreadFinished(threadHasMoreMessages, newThreadMessages);
+    } catch (e) {
+      loadMoreThreadFinished(false, oldMessages);
+    }
   }, [channel, loadMoreThreadFinished, state.thread, state.threadLoadingMore]);
 
   const closeThread = useCallback((e) => {

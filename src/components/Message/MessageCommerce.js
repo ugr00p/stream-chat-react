@@ -3,7 +3,8 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { smartRender } from '../../utils';
 import { Attachment as DefaultAttachment } from '../Attachment';
-import { Avatar } from '../Avatar';
+import { Avatar as DefaultAvatar } from '../Avatar';
+import { MML } from '../MML';
 import {
   ReactionsList as DefaultReactionsList,
   ReactionSelector as DefaultReactionSelector,
@@ -32,6 +33,7 @@ import MessageTimestamp from './MessageTimestamp';
  * @example ../../docs/MessageCommerce.md
  * @type { React.FC<import('types').MessageCommerceProps> }
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 const MessageCommerce = (props) => {
   const {
     message,
@@ -51,6 +53,7 @@ const MessageCommerce = (props) => {
     tDateTimeParser: propTDateTimeParser,
   } = props;
   const Attachment = props.Attachment || DefaultAttachment;
+  const Avatar = props.Avatar || DefaultAvatar;
   const hasReactions = messageHasReactions(message);
   const handleAction = useActionHandler(message);
   const handleReaction = useReactionHandler(message);
@@ -135,6 +138,7 @@ const MessageCommerce = (props) => {
                 <ReactionsList
                   reactions={message.latest_reactions}
                   reaction_counts={message.reaction_counts || undefined}
+                  own_reactions={message.own_reactions}
                   onClick={onReactionListClick}
                 />
               )}
@@ -145,6 +149,7 @@ const MessageCommerce = (props) => {
                   detailedView
                   reaction_counts={message.reaction_counts || undefined}
                   latest_reactions={message.latest_reactions}
+                  own_reactions={message.own_reactions}
                   ref={reactionSelectorRef}
                 />
               )}
@@ -155,6 +160,14 @@ const MessageCommerce = (props) => {
             <Attachment
               attachments={message.attachments}
               actionHandler={propHandleAction || handleAction}
+            />
+          )}
+
+          {message?.mml && (
+            <MML
+              source={message.mml}
+              actionHandler={handleAction}
+              align={isMyMessage ? 'right' : 'left'}
             />
           )}
 
@@ -217,6 +230,12 @@ MessageCommerce.propTypes = {
    * Default: [Attachment](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Attachment.js)
    * */
   Attachment: /** @type {PropTypes.Validator<React.ElementType<import('types').WrapperAttachmentUIComponentProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to display user avatar
+   *
+   * Defaults to and accepts same props as: [Avatar](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Avatar/Avatar.js)
+   * */
+  Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
    *
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
