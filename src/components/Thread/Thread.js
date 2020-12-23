@@ -82,6 +82,8 @@ class Thread extends PureComponent {
         ```
     */
     MessageInput: /** @type {PropTypes.Validator<React.ComponentType<import('types').MessageInputProps>>} */ (PropTypes.elementType),
+
+    ThreadStyle:  PropTypes.object,
   };
 
   static defaultProps = {
@@ -89,6 +91,7 @@ class Thread extends PureComponent {
     threadLoadingMore: true,
     fullWidth: false,
     autoFocus: true,
+    ThreadStyle: {},
     MessageInput,
   };
 
@@ -219,6 +222,7 @@ class ThreadInner extends React.PureComponent {
       closeThread,
       thread,
       ThreadHeader = DefaultThreadHeader,
+      ThreadStyle,
     } = this.props;
 
     if (!thread) {
@@ -231,6 +235,7 @@ class ThreadInner extends React.PureComponent {
         className={`str-chat__thread ${
           this.props.fullWidth ? 'str-chat__thread--full' : ''
         }`}
+        style={ ThreadStyle? ThreadStyle: {} }
       >
         <ThreadHeader closeThread={closeThread} t={t} thread={thread} />
         <div className="str-chat__thread-list" ref={this.messageList}>

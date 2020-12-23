@@ -982,6 +982,7 @@ export interface ThreadProps {
   additionalMessageInputProps?: object;
   MessageInput?: React.ElementType<MessageInputProps>;
   ThreadHeader?: React.ElementType<ThreadHeaderProps>;
+  ThreadStyle?: object,
 }
 
 export interface ThreadHeaderProps {
