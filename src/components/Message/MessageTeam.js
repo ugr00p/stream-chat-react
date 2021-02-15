@@ -8,7 +8,10 @@ import { ChannelContext, TranslationContext } from '../../context';
 import { Attachment as DefaultAttachment } from '../Attachment';
 import { Avatar as DefaultAvatar } from '../Avatar';
 import { MML } from '../MML';
-import { MessageInput, EditMessageForm } from '../MessageInput';
+import {
+  MessageInput,
+  EditMessageForm as DefaultEditMessageForm,
+} from '../MessageInput';
 import { MessageActions } from '../MessageActions';
 import { Tooltip } from '../Tooltip';
 import { LoadingIndicator } from '../Loading';
@@ -29,10 +32,11 @@ import {
 } from './hooks';
 import { areMessagePropsEqual, getReadByTooltipText } from './utils';
 import {
+  DeliveredCheckIcon,
+  ErrorIcon,
+  PinIndicator as DefaultPinIndicator,
   ReactionIcon,
   ThreadIcon,
-  ErrorIcon,
-  DeliveredCheckIcon,
 } from './icons';
 import MessageTimestamp from './MessageTimestamp';
 
@@ -55,7 +59,9 @@ const MessageTeam = (props) => {
     unsafeHTML,
     getMessageActions,
     Avatar = DefaultAvatar,
+    EditMessageInput = DefaultEditMessageForm,
     MessageDeleted,
+    PinIndicator = DefaultPinIndicator,
     ReactionsList = DefaultReactionsList,
     ReactionSelector = DefaultReactionSelector,
     editing: propEditing,
@@ -81,7 +87,7 @@ const MessageTeam = (props) => {
     ChannelContext,
   );
   const channelConfig = propChannelConfig || channel?.getConfig();
-  const { t: contextT } = useContext(TranslationContext);
+  const { t: contextT, userLanguage } = useContext(TranslationContext);
   const t = propT || contextT;
   const groupStyles = props.groupStyles || ['single'];
   const reactionSelectorRef = useRef(null);
@@ -113,11 +119,13 @@ const MessageTeam = (props) => {
     onUserClickHandler: propOnUserClick,
     onUserHoverHandler: propOnUserHover,
   });
-  const messageTextItem = message?.text;
+  const messageTextToRender =
+    message?.i18n?.[`${userLanguage}_text`] || message?.text;
   const messageMentionedUsersItem = message?.mentioned_users;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const messageText = useMemo(
-    () => renderText(messageTextItem, messageMentionedUsersItem),
-    [messageTextItem, messageMentionedUsersItem],
+    () => renderText(messageTextToRender, messageMentionedUsersItem),
+    [messageMentionedUsersItem, messageTextToRender],
   );
   const firstGroupStyle = groupStyles ? groupStyles[0] : '';
 
@@ -147,7 +155,7 @@ const MessageTeam = (props) => {
           </div>
         )}
         <MessageInput
-          Input={EditMessageForm}
+          Input={EditMessageInput}
           message={message}
           clearEditingState={clearEdit}
           updateMessage={propUpdateMessage || channelUpdateMessage}
@@ -155,15 +163,21 @@ const MessageTeam = (props) => {
       </div>
     );
   }
+
   return (
     <React.Fragment>
+      {message?.pinned && (
+        <div className="str-chat__message-team-pin-indicator">
+          <PinIndicator message={message} t={t} />
+        </div>
+      )}
       <div
         data-testid="message-team"
         className={`str-chat__message-team str-chat__message-team--${firstGroupStyle} str-chat__message-team--${
           message?.type
         } ${threadList ? 'thread-list' : ''} str-chat__message-team--${
           message?.status
-        }`}
+        } ${message?.pinned ? 'pinned-message' : ''}`}
         ref={messageWrapperRef}
       >
         <div className="str-chat__message-team-meta">
@@ -279,6 +293,7 @@ const MessageTeam = (props) => {
                         handleMute={props.handleMute}
                         handleEdit={props.handleEdit}
                         handleDelete={props.handleDelete}
+                        handlePin={props.handlePin}
                         customWrapperClass={''}
                         inline
                       />
@@ -498,6 +513,18 @@ MessageTeam.propTypes = {
    * */
   Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
+   * Custom UI component to override default edit message input
+   *
+   * Defaults to and accepts same props as: [EditMessageForm](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageInput/EditMessageForm.js)
+   * */
+  EditMessageInput: /** @type {PropTypes.Validator<React.FC<import("types").MessageInputProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to override default pinned message indicator
+   *
+   * Defaults to and accepts same props as: [PinIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/icon.js)
+   * */
+  PinIndicator: /** @type {PropTypes.Validator<React.FC<import("types").PinIndicatorProps>>} */ (PropTypes.elementType),
+  /**
    *
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
@@ -517,7 +544,7 @@ MessageTeam.propTypes = {
   channelConfig: /** @type {PropTypes.Validator<import('stream-chat').ChannelConfig>} */ (PropTypes.object),
   /** If component is in thread list */
   threadList: PropTypes.bool,
-  /** Function to open thread on current messxage */
+  /** Function to open thread on current message */
   handleOpenThread: PropTypes.func,
   /** If the message is in edit state */
   editing: PropTypes.bool,
@@ -529,7 +556,7 @@ MessageTeam.propTypes = {
   /** Override the default formatting of the date. This is a function that has access to the original date object. Returns a string or Node  */
   formatDate: PropTypes.func,
   /**
-   * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+   * Returns all allowed actions on message by current user e.g., ['edit', 'delete', 'flag', 'mute', 'react', 'reply']
    * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
    * */
   getMessageActions: /** @type {PropTypes.Validator<() => Array<string>>} */ (PropTypes.func),
@@ -567,6 +594,13 @@ MessageTeam.propTypes = {
    * @param event Dom event that triggered this handler
    */
   handleAction: PropTypes.func,
+  /**
+   * Handler for pinning a current message
+   *
+   * @param event React's MouseEventHandler event
+   * @returns void
+   * */
+  handlePin: PropTypes.func,
   /**
    * The handler for hover event on @mention in message
    *

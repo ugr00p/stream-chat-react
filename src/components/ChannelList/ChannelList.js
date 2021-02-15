@@ -118,10 +118,18 @@ const ChannelList = (props) => {
     activeChannelHandler,
   );
 
+  const loadedChannels = props.channelRenderFilterFn
+    ? props.channelRenderFilterFn(channels)
+    : channels;
+
   useMobileNavigation(channelListRef, navOpen, closeMobileNav);
 
   // All the event listeners
-  useMessageNewListener(setChannels, props.lockChannelOrder);
+  useMessageNewListener(
+    setChannels,
+    props.lockChannelOrder,
+    props.allowNewMessagesFromUnfilteredChannels,
+  );
   useNotificationMessageNewListener(setChannels, props.onMessageNew);
   useNotificationAddedToChannelListener(setChannels, props.onAddedToChannel);
   useNotificationRemovedFromChannelListener(
@@ -212,13 +220,13 @@ const ChannelList = (props) => {
         LoadingIndicator={LoadingIndicator}
         LoadingErrorIndicator={LoadingErrorIndicator}
       >
-        {!channels || channels.length === 0
+        {!loadedChannels || loadedChannels.length === 0
           ? renderEmptyStateIndicator()
           : smartRender(Paginator, {
               loadNextPage,
               hasNextPage,
               refreshing: status.refreshing,
-              children: channels.map((item) => renderChannel(item)),
+              children: loadedChannels.map(renderChannel),
             })}
       </List>
     );
@@ -349,6 +357,13 @@ ChannelList.propTypes = {
    * */
   onChannelDeleted: PropTypes.func,
   /**
+   * Optional function to filter channels prior to loading in the DOM. Do not use any complex or async logic here that would significantly delay the loading of the ChannelList.
+   * We recommend using a pure function with array methods like filter/sort/reduce.
+   * @param {Array} channels
+   * @returns {Array} channels
+   * */
+  channelRenderFilterFn: /** @type {PropTypes.Validator<(channels: import('stream-chat').Channel[]) => import('stream-chat').Channel[]>} */ (PropTypes.func),
+  /**
    * Object containing query filters
    * @see See [Channel query documentation](https://getstream.io/chat/docs/query_channels/?language=js) for a list of available fields for filter.
    * */
@@ -381,6 +396,18 @@ ChannelList.propTypes = {
    * If true, channels won't be dynamically sorted by most recent message.
    */
   lockChannelOrder: PropTypes.bool,
+  /**
+   * When client receives an event `message.new`, we push that channel to top of the list.
+   *
+   * But If the channel doesn't exist in the list, then we get the channel from client
+   * (client maintains list of watched channels as `client.activeChannels`) and push
+   * that channel to top of the list by default. You can disallow this behavior by setting following
+   * prop to false. This is quite usefull where you have multiple tab structure and you don't want
+   * ChannelList in Tab1 to react to new message on some channel in Tab2.
+   *
+   * Default value is true.
+   */
+  allowNewMessagesFromUnfilteredChannels: PropTypes.bool,
 };
 
 export default React.memo(ChannelList);

@@ -16,7 +16,10 @@ import { ChannelContext, TranslationContext } from '../../context';
 
 import { Avatar as DefaultAvatar } from '../Avatar';
 import { Attachment as DefaultAttachment } from '../Attachment';
-import { MessageInput, EditMessageForm } from '../MessageInput';
+import {
+  MessageInput,
+  EditMessageForm as DefaultEditMessageForm,
+} from '../MessageInput';
 import {
   SimpleReactionsList as DefaultReactionsList,
   ReactionSelector as DefaultReactionSelector,
@@ -33,7 +36,12 @@ import {
 } from './hooks';
 import { areMessagePropsEqual } from './utils';
 import { MessageActions } from '../MessageActions';
-import { ReactionIcon, ThreadIcon, ErrorIcon } from './icons';
+import {
+  ErrorIcon,
+  PinIndicator as DefaultPinIndicator,
+  ReactionIcon,
+  ThreadIcon,
+} from './icons';
 import MessageTimestamp from './MessageTimestamp';
 
 /**
@@ -69,11 +77,13 @@ const MessageLivestreamComponent = (props) => {
     onMentionsHoverMessage: propOnMentionsHover,
     Attachment = DefaultAttachment,
     Avatar = DefaultAvatar,
+    EditMessageInput = DefaultEditMessageForm,
     t: propT,
     tDateTimeParser: propTDateTimeParser,
     MessageDeleted,
+    PinIndicator = DefaultPinIndicator,
   } = props;
-  const { t: contextT } = useContext(TranslationContext);
+  const { t: contextT, userLanguage } = useContext(TranslationContext);
   const t = propT || contextT;
   const messageWrapperRef = useRef(null);
   const reactionSelectorRef = useRef(null);
@@ -110,11 +120,12 @@ const MessageLivestreamComponent = (props) => {
     onUserClickHandler: propOnUserClick,
     onUserHoverHandler: propOnUserHover,
   });
-  const messageTextItem = message?.text;
+  const messageTextToRender =
+    message?.i18n?.[`${userLanguage}_text`] || message?.text;
   const messageMentionedUsersItem = message?.mentioned_users;
   const messageText = useMemo(
-    () => renderText(messageTextItem, messageMentionedUsersItem),
-    [messageTextItem, messageMentionedUsersItem],
+    () => renderText(messageTextToRender, messageMentionedUsersItem),
+    [messageMentionedUsersItem, messageTextToRender],
   );
 
   const firstGroupStyle = groupStyles ? groupStyles[0] : '';
@@ -148,7 +159,7 @@ const MessageLivestreamComponent = (props) => {
           </div>
         )}
         <MessageInput
-          Input={EditMessageForm}
+          Input={EditMessageInput}
           message={message}
           clearEditingState={clearEdit}
           updateMessage={propUpdateMessage || channelUpdateMessage}
@@ -159,13 +170,18 @@ const MessageLivestreamComponent = (props) => {
 
   return (
     <React.Fragment>
+      {message?.pinned && (
+        <div className="str-chat__message-livestream-pin-indicator">
+          <PinIndicator message={message} t={t} />
+        </div>
+      )}
       <div
         data-testid="message-livestream"
         className={`str-chat__message-livestream str-chat__message-livestream--${firstGroupStyle} str-chat__message-livestream--${
           message.type
         } str-chat__message-livestream--${message.status} ${
           initialMessage ? 'str-chat__message-livestream--initial-message' : ''
-        }`}
+        } ${message?.pinned ? 'pinned-message' : ''}`}
         ref={messageWrapperRef}
       >
         {showDetailedReactions && isReactionEnabled && (
@@ -412,6 +428,18 @@ MessageLivestreamComponent.propTypes = {
    * */
   Avatar: /** @type {PropTypes.Validator<React.ElementType<import('types').AvatarProps>>} */ (PropTypes.elementType),
   /**
+   * Custom UI component to override default edit message input
+   *
+   * Defaults to and accepts same props as: [EditMessageForm](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageInput/EditMessageForm.js)
+   * */
+  EditMessageInput: /** @type {PropTypes.Validator<React.FC<import("types").MessageInputProps>>} */ (PropTypes.elementType),
+  /**
+   * Custom UI component to override default pinned message indicator
+   *
+   * Defaults to and accepts same props as: [PinIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/icon.js)
+   * */
+  PinIndicator: /** @type {PropTypes.Validator<React.FC<import("types").PinIndicatorProps>>} */ (PropTypes.elementType),
+  /**
    *
    * @deprecated Its not recommended to use this anymore. All the methods in this HOC are provided explicitly.
    *
@@ -434,7 +462,7 @@ MessageLivestreamComponent.propTypes = {
   channelConfig: /** @type {PropTypes.Validator<import('stream-chat').ChannelConfig>} */ (PropTypes.object),
   /** If component is in thread list */
   threadList: PropTypes.bool,
-  /** Function to open thread on current messxage */
+  /** Function to open thread on current message */
   handleOpenThread: PropTypes.func,
   /** If the message is in edit state */
   editing: PropTypes.bool,
@@ -443,10 +471,10 @@ MessageLivestreamComponent.propTypes = {
   /** Returns true if message belongs to current user */
   isMyMessage: PropTypes.func,
   /**
-   * Returns all allowed actions on message by current user e.g., [edit, delete, flag, mute]
+   * Returns all allowed actions on message by current user e.g., ['edit', 'delete', 'flag', 'mute', 'react', 'reply']
    * Please check [Message](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message.js) component for default implementation.
    * */
-  getMessageActions: PropTypes.func.isRequired,
+  getMessageActions: /** @type {PropTypes.Validator<() => Array<string>>} */ (PropTypes.func),
   /**
    * Function to publish updates on message to channel
    *

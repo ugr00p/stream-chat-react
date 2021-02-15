@@ -322,6 +322,18 @@ export interface ChannelListProps {
   List?: React.ElementType<ChannelListUIComponentProps>;
   Paginator?: React.ElementType<PaginatorProps>;
   lockChannelOrder?: boolean;
+  /**
+   * When client receives an event `message.new`, we push that channel to top of the list.
+   *
+   * But If the channel doesn't exist in the list, then we get the channel from client
+   * (client maintains list of watched channels as `client.activeChannels`) and push
+   * that channel to top of the list by default. You can disallow this behavior by setting following
+   * prop to false. This is quite usefull where you have multiple tab structure and you don't want
+   * ChannelList in Tab1 to react to new message on some channel in Tab2.
+   *
+   * Default value is true.
+   */
+  allowNewMessagesFromUnfilteredChannels?: boolean;
   onMessageNew?(
     thisArg: React.Dispatch<React.SetStateAction<Client.Channel[]>>,
     e: Client.Event,
@@ -357,6 +369,11 @@ export interface ChannelListProps {
     e: Client.Event,
   ): void;
   setActiveChannelOnMount?: boolean;
+  /**
+   * Optional function to filter channels prior to loading in the DOM. Do not use any complex or async logic here that would significantly delay the loading of the ChannelList.
+   * We recommend using a pure function with array methods like filter/sort/reduce.
+   */
+  channelRenderFilterFn?: (channels: Client.Channel[]) => Client.Channel[];
   /** Object containing query filters */
   filters?: Client.ChannelFilters;
   /** Object containing query options */
@@ -456,7 +473,7 @@ export function useMentionsHandlers(
   onMentionsClick?: (e: React.MouseEvent, user?: Client.UserResponse) => void,
 ): (
   e: React.MouseEvent<HTMLSpanElement>,
-  mentioned_users: UserResponse[],
+  mentioned_users: Client.UserResponse[],
 ) => void;
 
 export interface PaginatorProps {
@@ -541,6 +558,19 @@ export interface SendButtonProps {
   sendMessage(e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void;
 }
 
+export interface SuggestionListProps {
+  className: string;
+  component: React.ElementType<unknown> | null;
+  dropdownScroll: (item: unknown) => void;
+  getSelectedItem: (<D>(item: D) => D) | null;
+  getTextToReplace: <D>(item: D) => D;
+  itemClassName: string;
+  onSelect: (newToken: unknown) => void;
+  values: Record<string, unknown>[] | null;
+  itemStyle?: React.CSSProperties;
+  value?: string;
+}
+
 export interface FixedHeightMessageProps {
   message: Client.MessageResponse;
   groupedByUser: boolean;
@@ -608,6 +638,8 @@ export interface MessageListProps {
   /** Date separator component to render  */
   dateSeparator?: React.ElementType<DateSeparatorProps>;
   DateSeparator?: React.ElementType<DateSeparatorProps>;
+  disableDateSeparator?: boolean;
+  hideDeletedMessages?: boolean;
   /** Turn off grouping of messages by user */
   noGroupByUser?: boolean;
   /** Weather its a thread of no. Default - false  */
@@ -621,6 +653,8 @@ export interface MessageListProps {
   getFlagMessageErrorNotification?(message: Client.MessageResponse): string;
   getMuteUserSuccessNotification?(message: Client.MessageResponse): string;
   getMuteUserErrorNotification?(message: Client.MessageResponse): string;
+  getPinMessageErrorNotification?(message: Client.MessageResponse): string;
+  pinPermissions?: PinPermissions;
   additionalMessageInputProps?: object;
   client?: Client.StreamChat;
   loadMore?(messageLimit?: number): Promise<number>;
@@ -677,6 +711,8 @@ export interface MessageInputProps {
   /** Disable input */
   disabled?: boolean;
   /** enable/disable firing the typing event */
+  disableMentions?: boolean;
+  /** enable/disable firing the typing event */
   publishTypingEvent?: boolean;
   /** Grow the textarea while you're typing */
   grow?: boolean;
@@ -691,8 +727,17 @@ export interface MessageInputProps {
   /** The component handling how the input is rendered */
   Input?: React.ElementType<MessageInputProps>;
 
+  /** Change the EmojiIcon component */
+  EmojiIcon?: React.ElementType;
+
+  /** Change the FileUploadIcon component */
+  FileUploadIcon?: React.ElementType;
+
   /** Change the SendButton component */
   SendButton?: React.ElementType<SendButtonProps>;
+
+  /** Override default suggestion list component */
+  SuggestionList?: React.ElementType<SuggestionListProps>;
 
   /** Override image upload request */
   doImageUploadRequest?(
@@ -720,7 +765,7 @@ export interface MessageInputProps {
    *  }}
    * />
    */
-  additionalTextareaProps?: object;
+  additionalTextareaProps?: React.TextareaHTMLAttributes;
   /** Message object. If defined, the message passed will be edited, instead of a new message being created */
   message?: Client.MessageResponse;
   /** Callback to clear editing state in parent component */
@@ -877,18 +922,11 @@ export interface MessageProps extends TranslationContextValue {
     extraState?: object,
   ): void;
   additionalMessageInputProps?: object;
-  getFlagMessageSuccessNotification?(
-    message: StreamChatReactMessageResponse,
-  ): string;
-  getFlagMessageErrorNotification?(
-    message: StreamChatReactMessageResponse,
-  ): string;
-  getMuteUserSuccessNotification?(
-    message: StreamChatReactMessageResponse,
-  ): string;
-  getMuteUserErrorNotification?(
-    message: StreamChatReactMessageResponse,
-  ): string;
+  getFlagMessageSuccessNotification?(message: Client.MessageResponse): string;
+  getFlagMessageErrorNotification?(message: Client.MessageResponse): string;
+  getMuteUserSuccessNotification?(message: Client.MessageResponse): string;
+  getMuteUserErrorNotification?(message: Client.MessageResponse): string;
+  getPinMessageErrorNotification?(message: Client.MessageResponse): string;
   /** Override the default formatting of the date. This is a function that has access to the original date object. Returns a string or Node  */
   formatDate?(date: Date): string;
 }
@@ -930,6 +968,7 @@ export interface MessageComponentProps
   ): void;
   initialMessage?: boolean;
   threadList?: boolean;
+  pinPermissions?: PinPermissions;
 }
 
 // MessageUIComponentProps defines the props for the Message UI components (e.g. MessageSimple)
@@ -945,6 +984,7 @@ export interface MessageUIComponentProps
   handleDelete?(event?: React.BaseSyntheticEvent): void;
   handleFlag?(event?: React.BaseSyntheticEvent): void;
   handleMute?(event?: React.BaseSyntheticEvent): void;
+  handlePin?(event?: React.BaseSyntheticEvent): void;
   handleAction?(
     name: string,
     value: string,
@@ -964,7 +1004,15 @@ export interface MessageUIComponentProps
   threadList?: boolean;
   additionalMessageInputProps?: object;
   initialMessage?: boolean;
+  EditMessageInput?: React.FC<MessageInputProps>;
+  PinIndicator?: React.FC<PinIndicatorProps>;
 }
+
+export type PinIndicatorProps = {
+  message?: StreamChatReactMessageResponse;
+  t?: i18next.TFunction;
+};
+
 export interface MessageDeletedProps extends TranslationContextValue {
   /** The message object */
   message: Client.MessageResponse;
@@ -972,14 +1020,12 @@ export interface MessageDeletedProps extends TranslationContextValue {
 }
 
 export interface ThreadProps {
-  channel?: ReturnType<StreamChatReactClient['channel']>;
-  /** Display the thread on 100% width of it's container. Useful for mobile style view */
   fullWidth?: boolean;
-  /** Make input focus on mounting thread */
   autoFocus?: boolean;
   additionalParentMessageProps?: object;
   additionalMessageListProps?: object;
   additionalMessageInputProps?: object;
+  Message?: React.ElementType<MessageUIComponentProps>;
   MessageInput?: React.ElementType<MessageInputProps>;
   ThreadHeader?: React.ElementType<ThreadHeaderProps>;
   ThreadStyle?: object,
@@ -994,6 +1040,7 @@ export interface ThreadHeaderProps {
 export interface TypingIndicatorProps {
   Avatar?: React.ElementType<AvatarProps>;
   avatarSize?: number;
+  threadList?: boolean;
 }
 
 export interface ReactionSelectorProps {
@@ -1112,6 +1159,7 @@ export interface ChatAutoCompleteProps {
   grow?: boolean;
   maxRows?: number;
   disabled?: boolean;
+  disableMentions?: boolean;
   value?: string;
   handleSubmit?(event: React.FormEvent): void;
   onChange?(event: React.ChangeEventHandler): void;
@@ -1125,6 +1173,7 @@ export interface ChatAutoCompleteProps {
   onPaste?: React.ClipboardEventHandler;
   additionalTextareaProps?: object;
   innerRef: React.MutableRefObject<HTMLTextAreaElement | undefined>;
+  SuggestionList?: React.ElementType<SuggestionListProps>;
 }
 
 export interface ChatDownProps extends TranslationContextValue {
@@ -1232,8 +1281,11 @@ export interface LoadMoreButtonProps {
   onClick: React.MouseEventHandler;
   refreshing: boolean;
 }
+
 export interface LoadingChannelsProps {}
+
 export interface MessageActionsBoxProps {
+  message?: Client.MessageResponse;
   /** If the message actions box should be open or not */
   open?: boolean;
   /** If message belongs to current user. */
@@ -1245,6 +1297,7 @@ export interface MessageActionsBoxProps {
   handleDelete?(event?: React.BaseSyntheticEvent): void;
   handleFlag?(event?: React.BaseSyntheticEvent): void;
   handleMute?(event?: React.BaseSyntheticEvent): void;
+  handlePin?(event?: React.BaseSyntheticEvent): void;
   getMessageActions(): Array<string>;
 }
 export interface MessageNotificationProps {
@@ -1337,6 +1390,7 @@ export class Channel extends React.PureComponent<ChannelProps, any> {}
 export class Avatar extends React.PureComponent<AvatarProps, any> {}
 export class Message extends React.PureComponent<MessageComponentProps, any> {}
 export class MessageList extends React.PureComponent<MessageListProps, any> {}
+export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps>;
 export const ChannelHeader: React.FC<ChannelHeaderProps>;
 export class MessageInput extends React.PureComponent<MessageInputProps, any> {}
 export class MessageInputLarge extends React.PureComponent<
@@ -1375,7 +1429,8 @@ export const LoadMorePaginator: React.FC<LoadMorePaginatorProps>;
 export const InfiniteScrollPaginator: React.FC<InfiniteScrollPaginatorProps>;
 export const LoadingIndicator: React.FC<LoadingIndicatorProps>;
 
-export interface MessageCommerceProps extends MessageUIComponentProps {}
+export interface MessageCommerceProps
+  extends Omit<MessageUIComponentProps, 'EditMessageForm'> {}
 export const MessageCommerce: React.FC<MessageCommerceProps>;
 
 export interface MessageLivestreamProps extends MessageUIComponentProps {}
@@ -1421,7 +1476,8 @@ export class MessageTeam extends React.PureComponent<
   MessageTeamState
 > {}
 
-export interface MessageSimpleProps extends MessageUIComponentProps {}
+export interface MessageSimpleProps
+  extends Omit<MessageUIComponentProps, 'PinIndicator'> {}
 export interface MessageTimestampProps {
   customClass?: string;
   message?: Client.MessageResponse;
@@ -1448,12 +1504,15 @@ export interface MessageActionsProps {
   handleDelete?(event?: React.BaseSyntheticEvent): void;
   handleFlag?(event?: React.BaseSyntheticEvent): void;
   handleMute?(event?: React.BaseSyntheticEvent): void;
+  handlePin?(event?: React.BaseSyntheticEvent): void;
+  pinPermissions?: PinPermissions;
   mutes?: Client.Mute[];
   getMessageActions(): Array<string>;
   getFlagMessageSuccessNotification?(message: Client.MessageResponse): string;
   getFlagMessageErrorNotification?(message: Client.MessageResponse): string;
   getMuteUserSuccessNotification?(message: Client.MessageResponse): string;
   getMuteUserErrorNotification?(message: Client.MessageResponse): string;
+  getPinMessageErrorNotification?(message: Client.MessageResponse): string;
   setEditingState?(event?: React.BaseSyntheticEvent): void;
   messageListRect?: DOMRect;
   message?: Client.MessageResponse;
@@ -1508,7 +1567,7 @@ interface MessageNotificationArguments {
 }
 export function useFlagHandler(
   message: Client.MessageResponse | undefined,
-  notification: MessageNotificationArguments,
+  notifications: MessageNotificationArguments,
 ): (event: React.MouseEvent<HTMLElement>) => Promise<void>;
 
 type CustomMentionHandler = (
@@ -1538,7 +1597,7 @@ export function useMentionsUIHandler(
 
 export function useMuteHandler(
   message: Client.MessageResponse | undefined,
-  notification: MessageNotificationArguments,
+  notifications: MessageNotificationArguments,
 ): (event: React.MouseEvent<HTMLElement>) => Promise<void>;
 
 export function useOpenThreadHandler(
@@ -1548,6 +1607,36 @@ export function useOpenThreadHandler(
     event: React.SyntheticEvent,
   ) => void,
 ): (event: React.SyntheticEvent) => void;
+
+export type PinEnabledUserRoles = {
+  admin?: boolean;
+  anonymous?: boolean;
+  channel_member?: boolean;
+  channel_moderator?: boolean;
+  guest?: boolean;
+  member?: boolean;
+  moderator?: boolean;
+  owner?: boolean;
+  user?: boolean;
+};
+
+export type PinPermissions = {
+  commerce?: PinEnabledUserRoles;
+  gaming?: PinEnabledUserRoles;
+  livestream?: PinEnabledUserRoles;
+  messaging?: PinEnabledUserRoles;
+  team?: PinEnabledUserRoles;
+  [key: string]: PinEnabledUserRoles;
+};
+
+export function usePinHandler(
+  message: Client.MessageResponse | undefined,
+  pinPermissions: PinPermissions,
+  notifications: Omit<MessageNotificationArguments, 'getSuccessNotification'>,
+): {
+  canPin: boolean;
+  handlePin: (event: React.MouseEvent<HTMLElement>) => Promise<void>;
+};
 
 export function useReactionHandler(
   message: Client.MessageResponse | undefined,
@@ -1593,10 +1682,8 @@ export function useUserRole(
   message: Client.MessageResponse | undefined,
 ): UserRoles & UserCapabilities;
 
-export class Thread extends React.PureComponent<
-  Omit<ThreadProps & ChannelContextValue & TranslationContextValue, 'client'>,
-  any
-> {}
+export const Thread: React.FC<ThreadProps>;
+
 export const TypingIndicator: React.FC<TypingIndicatorProps>;
 export class ReactionSelector extends React.PureComponent<
   ReactionSelectorProps,
@@ -1706,6 +1793,7 @@ export interface TranslationContext
 export interface TranslationContextValue {
   t?: i18next.TFunction;
   tDateTimeParser?(datetime: string | number): Dayjs.Dayjs;
+  userLanguage?: string;
 }
 
 export interface Streami18nOptions {
