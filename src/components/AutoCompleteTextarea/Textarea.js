@@ -633,8 +633,6 @@ class ReactTextareaAutocomplete extends React.Component {
       style,
       SuggestionList = DefaultSuggestionList,
     } = this.props;
-    console.log('this.props', this.props);
-    console.log('style', style);
     let { maxRows } = this.props;
 
     const { component, currentTrigger, dataLoading, value } = this.state;

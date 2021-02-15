@@ -101,6 +101,17 @@ export const defaultPinPermissions = {
     owner: true,
     user: false,
   },
+  ugroop: {
+    admin: true,
+    anonymous: false,
+    channel_member: true,
+    channel_moderator: true,
+    guest: false,
+    member: true,
+    moderator: true,
+    owner: true,
+    user: false,
+  },
 };
 
 /**
