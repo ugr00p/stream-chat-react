@@ -17,19 +17,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@master
-        id: yarn-cache
+      - name: Cache Dependencies
+        uses: actions/cache@v2
         with:
-          path: ${{ steps.yarn-cache-path.outputs.dir }}
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: yarn-
+          path: ./node_modules
+          key: ${{ runner.os }}-${{ matrix.node }}-modules-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Install dependencies
-        run: yarn install
+      - name: Install Dependencies & Build
+        run: yarn install --frozen-lockfile --ignore-engines
 
       - name: Lint and Test with ${{ matrix.node }}
         env:
@@ -38,6 +33,5 @@ jobs:
         run: |
           if [ "$TYPESCRIPT" == "no" ]; then yarn lint; fi
           if [ "$TYPESCRIPT" == "no" ]; then yarn coverage; fi
-          if [ "$TYPESCRIPT" == "no" ]; then yarn docs; fi
           if [ "$TYPESCRIPT" == "no" ]; then yarn validate-translations; fi
           if [ "$TYPESCRIPT" == "yes" ]; then yarn types; fi

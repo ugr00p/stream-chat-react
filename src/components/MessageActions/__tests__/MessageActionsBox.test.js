@@ -1,25 +1,40 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import MessageActionsBox from '../MessageActionsBox';
+
+import { MessageActionsBox } from '../MessageActionsBox';
+
+import { MessageProvider } from '../../../context/MessageContext';
+
+import { generateMessage } from '../../../mock-builders';
 
 const getMessageActionsMock = jest.fn(() => []);
 
-const renderComponent = (props) =>
-  render(
-    <MessageActionsBox {...props} getMessageActions={getMessageActionsMock} />,
+const messageContextValue = {
+  message: generateMessage(),
+  messageListRect: {},
+};
+
+function renderComponent(boxProps) {
+  return render(
+    <MessageProvider value={{ ...messageContextValue, message: boxProps.message }}>
+      <MessageActionsBox {...boxProps} getMessageActions={getMessageActionsMock} />
+    </MessageProvider>,
   );
+}
 
 describe('MessageActionsBox', () => {
   afterEach(jest.clearAllMocks);
 
   it('should not show any of the action buttons if no actions are returned by getMessageActions', () => {
-    const { queryByText } = renderComponent();
+    const { queryByText } = renderComponent({});
     expect(queryByText('Flag')).not.toBeInTheDocument();
     expect(queryByText('Mute')).not.toBeInTheDocument();
     expect(queryByText('Unmute')).not.toBeInTheDocument();
     expect(queryByText('Edit Message')).not.toBeInTheDocument();
     expect(queryByText('Delete')).not.toBeInTheDocument();
+    expect(queryByText('Pin')).not.toBeInTheDocument();
+    expect(queryByText('Unpin')).not.toBeInTheDocument();
   });
 
   it('should call the handleFlag prop if the flag button is clicked', () => {
@@ -66,5 +81,23 @@ describe('MessageActionsBox', () => {
     const { getByText } = renderComponent({ handleDelete });
     fireEvent.click(getByText('Delete'));
     expect(handleDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call the handlePin prop if the pin button is clicked', () => {
+    getMessageActionsMock.mockImplementationOnce(() => ['pin']);
+    const handlePin = jest.fn();
+    const message = generateMessage({ pinned: false });
+    const { getByText } = renderComponent({ handlePin, message });
+    fireEvent.click(getByText('Pin'));
+    expect(handlePin).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call the handlePin prop if the unpin button is clicked', () => {
+    getMessageActionsMock.mockImplementationOnce(() => ['pin']);
+    const handlePin = jest.fn();
+    const message = generateMessage({ pinned: true });
+    const { getByText } = renderComponent({ handlePin, message });
+    fireEvent.click(getByText('Unpin'));
+    expect(handlePin).toHaveBeenCalledTimes(1);
   });
 });

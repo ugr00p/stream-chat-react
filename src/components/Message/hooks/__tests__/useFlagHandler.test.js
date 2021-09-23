@@ -1,16 +1,16 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
+
+import { missingUseFlagHandlerParameterWarning, useFlagHandler } from '../useFlagHandler';
+
+import { ChatProvider } from '../../../../context/ChatContext';
+import { ChannelStateProvider } from '../../../../context/ChannelStateContext';
 import {
-  getTestClientWithUser,
   generateChannel,
   generateMessage,
   generateUser,
-} from 'mock-builders';
-import {
-  useFlagHandler,
-  missingUseFlagHandlerParameterWarning,
-} from '../useFlagHandler';
-import { ChannelContext } from '../../../../context';
+  getTestClientWithUser,
+} from '../../../../mock-builders';
 
 const alice = generateUser({ name: 'alice' });
 const flagMessage = jest.fn();
@@ -21,26 +21,24 @@ const mouseEventMock = {
 async function renderUseHandleFlagHook(
   message = generateMessage(),
   notificationOpts,
-  channelContextValue,
+  channelStateContextValue,
 ) {
   const client = await getTestClientWithUser(alice);
   client.flagMessage = flagMessage;
   const channel = generateChannel();
   const wrapper = ({ children }) => (
-    <ChannelContext.Provider
-      value={{
-        channel,
-        client,
-        ...channelContextValue,
-      }}
-    >
-      {children}
-    </ChannelContext.Provider>
+    <ChatProvider value={{ client }}>
+      <ChannelStateProvider
+        value={{
+          channel,
+          ...channelStateContextValue,
+        }}
+      >
+        {children}
+      </ChannelStateProvider>
+    </ChatProvider>
   );
-  const { result } = renderHook(
-    () => useFlagHandler(message, notificationOpts),
-    { wrapper },
-  );
+  const { result } = renderHook(() => useFlagHandler(message, notificationOpts), { wrapper });
   return result.current;
 }
 describe('useHandleFlag custom hook', () => {
@@ -51,14 +49,10 @@ describe('useHandleFlag custom hook', () => {
   });
 
   it('should throw a warning when there are missing parameters and the handler is called', async () => {
-    const consoleWarnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementationOnce(() => null);
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementationOnce(() => null);
     const handleFlag = await renderUseHandleFlagHook(undefined);
     await handleFlag(mouseEventMock);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      missingUseFlagHandlerParameterWarning,
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(missingUseFlagHandlerParameterWarning);
   });
 
   it('should allow to flag a message and notify with custom success notification when it is successful', async () => {
@@ -68,8 +62,8 @@ describe('useHandleFlag custom hook', () => {
     const messageFlaggedNotification = 'Message flagged!';
     const getSuccessNotification = jest.fn(() => messageFlaggedNotification);
     const handleFlag = await renderUseHandleFlagHook(message, {
-      notify,
       getSuccessNotification,
+      notify,
     });
     await handleFlag(mouseEventMock);
     expect(flagMessage).toHaveBeenCalledWith(message.id);
@@ -96,8 +90,8 @@ describe('useHandleFlag custom hook', () => {
     const messageFlagFailedNotification = 'Message flagged failed!';
     const getErrorNotification = jest.fn(() => messageFlagFailedNotification);
     const handleFlag = await renderUseHandleFlagHook(message, {
-      notify,
       getErrorNotification,
+      notify,
     });
     await handleFlag(mouseEventMock);
     expect(flagMessage).toHaveBeenCalledWith(message.id);
@@ -108,16 +102,12 @@ describe('useHandleFlag custom hook', () => {
     const message = generateMessage();
     const notify = jest.fn();
     flagMessage.mockImplementationOnce(() => Promise.reject());
-    const defaultFlagMessageFailedNotification =
-      'Error adding flag: Either the flag already exist or there is issue with network connection ...';
+    const defaultFlagMessageFailedNotification = 'Error adding flag';
     const handleFlag = await renderUseHandleFlagHook(message, {
       notify,
     });
     await handleFlag(mouseEventMock);
     expect(flagMessage).toHaveBeenCalledWith(message.id);
-    expect(notify).toHaveBeenCalledWith(
-      defaultFlagMessageFailedNotification,
-      'error',
-    );
+    expect(notify).toHaveBeenCalledWith(defaultFlagMessageFailedNotification, 'error');
   });
 });

@@ -1,16 +1,16 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
+
+import { missingUseMuteHandlerParamsWarning, useMuteHandler } from '../useMuteHandler';
+
+import { ChannelStateProvider } from '../../../../context/ChannelStateContext';
+import { ChatProvider } from '../../../../context/ChatContext';
 import {
-  getTestClientWithUser,
   generateChannel,
   generateMessage,
   generateUser,
-} from 'mock-builders';
-import { ChannelContext } from '../../../../context';
-import {
-  useMuteHandler,
-  missingUseMuteHandlerParamsWarning,
-} from '../useMuteHandler';
+  getTestClientWithUser,
+} from '../../../../mock-builders';
 
 const alice = generateUser({ name: 'alice' });
 const bob = generateUser({ name: 'bob' });
@@ -23,27 +23,27 @@ const mouseEventMock = {
 async function renderUseHandleMuteHook(
   message = generateMessage(),
   notificationOpts,
-  channelContextValue,
+  channelStateContextValue,
 ) {
   const client = await getTestClientWithUser(alice);
   client.muteUser = muteUser;
   client.unmuteUser = unmuteUser;
   const channel = generateChannel();
+
   const wrapper = ({ children }) => (
-    <ChannelContext.Provider
-      value={{
-        channel,
-        client,
-        ...channelContextValue,
-      }}
-    >
-      {children}
-    </ChannelContext.Provider>
+    <ChatProvider value={{ client }}>
+      <ChannelStateProvider
+        value={{
+          channel,
+          ...channelStateContextValue,
+        }}
+      >
+        {children}
+      </ChannelStateProvider>
+    </ChatProvider>
   );
-  const { result } = renderHook(
-    () => useMuteHandler(message, notificationOpts),
-    { wrapper },
-  );
+
+  const { result } = renderHook(() => useMuteHandler(message, notificationOpts), { wrapper });
   return result.current;
 }
 
@@ -55,14 +55,10 @@ describe('useHandleMute custom hook', () => {
   });
 
   it('should throw a warning when there are missing parameters and the handler is called', async () => {
-    const consoleWarnSpy = jest
-      .spyOn(console, 'warn')
-      .mockImplementationOnce(() => null);
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementationOnce(() => null);
     const handleMute = await renderUseHandleMuteHook(undefined);
     await handleMute(mouseEventMock);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      missingUseMuteHandlerParamsWarning,
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(missingUseMuteHandlerParamsWarning);
   });
 
   it('should allow to mute a user and notify with custom success notification when it is successful', async () => {
@@ -71,8 +67,8 @@ describe('useHandleMute custom hook', () => {
     const userMutedNotification = 'User muted!';
     const getMuteUserSuccessNotification = jest.fn(() => userMutedNotification);
     const handleMute = await renderUseHandleMuteHook(message, {
-      notify,
       getSuccessNotification: getMuteUserSuccessNotification,
+      notify,
     });
     await handleMute(mouseEventMock);
     expect(muteUser).toHaveBeenCalledWith(bob.id);
@@ -97,8 +93,8 @@ describe('useHandleMute custom hook', () => {
     const userMutedFailNotification = 'User mute failed!';
     const getErrorNotification = jest.fn(() => userMutedFailNotification);
     const handleMute = await renderUseHandleMuteHook(message, {
-      notify,
       getErrorNotification,
+      notify,
     });
     await handleMute(mouseEventMock);
     expect(muteUser).toHaveBeenCalledWith(bob.id);
@@ -128,8 +124,8 @@ describe('useHandleMute custom hook', () => {
     const handleMute = await renderUseHandleMuteHook(
       message,
       {
-        notify,
         getSuccessNotification,
+        notify,
       },
       { mutes: [{ target: { id: bob.id } }] },
     );
@@ -165,8 +161,8 @@ describe('useHandleMute custom hook', () => {
     const handleMute = await renderUseHandleMuteHook(
       message,
       {
-        notify,
         getErrorNotification,
+        notify,
       },
       { mutes: [{ target: { id: bob.id } }] },
     );

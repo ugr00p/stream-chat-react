@@ -1,15 +1,16 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { generateReaction } from 'mock-builders';
-import { NimbleEmoji as EmojiComponentMock } from 'emoji-mart';
-import ReactionsList from '../ReactionsList';
+import EmojiComponentMock from 'emoji-mart/dist-modern/components/emoji/nimble-emoji';
 
-jest.mock('emoji-mart', () => ({
-  NimbleEmoji: jest.fn(({ emoji }) => (
-    <div data-testid={`emoji-${emoji.id}`} />
-  )),
-}));
+import { ReactionsList } from '../ReactionsList';
+
+import { EmojiProvider } from '../../../context/EmojiContext';
+import { emojiComponentMock, emojiDataMock, generateReaction } from '../../../mock-builders';
+
+jest.mock('emoji-mart/dist-modern/components/emoji/nimble-emoji', () =>
+  jest.fn(({ emoji }) => <div data-testid={`emoji-${emoji.id}`} />),
+);
 
 const renderComponent = ({ reaction_counts = {}, ...props }) => {
   const reactions = Object.entries(reaction_counts)
@@ -21,11 +22,16 @@ const renderComponent = ({ reaction_counts = {}, ...props }) => {
     .flat();
 
   return render(
-    <ReactionsList
-      reaction_counts={reaction_counts}
-      reactions={reactions}
-      {...props}
-    />,
+    <EmojiProvider
+      value={{
+        Emoji: emojiComponentMock.Emoji,
+        emojiConfig: emojiDataMock,
+        EmojiIndex: emojiComponentMock.EmojiIndex,
+        EmojiPicker: emojiComponentMock.EmojiPicker,
+      }}
+    >
+      <ReactionsList reaction_counts={reaction_counts} reactions={reactions} {...props} />
+    </EmojiProvider>,
   );
 };
 
@@ -44,8 +50,8 @@ describe('ReactionsList', () => {
   it('should render the total reaction count', () => {
     const { getByText } = renderComponent({
       reaction_counts: {
-        love: 5,
         angry: 2,
+        love: 5,
       },
     });
     const count = getByText('7');
@@ -55,14 +61,12 @@ describe('ReactionsList', () => {
 
   it('should render an emoji for each type of reaction', () => {
     const reaction_counts = {
-      love: 5,
       angry: 2,
+      love: 5,
     };
     renderComponent({ reaction_counts });
 
-    expect(EmojiComponentMock).toHaveBeenCalledTimes(
-      Object.keys(reaction_counts).length,
-    );
+    expect(EmojiComponentMock).toHaveBeenCalledTimes(Object.keys(reaction_counts).length);
 
     Object.keys(reaction_counts).forEach(expectEmojiToHaveBeenRendered);
   });
@@ -76,26 +80,34 @@ describe('ReactionsList', () => {
     renderComponent({
       reaction_counts,
       reactionOptions: [
-        { id: 'banana', emoji: '🍌' },
-        { id: 'cowboy', emoji: '🤠' },
+        { emoji: '🍌', id: 'banana' },
+        { emoji: '🤠', id: 'cowboy' },
       ],
     });
 
-    expect(EmojiComponentMock).toHaveBeenCalledTimes(
-      Object.keys(reaction_counts).length,
-    );
+    expect(EmojiComponentMock).toHaveBeenCalledTimes(Object.keys(reaction_counts).length);
 
     Object.keys(reaction_counts).forEach(expectEmojiToHaveBeenRendered);
   });
 
   it('should add reverse class if the prop is set to true', () => {
+    const reaction_counts = {
+      banana: 1,
+      cowboy: 2,
+    };
+    const reactionOptions = [
+      { emoji: '🍌', id: 'banana' },
+      { emoji: '🤠', id: 'cowboy' },
+    ];
+
     expect(
-      renderComponent({ reverse: true }).container.querySelector(
+      renderComponent({ reaction_counts, reactionOptions, reverse: true }).container.querySelector(
         '.str-chat__reaction-list--reverse',
       ),
     ).toBeInTheDocument();
+
     expect(
-      renderComponent({ reverse: false }).container.querySelector(
+      renderComponent({ reaction_counts, reactionOptions, reverse: false }).container.querySelector(
         '.str-chat__reaction-list--reverse',
       ),
     ).not.toBeInTheDocument();

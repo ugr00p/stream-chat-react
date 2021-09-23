@@ -1,64 +1,45 @@
-/* eslint-disable */
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import Listeners, { KEY_CODES } from './listener';
-import Item from './Item';
+import { useComponentContext } from '../../context/ComponentContext';
+import { escapeRegExp } from '../../utils';
 
-export class List extends React.Component {
-  state = {
-    selectedItem: null,
-  };
+import { Item } from './Item';
+import { DefaultSuggestionListHeader } from './Header';
+import { KEY_CODES } from './listener';
 
-  cachedValues = null;
+export const List = (props) => {
+  const {
+    className,
+    component,
+    currentTrigger,
+    dropdownScroll,
+    getSelectedItem,
+    getTextToReplace,
+    Header: PropHeader,
+    itemClassName,
+    itemStyle,
+    onSelect,
+    selectionEnd,
+    style,
+    SuggestionItem: PropSuggestionItem,
+    value: propValue,
+    values,
+  } = props;
 
-  componentDidMount() {
-    this.listeners.push(
-      Listeners.add([KEY_CODES.DOWN, KEY_CODES.UP], this.scroll),
-      Listeners.add([KEY_CODES.ENTER, KEY_CODES.TAB], this.onPressEnter),
-    );
+  const { AutocompleteSuggestionHeader, AutocompleteSuggestionItem } = useComponentContext();
+  const SuggestionItem = PropSuggestionItem || AutocompleteSuggestionItem || Item;
+  const SuggestionHeader =
+    PropHeader || AutocompleteSuggestionHeader || DefaultSuggestionListHeader;
 
-    const { values } = this.props;
-    if (values && values[0]) this.selectItem(values[0]);
-  }
+  const [selectedItem, setSelectedItem] = useState(undefined);
 
-  UNSAFE_componentWillReceiveProps({ values }) {
-    const newValues = values.map((val) => this.getId(val)).join('');
+  const itemsRef = [];
 
-    if (this.cachedValues !== newValues && values && values[0]) {
-      this.selectItem(values[0]);
-      this.cachedValues = newValues;
-    }
-  }
+  const isSelected = (item) =>
+    selectedItem === values.findIndex((value) => getId(value) === getId(item));
 
-  componentWillUnmount() {
-    let listener;
-    while (this.listeners.length) {
-      listener = this.listeners.pop();
-      Listeners.remove(listener);
-    }
-  }
-
-  onPressEnter = (e) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-
-    const { values } = this.props;
-
-    this.modifyText(values[this.getPositionInList()]);
-  };
-
-  getPositionInList = () => {
-    const { values } = this.props;
-    const { selectedItem } = this.state;
-
-    if (!selectedItem) return 0;
-
-    return values.findIndex((a) => this.getId(a) === this.getId(selectedItem));
-  };
-
-  getId = (item) => {
-    const textToReplace = this.props.getTextToReplace(item);
+  const getId = (item) => {
+    const textToReplace = getTextToReplace(item);
     if (textToReplace.key) {
       return textToReplace.key;
     }
@@ -70,117 +51,101 @@ export class List extends React.Component {
     return item.key;
   };
 
-  listeners = [];
-
-  itemsRef = {};
-
-  modifyText = (value) => {
+  const modifyText = (value) => {
     if (!value) return;
 
-    const { onSelect, getTextToReplace, getSelectedItem } = this.props;
-
     onSelect(getTextToReplace(value));
-    if (getSelectedItem) {
-      getSelectedItem(value);
-    }
+    if (getSelectedItem) getSelectedItem(value);
   };
 
-  selectItem = (item, keyboard = false) => {
-    this.setState({ selectedItem: item }, () => {
-      if (keyboard) {
-        this.props.dropdownScroll(this.itemsRef[this.getId(item)]);
+  const handleClick = (e) => {
+    if (e) e.preventDefault?.();
+    modifyText(values[selectedItem]);
+  };
+
+  const selectItem = (item) => {
+    const index = values.findIndex((value) =>
+      value.id ? value.id === item.id : value.name === item.name,
+    );
+    setSelectedItem(index);
+  };
+
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (event.which === KEY_CODES.UP) {
+        setSelectedItem((prevSelected) => {
+          if (prevSelected === undefined) return 0;
+          const newID = prevSelected === 0 ? values.length - 1 : prevSelected - 1;
+          dropdownScroll(itemsRef[newID]);
+          return newID;
+        });
       }
-    });
+
+      if (event.which === KEY_CODES.DOWN) {
+        setSelectedItem((prevSelected) => {
+          if (prevSelected === undefined) return 0;
+          const newID = prevSelected === values.length - 1 ? 0 : prevSelected + 1;
+          dropdownScroll(itemsRef[newID]);
+          return newID;
+        });
+      }
+
+      if (
+        (event.which === KEY_CODES.ENTER || event.which === KEY_CODES.TAB) &&
+        selectedItem !== undefined
+      ) {
+        handleClick(event);
+        return setSelectedItem(undefined);
+      }
+
+      return null;
+    },
+    [selectedItem, values], // eslint-disable-line
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown, false);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  useEffect(() => {
+    if (values?.length) selectItem(values[0]);
+  }, [values]); // eslint-disable-line
+
+  const restructureItem = (item) => {
+    const matched = item.name || item.id;
+
+    const textBeforeCursor = propValue.slice(0, selectionEnd);
+    const triggerIndex = textBeforeCursor.lastIndexOf(currentTrigger);
+    const editedPropValue = escapeRegExp(textBeforeCursor.slice(triggerIndex + 1));
+
+    const parts = matched.split(new RegExp(`(${editedPropValue})`, 'gi'));
+
+    const itemNameParts = { match: editedPropValue, parts };
+
+    return { ...item, itemNameParts };
   };
 
-  scroll = (e) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-
-    const { values } = this.props;
-
-    const code = e.keyCode || e.which;
-
-    const oldPosition = this.getPositionInList();
-    let newPosition;
-    switch (code) {
-      case KEY_CODES.DOWN:
-        newPosition = oldPosition + 1;
-        break;
-      case KEY_CODES.UP:
-        newPosition = oldPosition - 1;
-        break;
-      default:
-        newPosition = oldPosition;
-        break;
-    }
-
-    newPosition =
-      ((newPosition % values.length) + values.length) % values.length; // eslint-disable-line
-    this.selectItem(
-      values[newPosition],
-      [KEY_CODES.DOWN, KEY_CODES.UP].includes(code),
-    );
-  };
-
-  isSelected = (item) => {
-    const { selectedItem } = this.state;
-    if (!selectedItem) return false;
-
-    return this.getId(selectedItem) === this.getId(item);
-  };
-
-  renderHeader = (value) => {
-    if (value[0] === '/') {
-      return `Commands matching <strong>${value.replace('/', '')}</strong>`;
-    }
-
-    if (value[0] === ':') {
-      return `Emoji matching <strong>${value.replace(':', '')}</strong>`;
-    }
-
-    if (value[0] === '@') {
-      return `Searching for people`;
-    }
-  };
-
-  render() {
-    const {
-      values,
-      component,
-      style,
-      itemClassName,
-      className,
-      itemStyle,
-    } = this.props;
-
-    return (
-      <ul className={`rta__list ${className || ''}`} style={style}>
-        <li
-          className="rta__list-header"
-          dangerouslySetInnerHTML={{
-            __html: this.renderHeader(this.props.value),
+  return (
+    <ul className={`rta__list ${className || ''}`} style={style}>
+      <li className='rta__list-header'>
+        <SuggestionHeader value={propValue} />
+      </li>
+      {values.map((item, i) => (
+        <SuggestionItem
+          className={itemClassName}
+          component={component}
+          item={restructureItem(item)}
+          key={getId(item)}
+          onClickHandler={handleClick}
+          onSelectHandler={selectItem}
+          ref={(ref) => {
+            itemsRef[i] = ref;
           }}
+          selected={isSelected(item)}
+          style={itemStyle}
         />
-        {values.map((item) => (
-          <Item
-            key={this.getId(item)}
-            innerRef={(ref) => {
-              this.itemsRef[this.getId(item)] = ref;
-            }}
-            selected={this.isSelected(item)}
-            item={item}
-            className={itemClassName}
-            style={itemStyle}
-            onClickHandler={this.onPressEnter}
-            onSelectHandler={this.selectItem}
-            component={component}
-          />
-        ))}
-      </ul>
-    );
-  }
-}
-
-export default List;
+      ))}
+    </ul>
+  );
+};

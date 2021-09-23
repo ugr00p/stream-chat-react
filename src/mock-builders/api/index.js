@@ -8,11 +8,8 @@
  * @param {*} apiResponses
  */
 export const useMockedApis = (client, apiResponses) => {
-  apiResponses.forEach(({ type, response }) => {
-    jest
-      .spyOn(client.axiosInstance, type)
-      .mockImplementation()
-      .mockResolvedValue(response);
+  apiResponses.forEach(({ response, type }) => {
+    jest.spyOn(client.axiosInstance, type).mockImplementation().mockResolvedValue(response);
   });
 };
 

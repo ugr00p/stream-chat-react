@@ -1,34 +1,25 @@
-import React, { useContext, useEffect } from 'react';
-import {
-  cleanup,
-  render,
-  waitFor,
-  fireEvent,
-  act,
-} from '@testing-library/react';
+import React, { useEffect } from 'react';
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import MessageInput from '../MessageInput';
-import MessageInputLarge from '../MessageInputLarge';
-import MessageInputSmall from '../MessageInputSmall';
-import MessageInputFlat from '../MessageInputFlat';
-import EditMessageForm from '../EditMessageForm';
-import { Chat } from '../../Chat';
-import { Channel } from '../../Channel';
+
+import { MessageInput } from '../MessageInput';
+import { MessageInputFlat } from '../MessageInputFlat';
+import { MessageInputSmall } from '../MessageInputSmall';
+import { EditMessageForm } from '../EditMessageForm';
+
+import { Chat } from '../../Chat/Chat';
+import { Channel } from '../../Channel/Channel';
+
+import { useChatContext } from '../../../context/ChatContext';
 import {
   generateChannel,
   generateMember,
-  generateUser,
   generateMessage,
-  useMockedApis,
+  generateUser,
   getOrCreateChannelApi,
   getTestClientWithUser,
+  useMockedApis,
 } from '../../../mock-builders';
-import { ChatContext } from '../../../context';
-
-// mock image loader fn used by ImagePreview
-jest.mock('blueimp-load-image/js/load-image-fetch', () => {
-  return jest.fn().mockImplementation(() => Promise.resolve());
-});
 
 let chatClient;
 let channel;
@@ -37,7 +28,7 @@ const submitMock = jest.fn();
 const editMock = jest.fn();
 
 const ActiveChannelSetter = ({ activeChannel }) => {
-  const { setActiveChannel } = useContext(ChatContext);
+  const { setActiveChannel } = useChatContext();
   useEffect(() => {
     setActiveChannel(activeChannel);
   });
@@ -45,15 +36,11 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 };
 
 [
-  { InputComponent: MessageInputLarge, name: 'MessageInputLarge' },
   { InputComponent: MessageInputSmall, name: 'MessageInputSmall' },
   { InputComponent: MessageInputFlat, name: 'MessageInputFlat' },
   { InputComponent: EditMessageForm, name: 'EditMessageForm' },
 ].forEach(({ InputComponent, name: componentName }) => {
   const renderComponent = (props = {}, channelProps = {}) => {
-    // MessageInput components rely on ChannelContext.
-    // ChannelContext is created by Channel component,
-    // Which relies on ChatContext, created by Chat component.
     const renderResult = render(
       <Chat client={chatClient}>
         <ActiveChannelSetter activeChannel={channel} />
@@ -68,8 +55,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
     );
 
     const submit = async () => {
-      const submitButton =
-        renderResult.findByText('Send') || renderResult.findByTitle('Send');
+      const submitButton = renderResult.findByText('Send') || renderResult.findByTitle('Send');
       fireEvent.click(await submitButton);
     };
 
@@ -78,16 +64,22 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
   describe(`${componentName}`, () => {
     const inputPlaceholder = 'Type your message';
+    const userId = 'userId';
     const username = 'username';
-    const userid = 'userid';
+    const mentionId = 'mention-id';
+    const mentionName = 'mention-name';
 
     // First, set up a client and channel, so we can properly set up the context etc.
     beforeAll(async () => {
-      const user1 = generateUser({ name: username, id: userid });
+      const user1 = generateUser({ id: userId, name: username });
+      const mentionUser = generateUser({
+        id: mentionId,
+        name: mentionName,
+      });
       const message1 = generateMessage({ user: user1 });
       const mockedChannel = generateChannel({
+        members: [generateMember({ user: user1 }), generateMember({ user: mentionUser })],
         messages: [message1],
-        members: [generateMember({ user: user1 })],
       });
       chatClient = await getTestClientWithUser({ id: user1.id });
       useMockedApis(chatClient, [getOrCreateChannelApi(mockedChannel)]);
@@ -111,10 +103,8 @@ const ActiveChannelSetter = ({ activeChannel }) => {
     const filename = 'some.txt';
     const fileUploadUrl = 'http://www.getstream.io'; // real url, because ImagePreview will try to load the image
 
-    const getImage = () =>
-      new File(['content'], filename, { type: 'image/png' });
-    const getFile = (name = filename) =>
-      new File(['content'], name, { type: 'text/plain' });
+    const getImage = () => new File(['content'], filename, { type: 'image/png' });
+    const getFile = (name = filename) => new File(['content'], name, { type: 'text/plain' });
 
     const mockUploadApi = () =>
       jest.fn().mockImplementation(() =>
@@ -135,19 +125,65 @@ const ActiveChannelSetter = ({ activeChannel }) => {
       });
     });
 
+    it('Should render default emoji svg', async () => {
+      const { findByTitle } = renderComponent();
+      const emojiIcon = await findByTitle('Open emoji picker');
+
+      await waitFor(() => {
+        expect(emojiIcon).toBeInTheDocument();
+      });
+    });
+
+    it('Should render custom emoji svg provided as prop', async () => {
+      const EmojiIcon = () => (
+        <svg>
+          <title>NotEmoji</title>
+        </svg>
+      );
+
+      const { findByTitle } = renderComponent({}, { EmojiIcon });
+
+      const emojiIcon = await findByTitle('NotEmoji');
+
+      await waitFor(() => {
+        expect(emojiIcon).toBeInTheDocument();
+      });
+    });
+
+    it('Should render default file upload icon', async () => {
+      const { findByTitle } = renderComponent();
+      const fileUploadIcon = await findByTitle('Attach files');
+
+      await waitFor(() => {
+        expect(fileUploadIcon).toBeInTheDocument();
+      });
+    });
+
+    it('Should render custom file upload svg provided as prop', async () => {
+      const FileUploadIcon = () => (
+        <svg>
+          <title>NotFileUploadIcon</title>
+        </svg>
+      );
+
+      const { findByTitle } = renderComponent({}, { FileUploadIcon });
+
+      const fileUploadIcon = await findByTitle('NotFileUploadIcon');
+
+      await waitFor(() => {
+        expect(fileUploadIcon).toBeInTheDocument();
+      });
+    });
+
     it('Should open the emoji picker after clicking the icon, and allow adding emojis to the message', async () => {
-      const {
-        container,
-        findByTitle,
-        queryByText,
-        queryAllByText,
-        getByDisplayValue,
-      } = renderComponent();
+      const { container, findByTitle, getByDisplayValue, queryAllByText } = renderComponent();
 
       const emojiIcon = await findByTitle('Open emoji picker');
       fireEvent.click(emojiIcon);
 
-      expect(queryByText('Pick your emoji')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(container.querySelector('.emoji-mart')).toBeInTheDocument();
+      });
 
       const emoji = '💯';
       const emojiButton = queryAllByText(emoji)[0];
@@ -160,7 +196,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
       // close picker
       fireEvent.click(container);
-      expect(queryByText('Pick your emoji…')).not.toBeInTheDocument();
+      expect(container.querySelector('.emoji-mart')).not.toBeInTheDocument();
     });
 
     describe('Attachments', () => {
@@ -182,12 +218,12 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         clipboardEvent.clipboardData = {
           items: [
             {
-              kind: 'file',
               getAsFile: () => file,
+              kind: 'file',
             },
             {
-              kind: 'file',
               getAsFile: () => image,
+              kind: 'file',
             },
           ],
         };
@@ -195,19 +231,10 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         formElement.dispatchEvent(clipboardEvent);
         const filenameText = await findByText(filename);
         await waitFor(() => {
-          expect(doFileUploadRequest).toHaveBeenCalledWith(
-            file,
-            expect.any(Object),
-          );
+          expect(doFileUploadRequest).toHaveBeenCalledWith(file, expect.any(Object));
           expect(filenameText).toBeInTheDocument();
-          expect(filenameText.closest('a')).toHaveAttribute(
-            'href',
-            fileUploadUrl,
-          );
-          expect(doImageUploadRequest).toHaveBeenCalledWith(
-            image,
-            expect.any(Object),
-          );
+          expect(filenameText.closest('a')).toHaveAttribute('href', fileUploadUrl);
+          expect(doImageUploadRequest).toHaveBeenCalledWith(image, expect.any(Object));
         });
       });
 
@@ -222,10 +249,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         dropFile(file, formElement);
 
         await waitFor(() => {
-          expect(doImageUploadRequest).toHaveBeenCalledWith(
-            file,
-            expect.any(Object),
-          );
+          expect(doImageUploadRequest).toHaveBeenCalledWith(file, expect.any(Object));
         });
       });
 
@@ -240,10 +264,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         const filenameText = await findByText(filename);
 
         expect(filenameText).toBeInTheDocument();
-        expect(filenameText.closest('a')).toHaveAttribute(
-          'href',
-          fileUploadUrl,
-        );
+        expect(filenameText.closest('a')).toHaveAttribute('href', fileUploadUrl);
       });
 
       it('should allow uploading files with the file upload button', async () => {
@@ -262,10 +283,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         const filenameText = await findByText(filename);
 
         expect(filenameText).toBeInTheDocument();
-        expect(filenameText.closest('a')).toHaveAttribute(
-          'href',
-          fileUploadUrl,
-        );
+        expect(filenameText.closest('a')).toHaveAttribute('href', fileUploadUrl);
       });
 
       it('Should call error handler if an image failed to upload', async () => {
@@ -282,15 +300,8 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         dropFile(file, formElement);
 
         await waitFor(() => {
-          expect(errorHandler).toHaveBeenCalledWith(
-            cause,
-            'upload-image',
-            expect.any(Object),
-          );
-          expect(doImageUploadRequest).toHaveBeenCalledWith(
-            file,
-            expect.any(Object),
-          );
+          expect(errorHandler).toHaveBeenCalledWith(cause, 'upload-image', expect.any(Object));
+          expect(doImageUploadRequest).toHaveBeenCalledWith(file, expect.any(Object));
         });
       });
 
@@ -309,32 +320,20 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         dropFile(file, formElement);
 
         await waitFor(() => {
-          expect(errorHandler).toHaveBeenCalledWith(
-            cause,
-            'upload-file',
-            expect.any(Object),
-          );
-          expect(doFileUploadRequest).toHaveBeenCalledWith(
-            file,
-            expect.any(Object),
-          );
+          expect(errorHandler).toHaveBeenCalledWith(cause, 'upload-file', expect.any(Object));
+          expect(doFileUploadRequest).toHaveBeenCalledWith(file, expect.any(Object));
         });
 
-        doFileUploadRequest.mockImplementationOnce(() =>
-          Promise.resolve({ file }),
-        );
+        doFileUploadRequest.mockImplementationOnce(() => Promise.resolve({ file }));
 
         fireEvent.click(await findByText('retry'));
 
         await waitFor(() =>
-          expect(doFileUploadRequest).toHaveBeenCalledWith(
-            file,
-            expect.any(Object),
-          ),
+          expect(doFileUploadRequest).toHaveBeenCalledWith(file, expect.any(Object)),
         );
       });
 
-      it('should not set multiple attribute on the file input if mutltipleUploads is false', async () => {
+      it('should not set multiple attribute on the file input if multipleUploads is false', async () => {
         const { findByTestId } = renderComponent(
           {},
           {
@@ -345,7 +344,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         expect(input).not.toHaveAttribute('multiple');
       });
 
-      it('should set multiple attribute on the file input if mutltipleUploads is true', async () => {
+      it('should set multiple attribute on the file input if multipleUploads is true', async () => {
         const { findByTestId } = renderComponent(
           {},
           {
@@ -376,9 +375,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
         const file2 = getFile(filename2);
         act(() => dropFile(file2, formElement));
-        await waitFor(() =>
-          expect(queryByText(filename2)).not.toBeInTheDocument(),
-        );
+        await waitFor(() => expect(queryByText(filename2)).not.toBeInTheDocument());
       });
 
       it('should only allow uploading 1 file if multipleUploads is false', async () => {
@@ -399,9 +396,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
         const file2 = getFile(filename2);
         act(() => dropFile(file2, formElement));
-        await waitFor(() =>
-          expect(queryByText(filename2)).not.toBeInTheDocument(),
-        );
+        await waitFor(() => expect(queryByText(filename2)).not.toBeInTheDocument());
       });
 
       // TODO: Check if pasting plaintext is not prevented -> tricky because recreating exact event is hard
@@ -420,7 +415,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
       it('should not render file upload button', () => {
         const { queryByTestId } = renderComponent();
-        expect(queryByTestId('fileinput')).toBeNull();
+        expect(queryByTestId('fileinput')).not.toBeInTheDocument();
       });
 
       it('Pasting images and files should do nothing', async () => {
@@ -438,14 +433,14 @@ const ActiveChannelSetter = ({ activeChannel }) => {
         // set `clipboardData`. Mock DataTransfer object
         clipboardEvent.clipboardData = {
           items: [
-            { kind: 'file', getAsFile: () => file },
-            { kind: 'file', getAsFile: () => image },
+            { getAsFile: () => file, kind: 'file' },
+            { getAsFile: () => image, kind: 'file' },
           ],
         };
         const formElement = await findByPlaceholderText(inputPlaceholder);
         formElement.dispatchEvent(clipboardEvent);
         await waitFor(() => {
-          expect(queryByText(filename)).toBeNull();
+          expect(queryByText(filename)).not.toBeInTheDocument();
           expect(doFileUploadRequest).not.toHaveBeenCalled();
           expect(doImageUploadRequest).not.toHaveBeenCalled();
         });
@@ -469,7 +464,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
     describe('Submitting', () => {
       it('Should submit the input value when clicking the submit button', async () => {
-        const { submit, findByPlaceholderText } = renderComponent();
+        const { findByPlaceholderText, submit } = renderComponent();
 
         const messageText = 'Some text';
 
@@ -490,10 +485,8 @@ const ActiveChannelSetter = ({ activeChannel }) => {
       });
 
       it('Should use overrideSubmitHandler prop if it is defined', async () => {
-        const overrideMock = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve());
-        const { submit, findByPlaceholderText } = renderComponent({
+        const overrideMock = jest.fn().mockImplementation(() => Promise.resolve());
+        const { findByPlaceholderText, submit } = renderComponent({
           overrideSubmitHandler: overrideMock,
         });
         const messageText = 'Some text';
@@ -523,7 +516,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
       it('should add image as attachment if a message is submitted with an image', async () => {
         const doImageUploadRequest = mockUploadApi();
-        const { submit, findByPlaceholderText } = renderComponent({
+        const { findByPlaceholderText, submit } = renderComponent({
           doImageUploadRequest,
         });
 
@@ -540,8 +533,8 @@ const ActiveChannelSetter = ({ activeChannel }) => {
           expect.objectContaining({
             attachments: expect.arrayContaining([
               expect.objectContaining({
-                type: 'image',
                 image_url: fileUploadUrl,
+                type: 'image',
               }),
             ]),
           }),
@@ -550,7 +543,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
       it('should add file as attachment if a message is submitted with an file', async () => {
         const doFileUploadRequest = mockUploadApi();
-        const { submit, findByPlaceholderText } = renderComponent({
+        const { findByPlaceholderText, submit } = renderComponent({
           doFileUploadRequest,
         });
 
@@ -567,8 +560,8 @@ const ActiveChannelSetter = ({ activeChannel }) => {
           expect.objectContaining({
             attachments: expect.arrayContaining([
               expect.objectContaining({
-                type: 'file',
                 asset_url: fileUploadUrl,
+                type: 'file',
               }),
             ]),
           }),
@@ -577,7 +570,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
 
       it('should add audio as attachment if a message is submitted with an audio file', async () => {
         const doFileUploadRequest = mockUploadApi();
-        const { submit, findByPlaceholderText } = renderComponent({
+        const { findByPlaceholderText, submit } = renderComponent({
           doFileUploadRequest,
         });
 
@@ -596,34 +589,130 @@ const ActiveChannelSetter = ({ activeChannel }) => {
           expect.objectContaining({
             attachments: expect.arrayContaining([
               expect.objectContaining({
-                type: 'audio',
                 asset_url: fileUploadUrl,
+                type: 'audio',
               }),
             ]),
           }),
+        );
+      });
+      it('should not submit if keycodeSubmitKeys are provided and keydown events do not match', async () => {
+        const { findByPlaceholderText } = renderComponent({
+          keycodeSubmitKeys: [[17]],
+        });
+        const input = await findByPlaceholderText(inputPlaceholder);
+
+        fireEvent.keyDown(input, {
+          keyCode: 19,
+        });
+
+        expect(submitMock).not.toHaveBeenCalled();
+      });
+      it('should submit if keycodeSubmitKeys are provided and keydown events do match', async () => {
+        const { findByPlaceholderText, submit } = renderComponent({
+          keycodeSubmitKeys: [[17, 13]],
+        });
+        const messageText = 'Submission text.';
+        const input = await findByPlaceholderText(inputPlaceholder);
+
+        fireEvent.change(input, {
+          target: {
+            value: messageText,
+          },
+        });
+
+        fireEvent.keyDown(input, {
+          keyCode: 17,
+        });
+
+        fireEvent.keyDown(input, {
+          keyCode: 13,
+        });
+
+        await submit();
+
+        expect(submitMock).toHaveBeenCalledWith(
+          channel.cid,
+          expect.objectContaining({
+            text: messageText,
+          }),
+        );
+      });
+      it('should submit if [[16,13], [57], [48]] are provided as keycodeSubmitKeys and keydown events match 57', async () => {
+        const { findByPlaceholderText, submit } = renderComponent({
+          keycodeSubmitKeys: [[16, 13], [57], [48]],
+        });
+        const messageText = 'Submission text.';
+        const input = await findByPlaceholderText(inputPlaceholder);
+
+        fireEvent.change(input, {
+          target: {
+            value: messageText,
+          },
+        });
+
+        fireEvent.keyDown(input, {
+          keyCode: 57,
+        });
+
+        await submit();
+
+        expect(submitMock).toHaveBeenCalledWith(
+          channel.cid,
+          expect.objectContaining({
+            text: messageText,
+          }),
+        );
+      });
+      it('should submit if just a tuple is provided and keycode events do match', async () => {
+        const { findByPlaceholderText, submit } = renderComponent({
+          keycodeSubmitKeys: [[76, 77]],
+        });
+        const messageText = 'Submission text.';
+        const input = await findByPlaceholderText(inputPlaceholder);
+
+        fireEvent.change(input, {
+          target: {
+            value: messageText,
+          },
+        });
+
+        fireEvent.keyDown(input, {
+          keyCode: 76,
+        });
+
+        fireEvent.keyDown(input, {
+          keyCode: 77,
+        });
+
+        await submit();
+
+        expect(submitMock).toHaveBeenCalledWith(
+          channel.cid,
+          expect.objectContaining({ text: messageText }),
         );
       });
     });
 
     it('Should edit a message if it is passed through the message prop', async () => {
       const file = {
-        type: 'file',
         asset_url: 'somewhere.txt',
+        file_size: 1000,
         mime_type: 'text/plain',
         title: 'title',
-        file_size: 1000,
+        type: 'file',
       };
       const image = {
-        type: 'image',
-        image_url: 'somewhere.png',
         fallback: 'fallback.png',
+        image_url: 'somewhere.png',
+        type: 'image',
       };
-      const mentioned_users = [{ name: username, id: userid }];
+      const mentioned_users = [{ id: userId, name: username }];
 
       const message = generateMessage({
+        attachments: [file, image],
         mentioned_users,
         text: `@${username} what's up!`,
-        attachments: [file, image],
       });
       const { submit } = renderComponent({
         clearEditingState: () => {},
@@ -634,27 +723,27 @@ const ActiveChannelSetter = ({ activeChannel }) => {
       expect(editMock).toHaveBeenCalledWith(
         channel.cid,
         expect.objectContaining({
-          text: message.text,
-          mentioned_users: [userid],
           attachments: expect.arrayContaining([
             expect.objectContaining(image),
             expect.objectContaining(file),
           ]),
+          mentioned_users: [{ id: userId, name: username }],
+          text: message.text,
         }),
       );
     });
 
     it('Should add a mentioned user if @ is typed and a user is selected', async () => {
-      const { findByPlaceholderText, findByText, submit } = renderComponent();
+      const { findByPlaceholderText, getByTestId, submit } = renderComponent();
 
       const formElement = await findByPlaceholderText(inputPlaceholder);
       fireEvent.change(formElement, {
         target: {
-          value: '@',
           selectionEnd: 1,
+          value: '@',
         },
       });
-      const usernameListItem = await findByText(username);
+      const usernameListItem = await getByTestId('user-item-name');
       expect(usernameListItem).toBeInTheDocument();
 
       fireEvent.click(usernameListItem);
@@ -663,7 +752,7 @@ const ActiveChannelSetter = ({ activeChannel }) => {
       expect(submitMock).toHaveBeenCalledWith(
         channel.cid,
         expect.objectContaining({
-          mentioned_users: expect.arrayContaining([userid]),
+          mentioned_users: expect.arrayContaining([mentionId]),
         }),
       );
     });
@@ -671,16 +760,16 @@ const ActiveChannelSetter = ({ activeChannel }) => {
     it('should remove mentioned users if they are no longer mentioned in the message text', async () => {
       const { findByPlaceholderText, submit } = renderComponent({
         message: {
+          mentioned_users: [{ id: userId, name: username }],
           text: `@${username}`,
-          mentioned_users: [{ id: userid, name: username }],
         },
       });
       // remove all text from input
       const formElement = await findByPlaceholderText(inputPlaceholder);
       fireEvent.change(formElement, {
         target: {
-          value: 'no mentioned users',
           selectionEnd: 1,
+          value: 'no mentioned users',
         },
       });
 
@@ -694,6 +783,31 @@ const ActiveChannelSetter = ({ activeChannel }) => {
           }),
         ),
       );
+    });
+
+    it('should override the default List component when SuggestionList is provided as a prop', async () => {
+      const AutocompleteSuggestionList = () => (
+        <div data-testid='suggestion-list'>Suggestion List</div>
+      );
+
+      const { findByPlaceholderText, getByTestId, queryByText } = renderComponent(
+        {},
+        { AutocompleteSuggestionList },
+      );
+
+      const formElement = await findByPlaceholderText(inputPlaceholder);
+
+      await waitFor(() => expect(queryByText('Suggestion List')).not.toBeInTheDocument());
+
+      fireEvent.change(formElement, {
+        target: { value: '/' },
+      });
+
+      if (componentName !== 'EditMessageForm') {
+        await waitFor(
+          () => expect(getByTestId('suggestion-list')).toBeInTheDocument(), // eslint-disable-line
+        );
+      }
     });
   });
 });

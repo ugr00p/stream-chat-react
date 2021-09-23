@@ -1,7 +1,8 @@
 module.exports = function (api) {
   api.cache(true);
   return {
-    presets: ['@babel/env', '@babel/react'],
+    ignore: ['./**/*.d.ts'],
+    presets: ['@babel/preset-typescript', '@babel/env', '@babel/react'],
     plugins: [
       [
         'i18next-extract',
@@ -9,7 +10,7 @@ module.exports = function (api) {
           contextSeparator: '__',
           defaultContexts: [''],
           defaultNS: 'en',
-          locales: ['nl', 'en', 'it', 'tr', 'fr', 'hi', 'ru'],
+          locales: ['nl', 'en', 'it', 'tr', 'fr', 'hi', 'ru', 'es', 'pt', 'de', 'ja', 'ko'],
           jsonSpace: 4,
           keySeparator: null,
           nsSeparator: null,

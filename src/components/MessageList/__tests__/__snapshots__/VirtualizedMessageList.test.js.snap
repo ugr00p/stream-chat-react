@@ -2,7 +2,7 @@
 
 exports[`VirtualizedMessageList should render the list without any message 1`] = `
 <div
-  className="str-chat str-chat-channel messaging light"
+  className="str-chat str-chat-channel messaging light "
 >
   <div
     className="str-chat__container"
@@ -16,6 +16,7 @@ exports[`VirtualizedMessageList should render the list without any message 1`] =
             "WebkitOverflowScrolling": "touch",
             "height": "100%",
             "outline": "none",
+            "overflowX": "hidden",
             "overflowY": "auto",
             "position": "relative",
           }
@@ -32,27 +33,8 @@ exports[`VirtualizedMessageList should render the list without any message 1`] =
             }
           }
         >
-          <div
-            style={
-              Object {
-                "marginTop": "0px",
-              }
-            }
-          >
-            <header />
-            <footer />
-          </div>
-        </div>
-        <div
-          style={
-            Object {
-              "height": "0px",
-              "position": "absolute",
-              "top": 0,
-            }
-          }
-        >
-           
+          <div />
+          <div />
         </div>
       </div>
       <div

@@ -1,18 +1,13 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import React from 'react';
-import { render, cleanup, waitFor } from '@testing-library/react';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import {
-  getTestClientWithUser,
-  generateUser,
-  generateChannel,
-} from 'mock-builders';
-import ChannelHeader from '../ChannelHeader';
-import {
-  ChatContext,
-  TranslationContext,
-  ChannelContext,
-} from '../../../context';
+
+import { ChannelHeader } from '../ChannelHeader';
+
+import { ChannelStateProvider } from '../../../context/ChannelStateContext';
+import { ChatProvider } from '../../../context/ChatContext';
+import { TranslationProvider } from '../../../context/TranslationContext';
+import { generateChannel, generateUser, getTestClientWithUser } from '../../../mock-builders';
 
 const alice = generateUser();
 let testChannel1;
@@ -21,14 +16,15 @@ async function renderComponent(props, channelData) {
   testChannel1 = generateChannel(channelData);
   const t = jest.fn((key) => key);
   const client = await getTestClientWithUser(alice);
+
   return render(
-    <ChatContext.Provider value={{ client, channel: testChannel1 }}>
-      <ChannelContext.Provider value={{ client, channel: testChannel1 }}>
-        <TranslationContext.Provider value={{ t }}>
+    <ChatProvider value={{ channel: testChannel1, client }}>
+      <ChannelStateProvider value={{ channel: testChannel1 }}>
+        <TranslationProvider value={{ t }}>
           <ChannelHeader {...props} />
-        </TranslationContext.Provider>
-      </ChannelContext.Provider>
-    </ChatContext.Provider>,
+        </TranslationProvider>
+      </ChannelStateProvider>
+    </ChatProvider>,
   );
 }
 
@@ -75,29 +71,27 @@ describe('ChannelHeader', () => {
 
   it('should display bigger image if channelType is commerce', async () => {
     const { getByTestId } = await renderComponent(null, {
-      type: 'commerce',
       data: {
         image: 'image.jpg',
         name: 'test-channel-1',
         subtitle: 'test subtitle',
       },
+      type: 'commerce',
     });
     expect(getByTestId('avatar-img')).toHaveStyle({
-      width: '60px',
-      height: '60px',
       flexBasis: '60px',
+      height: '60px',
       objectFit: 'cover',
+      width: '60px',
     });
     expect(getByTestId('avatar')).toHaveStyle({
-      width: '60px',
-      height: '60px',
       flexBasis: '60px',
-      lineHeight: '60px',
       fontSize: 30,
+      height: '60px',
+      lineHeight: '60px',
+      width: '60px',
     });
-    expect(getByTestId('avatar')).toHaveClass(
-      'str-chat__avatar str-chat__avatar--rounded',
-    );
+    expect(getByTestId('avatar')).toHaveClass('str-chat__avatar str-chat__avatar--rounded');
   });
 
   it('should display watcher_count', async () => {
@@ -118,9 +112,9 @@ describe('ChannelHeader', () => {
     const { getByText } = await renderComponent(null, {
       data: {
         image: 'image.jpg',
+        member_count: 34,
         name: 'test-channel-1',
         subtitle: 'test subtitle',
-        member_count: 34,
       },
     });
     waitFor(() => {

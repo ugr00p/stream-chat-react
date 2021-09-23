@@ -1,31 +1,46 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable jest-dom/prefer-to-have-class */
 import React from 'react';
 import testRenderer from 'react-test-renderer';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import {
-  generateChannel,
-  generateUser,
-  generateReaction,
-  getTestClientWithUser,
-  generateMessage,
-} from 'mock-builders';
-import { ChannelContext } from '../../../context';
-import MessageText from '../MessageText';
-import MessageOptionsMock from '../MessageOptions';
+import EmojiComponentMock from 'emoji-mart/dist-modern/components/emoji/nimble-emoji';
 
-jest.mock('../MessageOptions', () => jest.fn(() => <div />));
+import { Message } from '../Message';
+import { MessageOptions as MessageOptionsMock } from '../MessageOptions';
+import { MessageSimple } from '../MessageSimple';
+import { MessageText } from '../MessageText';
+
+import { Attachment } from '../../Attachment/Attachment';
+
+import { ChannelActionProvider } from '../../../context/ChannelActionContext';
+import { ChannelStateProvider } from '../../../context/ChannelStateContext';
+import { ChatProvider } from '../../../context/ChatContext';
+import { EmojiProvider } from '../../../context/EmojiContext';
+import { ComponentProvider } from '../../../context/ComponentContext';
+import { TranslationProvider } from '../../../context/TranslationContext';
+import {
+  emojiDataMock,
+  generateChannel,
+  generateMessage,
+  generateReaction,
+  generateUser,
+  getTestClientWithUser,
+} from '../../../mock-builders';
+
+jest.mock('../MessageOptions', () => ({
+  MessageOptions: jest.fn(() => <div />),
+}));
 
 const alice = generateUser({ name: 'alice' });
 const bob = generateUser({ name: 'bob' });
 const onMentionsHoverMock = jest.fn();
 const onMentionsClickMock = jest.fn();
 const defaultProps = {
-  message: generateMessage(),
   initialMessage: false,
-  threadList: false,
+  message: generateMessage(),
   messageWrapperRef: { current: document.createElement('div') },
   onReactionListClick: () => {},
+  threadList: false,
 };
 
 function generateAliceMessage(messageOptions) {
@@ -35,55 +50,73 @@ function generateAliceMessage(messageOptions) {
   });
 }
 
-async function renderMessageText(
-  customProps,
-  channelConfig = {},
-  renderer = render,
-) {
+async function renderMessageText(customProps, channelConfig = {}, renderer = render) {
   const client = await getTestClientWithUser(alice);
   const channel = generateChannel({
     getConfig: () => ({ reactions: true, ...channelConfig }),
+    state: { membership: {} },
   });
+  const customDateTimeParser = jest.fn(() => ({ format: jest.fn() }));
+
   return renderer(
-    <ChannelContext.Provider
-      value={{
-        channel,
-        client,
-        onMentionsHover: onMentionsHoverMock,
-        onMentionsClick: onMentionsClickMock,
-      }}
-    >
-      <MessageText {...defaultProps} {...customProps} />
-    </ChannelContext.Provider>,
+    <ChatProvider value={{ client }}>
+      <ChannelStateProvider value={{ channel }}>
+        <ChannelActionProvider
+          value={{ onMentionsClick: onMentionsClickMock, onMentionsHover: onMentionsHoverMock }}
+        >
+          <TranslationProvider
+            value={{
+              t: (key) => key,
+              tDateTimeParser: customDateTimeParser,
+              userLanguage: 'en',
+            }}
+          >
+            <ComponentProvider
+              value={{
+                Attachment,
+                Emoji: EmojiComponentMock,
+                // eslint-disable-next-line react/display-name
+                Message: () => <MessageSimple channelConfig={channelConfig} />,
+              }}
+            >
+              <EmojiProvider value={{ emojiConfig: emojiDataMock }}>
+                <Message {...defaultProps} {...customProps}>
+                  <MessageText {...defaultProps} {...customProps} />
+                </Message>
+              </EmojiProvider>
+            </ComponentProvider>
+          </TranslationProvider>
+        </ChannelActionProvider>
+      </ChannelStateProvider>
+    </ChatProvider>,
   );
 }
 
 const messageTextTestId = 'message-text-inner-wrapper';
 const reactionSelectorTestId = 'reaction-selector';
+
 describe('<MessageText />', () => {
   beforeEach(jest.clearAllMocks);
   it('should not render anything if message is not set', async () => {
-    const { queryByTestId } = await renderMessageText({ message: undefined });
-    expect(queryByTestId(messageTextTestId)).toBeNull();
+    const { queryByTestId } = await renderMessageText({ message: {} });
+    expect(queryByTestId(messageTextTestId)).not.toBeInTheDocument();
   });
 
   it('should not render anything if message text is not set', async () => {
-    const { queryByTestId } = await renderMessageText({ message: undefined });
-    expect(queryByTestId(messageTextTestId)).toBeNull();
+    const { queryByTestId } = await renderMessageText({ message: {} });
+    expect(queryByTestId(messageTextTestId)).not.toBeInTheDocument();
   });
 
   it('should set attachments css class modifier when message has text and is focused', async () => {
     const attachment = {
-      type: 'image',
       image_url: 'image.jpg',
+      type: 'image',
     };
     const message = generateAliceMessage({
       attachments: [attachment, attachment, attachment],
     });
     const { getByTestId } = await renderMessageText({ message });
-    expect(getByTestId(messageTextTestId).className).toContain(
-      '--has-attachment',
-    );
+    expect(getByTestId(messageTextTestId).className).toContain('--has-attachment');
   });
 
   it('should set emoji css class when message has text that is only emojis', async () => {
@@ -94,42 +127,24 @@ describe('<MessageText />', () => {
 
   it('should handle message mention mouse hover event', async () => {
     const message = generateAliceMessage({ mentioned_users: [bob] });
-    const { getByTestId } = await renderMessageText({ message });
+    const { getByTestId } = await renderMessageText({
+      message,
+      onMentionsHoverMessage: onMentionsHoverMock,
+    });
     expect(onMentionsHoverMock).not.toHaveBeenCalled();
     fireEvent.mouseOver(getByTestId(messageTextTestId));
     expect(onMentionsHoverMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle custom message mention mouse hover event', async () => {
-    const message = generateAliceMessage({ mentioned_users: [bob] });
-    const customMentionsHover = jest.fn();
-    const { getByTestId } = await renderMessageText({
-      message,
-      onMentionsHoverMessage: customMentionsHover,
-    });
-    expect(customMentionsHover).not.toHaveBeenCalled();
-    fireEvent.mouseOver(getByTestId(messageTextTestId));
-    expect(customMentionsHover).toHaveBeenCalledTimes(1);
-  });
-
   it('should handle message mention mouse click event', async () => {
     const message = generateAliceMessage({ mentioned_users: [bob] });
-    const { getByTestId } = await renderMessageText({ message });
+    const { getByTestId } = await renderMessageText({
+      message,
+      onMentionsClickMessage: onMentionsClickMock,
+    });
     expect(onMentionsClickMock).not.toHaveBeenCalled();
     fireEvent.click(getByTestId(messageTextTestId));
     expect(onMentionsClickMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('should handle custom message mention mouse click event', async () => {
-    const message = generateAliceMessage({ mentioned_users: [bob] });
-    const customMentionClick = jest.fn();
-    const { getByTestId } = await renderMessageText({
-      message,
-      onMentionsClickMessage: customMentionClick,
-    });
-    expect(customMentionClick).not.toHaveBeenCalled();
-    fireEvent.click(getByTestId(messageTextTestId));
-    expect(customMentionClick).toHaveBeenCalledTimes(1);
   });
 
   it('should inform that message was not sent when message is has type "error"', async () => {
@@ -141,9 +156,7 @@ describe('<MessageText />', () => {
   it('should inform that retry is possible when message has status "failed"', async () => {
     const message = generateAliceMessage({ status: 'failed' });
     const { getByText } = await renderMessageText({ message });
-    expect(
-      getByText('Message Failed · Click to try again'),
-    ).toBeInTheDocument();
+    expect(getByText('Message Failed · Click to try again')).toBeInTheDocument();
   });
 
   it('render message html when unsafe html property is enabled', async () => {
@@ -164,6 +177,18 @@ describe('<MessageText />', () => {
     expect(getByText(text)).toBeInTheDocument();
   });
 
+  it('should display text in users set language', async () => {
+    const text = 'bonjour';
+    const message = generateAliceMessage({
+      i18n: { en_text: 'hello', fr_text: 'bonjour', language: 'fr' },
+      text,
+    });
+
+    const { getByText } = await renderMessageText({ message });
+
+    expect(getByText('hello')).toBeInTheDocument();
+  });
+
   it('should show reaction list if message has reactions and detailed reactions are not displayed', async () => {
     const bobReaction = generateReaction({ user: bob });
     const message = generateAliceMessage({
@@ -178,12 +203,9 @@ describe('<MessageText />', () => {
     const message = generateAliceMessage({
       latest_reactions: [bobReaction],
     });
-    const { queryByTestId } = await renderMessageText(
-      { message },
-      { reactions: false },
-    );
+    const { queryByTestId } = await renderMessageText({ message }, { reactions: false });
 
-    expect(queryByTestId('reaction-list')).toBeNull();
+    expect(queryByTestId('reaction-list')).not.toBeInTheDocument();
   });
 
   it('should show reaction selector when message has reaction and reaction list is clicked', async () => {
@@ -192,7 +214,7 @@ describe('<MessageText />', () => {
       latest_reactions: [bobReaction],
     });
     const { getByTestId, queryByTestId } = await renderMessageText({ message });
-    expect(queryByTestId(reactionSelectorTestId)).toBeNull();
+    expect(queryByTestId(reactionSelectorTestId)).not.toBeInTheDocument();
     fireEvent.click(getByTestId('reaction-list'));
     expect(getByTestId(reactionSelectorTestId)).toBeInTheDocument();
   });
@@ -209,37 +231,48 @@ describe('<MessageText />', () => {
         displayLeft,
       },
     });
-    expect(MessageOptionsMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        displayLeft,
-      }),
-      {},
-    );
+    // eslint-disable-next-line jest/prefer-called-with
+    expect(MessageOptionsMock).toHaveBeenCalled();
   });
 
   it('should render with a custom wrapper class when one is set', async () => {
     const customWrapperClass = 'custom-wrapper';
     const message = generateMessage({ text: 'hello world' });
-    const tree = await renderMessageText(
-      { message, customWrapperClass },
-      {},
-      testRenderer.create,
-    );
+    const tree = await renderMessageText({ customWrapperClass, message }, {}, testRenderer.create);
     expect(tree.toJSON()).toMatchInlineSnapshot(`
       <div
-        className="custom-wrapper"
+        className="str-chat__message str-chat__message-simple
+      						str-chat__message--regular
+      						str-chat__message--received
+      						str-chat__message--has-text"
       >
         <div
-          className="str-chat__message-text-inner str-chat__message-simple-text-inner"
-          data-testid="message-text-inner-wrapper"
-          onClick={[Function]}
-          onMouseOver={[Function]}
+          className="str-chat__message-inner"
+          data-testid="message-inner"
         >
-          <p>
-            hello world
-          </p>
+          <div />
+          <div
+            className="str-chat__message-text"
+          >
+            <div
+              className="str-chat__message-text-inner str-chat__message-simple-text-inner"
+              data-testid="message-text-inner-wrapper"
+              onClick={[Function]}
+              onMouseOver={[Function]}
+            >
+              <div
+                onClick={[Function]}
+              >
+                <p>
+                  hello world
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            className="str-chat__message-data str-chat__message-simple-data"
+          />
         </div>
-        <div />
       </div>
     `);
   });
@@ -247,52 +280,82 @@ describe('<MessageText />', () => {
   it('should render with a custom inner class when one is set', async () => {
     const customInnerClass = 'custom-inner';
     const message = generateMessage({ text: 'hi mate' });
-    const tree = await renderMessageText(
-      { message, customInnerClass },
-      {},
-      testRenderer.create,
-    );
+    const tree = await renderMessageText({ customInnerClass, message }, {}, testRenderer.create);
     expect(tree.toJSON()).toMatchInlineSnapshot(`
       <div
-        className="str-chat__message-text"
+        className="str-chat__message str-chat__message-simple
+      						str-chat__message--regular
+      						str-chat__message--received
+      						str-chat__message--has-text"
       >
         <div
-          className="custom-inner"
-          data-testid="message-text-inner-wrapper"
-          onClick={[Function]}
-          onMouseOver={[Function]}
+          className="str-chat__message-inner"
+          data-testid="message-inner"
         >
-          <p>
-            hi mate
-          </p>
+          <div />
+          <div
+            className="str-chat__message-text"
+          >
+            <div
+              className="str-chat__message-text-inner str-chat__message-simple-text-inner"
+              data-testid="message-text-inner-wrapper"
+              onClick={[Function]}
+              onMouseOver={[Function]}
+            >
+              <div
+                onClick={[Function]}
+              >
+                <p>
+                  hi mate
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            className="str-chat__message-data str-chat__message-simple-data"
+          />
         </div>
-        <div />
       </div>
     `);
   });
 
   it('should render with custom theme identifier in generated css classes when theme is set', async () => {
     const message = generateMessage({ text: 'whatup?!' });
-    const tree = await renderMessageText(
-      { message, theme: 'custom' },
-      {},
-      testRenderer.create,
-    );
+    const tree = await renderMessageText({ message, theme: 'custom' }, {}, testRenderer.create);
     expect(tree.toJSON()).toMatchInlineSnapshot(`
       <div
-        className="str-chat__message-text"
+        className="str-chat__message str-chat__message-simple
+      						str-chat__message--regular
+      						str-chat__message--received
+      						str-chat__message--has-text"
       >
         <div
-          className="str-chat__message-text-inner str-chat__message-custom-text-inner"
-          data-testid="message-text-inner-wrapper"
-          onClick={[Function]}
-          onMouseOver={[Function]}
+          className="str-chat__message-inner"
+          data-testid="message-inner"
         >
-          <p>
-            whatup?!
-          </p>
+          <div />
+          <div
+            className="str-chat__message-text"
+          >
+            <div
+              className="str-chat__message-text-inner str-chat__message-simple-text-inner"
+              data-testid="message-text-inner-wrapper"
+              onClick={[Function]}
+              onMouseOver={[Function]}
+            >
+              <div
+                onClick={[Function]}
+              >
+                <p>
+                  whatup?!
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            className="str-chat__message-data str-chat__message-simple-data"
+          />
         </div>
-        <div />
       </div>
     `);
   });

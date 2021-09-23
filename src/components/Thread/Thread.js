@@ -83,7 +83,7 @@ class Thread extends PureComponent {
     */
     MessageInput: /** @type {PropTypes.Validator<React.ComponentType<import('types').MessageInputProps>>} */ (PropTypes.elementType),
 
-    ThreadStyle:  PropTypes.object,
+    ThreadStyle: PropTypes.object,
   };
 
   static defaultProps = {
@@ -96,18 +96,13 @@ class Thread extends PureComponent {
   };
 
   render() {
-    const { thread, channel } = this.props;
+    const { channel, thread } = this.props;
 
     if (!thread || channel?.getConfig?.()?.replies === false) return null;
 
     // We use a wrapper to make sure the key variable is set.
     // this ensures that if you switch thread the component is recreated
-    return (
-      <ThreadInner
-        {...this.props}
-        key={`thread-${thread.id}-${channel?.cid}`}
-      />
-    );
+    return <ThreadInner {...this.props} key={`thread-${thread.id}-${channel?.cid}`} />;
   }
 }
 
@@ -124,20 +119,20 @@ const DefaultThreadHeader = ({ closeThread, t, thread }) => {
   };
 
   return (
-    <div className="str-chat__thread-header">
-      <div className="str-chat__thread-header-details">
+    <div className='str-chat__thread-header'>
+      <div className='str-chat__thread-header-details'>
         <strong>{t && t('Thread')}</strong>
         <small>{getReplyCount()}</small>
       </div>
       <button
+        className='str-chat__square-button'
+        data-testid='close-button'
         onClick={(e) => closeThread && closeThread(e)}
-        className="str-chat__square-button"
-        data-testid="close-button"
       >
-        <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
+        <svg height='10' width='10' xmlns='http://www.w3.org/2000/svg'>
           <path
-            d="M9.916 1.027L8.973.084 5 4.058 1.027.084l-.943.943L4.058 5 .084 8.973l.943.943L5 5.942l3.973 3.974.943-.943L5.942 5z"
-            fillRule="evenodd"
+            d='M9.916 1.027L8.973.084 5 4.058 1.027.084l-.943.943L4.058 5 .084 8.973l.943.943L5 5.942l3.973 3.974.943-.943L5.942 5z'
+            fillRule='evenodd'
           />
         </svg>
       </button>
@@ -161,7 +156,7 @@ class ThreadInner extends React.PureComponent {
   }
 
   componentDidMount() {
-    const { thread, loadMoreThread } = this.props;
+    const { loadMoreThread, thread } = this.props;
     const parentID = thread && thread.id;
     if (parentID && thread?.reply_count && loadMoreThread) {
       loadMoreThread();
@@ -189,7 +184,7 @@ class ThreadInner extends React.PureComponent {
    * @param {number} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { thread, threadMessages, loadMoreThread } = this.props;
+    const { loadMoreThread, thread, threadMessages } = this.props;
     const parentID = thread?.id;
 
     if (
@@ -217,13 +212,7 @@ class ThreadInner extends React.PureComponent {
   }
 
   render() {
-    const {
-      t,
-      closeThread,
-      thread,
-      ThreadHeader = DefaultThreadHeader,
-      ThreadStyle,
-    } = this.props;
+    const { t, closeThread, thread, ThreadHeader = DefaultThreadHeader, ThreadStyle } = this.props;
 
     if (!thread) {
       return null;
@@ -232,34 +221,30 @@ class ThreadInner extends React.PureComponent {
     const read = {};
     return (
       <div
-        className={`str-chat__thread ${
-          this.props.fullWidth ? 'str-chat__thread--full' : ''
-        }`}
-        style={ ThreadStyle? ThreadStyle: {} }
+        className={`str-chat__thread ${this.props.fullWidth ? 'str-chat__thread--full' : ''}`}
+        style={ThreadStyle ? ThreadStyle : {}}
       >
         <ThreadHeader closeThread={closeThread} t={t} thread={thread} />
-        <div className="str-chat__thread-list" ref={this.messageList}>
+        <div className='str-chat__thread-list' ref={this.messageList}>
           <Message
             // @ts-ignore
-            message={thread}
             initialMessage
-            threadList
+            message={thread}
             Message={this.props.Message}
+            threadList
             // TODO: remove the following line in next release, since we already have additionalParentMessageProps now.
             {...this.props}
             {...this.props.additionalParentMessageProps}
           />
-          <div className="str-chat__thread-start">
-            {t && t('Start of a new thread')}
-          </div>
+          <div className='str-chat__thread-start'>{t && t('Start of a new thread')}</div>
           <MessageList
+            hasMore={this.props.threadHasMore}
+            loadingMore={this.props.threadLoadingMore}
+            loadMore={this.props.loadMoreThread}
+            Message={this.props.Message}
             messages={this.props.threadMessages}
             read={read}
             threadList
-            loadMore={this.props.loadMoreThread}
-            hasMore={this.props.threadHasMore}
-            loadingMore={this.props.threadLoadingMore}
-            Message={this.props.Message}
             {...this.props.additionalMessageListProps}
           />
         </div>
