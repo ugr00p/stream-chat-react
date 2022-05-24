@@ -5,16 +5,14 @@ import calendar from 'dayjs/plugin/calendar';
 import { cleanup, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import DateSeparator from '../DateSeparator';
+import { DateSeparator } from '../DateSeparator';
 import { TranslationContext } from '../../../context';
 
 Dayjs.extend(calendar);
 
 afterEach(cleanup); // eslint-disable-line
 
-// this changes every time tests are run,
-// but by mocking the actual renderers tests are still deterministic
-const now = new Date();
+const now = new Date('2020-03-30T22:57:47.173Z');
 
 const withContext = (props) => {
   const t = jest.fn((key) => key);
@@ -30,9 +28,7 @@ const withContext = (props) => {
 
 describe('DateSeparator', () => {
   it('should use formatDate if it is provided', () => {
-    const { queryByText } = render(
-      <DateSeparator formatDate={() => 'the date'} date={now} />,
-    );
+    const { queryByText } = render(<DateSeparator date={now} formatDate={() => 'the date'} />);
 
     expect(queryByText('the date')).toBeInTheDocument();
   });
@@ -41,7 +37,7 @@ describe('DateSeparator', () => {
     const { Component, t } = withContext({ date: now, unread: true });
     const { queryByText } = render(Component);
 
-    expect(queryByText('New')).toBeInTheDocument();
+    expect(queryByText('New - 03/30/2020')).toBeInTheDocument();
     expect(t).toHaveBeenCalledWith('New');
   });
 
@@ -58,7 +54,7 @@ describe('DateSeparator', () => {
         <div
           className="str-chat__date-separator-date"
         >
-          New
+          New - 03/30/2020
         </div>
       </div>
     `);
@@ -68,19 +64,13 @@ describe('DateSeparator', () => {
     const { Component, tDateTimeParser } = withContext({ date: now });
     const { queryByText } = render(Component);
 
-    expect(tDateTimeParser).toHaveBeenCalledWith(now.toISOString());
-    expect(
-      queryByText(Dayjs(now.toISOString()).calendar()),
-    ).toBeInTheDocument();
+    expect(tDateTimeParser).toHaveBeenCalledWith(now);
+    expect(queryByText(Dayjs(now.toISOString()).calendar())).toBeInTheDocument();
   });
 
   describe('Position prop', () => {
     const renderWithPosition = (position) => (
-      <DateSeparator
-        formatDate={() => 'the date'}
-        date={now}
-        position={position}
-      />
+      <DateSeparator date={now} formatDate={() => 'the date'} position={position} />
     );
 
     const defaultPosition = renderer.create(renderWithPosition()).toJSON();

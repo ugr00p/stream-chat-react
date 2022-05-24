@@ -1,9 +1,9 @@
 import React from 'react';
-import { cleanup, render, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import { generateAudioAttachment } from 'mock-builders';
-import Audio from '../Audio';
+import { Audio } from '../Audio';
 
 const mockAudioAsset = generateAudioAttachment();
 
@@ -21,14 +21,12 @@ describe('Audio', () => {
     // jsdom doesn't define these, so mock them instead
     // see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement#Methods
     jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(() => {});
-    jest
-      .spyOn(HTMLMediaElement.prototype, 'pause')
-      .mockImplementation(() => {});
+    jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
   });
   afterEach(cleanup);
 
   it('should render title and description as text, and render the image with description as alt tag', () => {
-    const { getByText, getByAltText } = renderComponent();
+    const { getByAltText, getByText } = renderComponent();
 
     expect(getByText(mockAudioAsset.title)).toBeInTheDocument();
     expect(getByText(mockAudioAsset.text)).toBeInTheDocument();
@@ -72,12 +70,10 @@ describe('Audio', () => {
     const { getByTestId } = renderComponent();
 
     let intervalId;
-    const setIntervalSpy = jest
-      .spyOn(window, 'setInterval')
-      .mockImplementationOnce(() => {
-        intervalId = 'something';
-        return intervalId;
-      });
+    const setIntervalSpy = jest.spyOn(window, 'setInterval').mockImplementationOnce(() => {
+      intervalId = 'something';
+      return intervalId;
+    });
     const clearIntervalSpy = jest.spyOn(window, 'clearInterval');
 
     fireEvent.click(getByTestId(playButtonTestId));
@@ -107,12 +103,8 @@ describe('Audio', () => {
   it('should show the correct progress', async () => {
     const { getByTestId } = renderComponent();
 
-    jest
-      .spyOn(HTMLAudioElement.prototype, 'duration', 'get')
-      .mockImplementationOnce(() => 100);
-    jest
-      .spyOn(HTMLAudioElement.prototype, 'currentTime', 'get')
-      .mockImplementationOnce(() => 50);
+    jest.spyOn(HTMLAudioElement.prototype, 'duration', 'get').mockImplementationOnce(() => 100);
+    jest.spyOn(HTMLAudioElement.prototype, 'currentTime', 'get').mockImplementationOnce(() => 50);
 
     fireEvent.click(getByTestId(playButtonTestId));
 

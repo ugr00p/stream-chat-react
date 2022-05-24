@@ -1,14 +1,13 @@
-/* eslint no-underscore-dangle: 0 */
-/* eslint no-param-reassign: 0 */
-
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-underscore-dangle */
 import { StreamChat } from 'stream-chat';
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 
 const apiKey = 'API_KEY';
 const token = 'dummy_token';
 
-const setUser = (client, user) => {
-  return new Promise((resolve) => {
+const connectUser = (client, user) =>
+  new Promise((resolve) => {
     client.connectionId = 'dumm_connection_id';
     client.user = user;
     client.user.mutes = [];
@@ -18,26 +17,25 @@ const setUser = (client, user) => {
     client.wsPromise = Promise.resolve(true);
     resolve();
   });
-};
 
 function mockClient(client) {
   jest.spyOn(client, '_setToken').mockImplementation();
   jest.spyOn(client, '_setupConnection').mockImplementation();
+  jest.spyOn(client, '_setupConnection').mockImplementation();
+  jest.spyOn(client, 'getAppSettings').mockImplementation();
   client.tokenManager = {
-    tokenReady: jest.fn(() => true),
     getToken: jest.fn(() => token),
+    tokenReady: jest.fn(() => true),
   };
-  client.setUser = setUser.bind(null, client);
+  client.connectUser = connectUser.bind(null, client);
   return client;
 }
 
-export const getTestClient = () => {
-  return mockClient(new StreamChat(apiKey));
-};
+export const getTestClient = () => mockClient(new StreamChat(apiKey));
 
-export const getTestClientWithUser = async (user = { id: uuidv4() }) => {
+export const getTestClientWithUser = async (user = { id: nanoid() }) => {
   const client = mockClient(new StreamChat(apiKey));
-  await setUser(client, user);
+  await connectUser(client, user);
   return client;
 };
 

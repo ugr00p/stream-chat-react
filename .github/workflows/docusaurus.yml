@@ -1,0 +1,18 @@
+name: docusaurus
+on:
+  push:
+    branches:
+      - master # default branch name for each repo that docs should be push from
+    paths:
+      - docusaurus/**
+jobs:
+  push_docusaurus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: push
+        uses: GetStream/push-stream-chat-docusaurus-action@main
+        with:
+          target-branch: production
+        env:
+          DOCUSAURUS_GH_TOKEN: ${{ secrets.DOCUSAURUS_GH_TOKEN }}

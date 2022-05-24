@@ -1,60 +1,87 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { generateUser, generateReaction } from 'mock-builders';
-import { NimbleEmoji as EmojiComponentMock } from 'emoji-mart';
-import ReactionSelector from '../ReactionSelector';
-import { defaultMinimalEmojis } from '../../../utils';
-import { Avatar as AvatarMock } from '../../Avatar';
+import EmojiComponentMock from 'emoji-mart/dist-modern/components/emoji/nimble-emoji';
+import { toHaveNoViolations } from 'jest-axe';
+import { axe } from '../../../../axe-helper';
+expect.extend(toHaveNoViolations);
 
-jest.mock('emoji-mart', () => ({
-  NimbleEmoji: jest.fn(({ emoji }) => (
-    <div data-testid={`emoji-${emoji.id}`} />
-  )),
-}));
+import { ReactionSelector } from '../ReactionSelector';
+
+import { Avatar as AvatarMock } from '../../Avatar';
+import { defaultMinimalEmojis } from '../../Channel/emojiData';
+
+import { ComponentProvider } from '../../../context/ComponentContext';
+import { EmojiProvider } from '../../../context/EmojiContext';
+import { MessageProvider } from '../../../context/MessageContext';
+
+import {
+  emojiComponentMock,
+  emojiDataMock,
+  generateReaction,
+  generateUser,
+} from '../../../mock-builders';
+
+jest.mock('emoji-mart/dist-modern/components/emoji/nimble-emoji', () =>
+  jest.fn(({ emoji }) => <div data-testid={`emoji-${emoji.id}`} />),
+);
 
 jest.mock('../../Avatar', () => ({
-  Avatar: jest.fn(() => <div data-testid="avatar" />),
+  Avatar: jest.fn(() => <div data-testid='avatar' />),
 }));
 
 const alice = generateUser({
-  name: 'alice',
-  image: 'alice-avatar.jpg',
   id: 'alice',
+  image: 'alice-avatar.jpg',
+  name: 'alice',
 });
 
 const bob = generateUser({
-  name: 'bob',
   id: 'bob',
+  name: 'bob',
 });
 
 const handleReactionMock = jest.fn();
 
 const renderComponent = (props) =>
-  render(<ReactionSelector handleReaction={handleReactionMock} {...props} />);
+  render(
+    <ComponentProvider value={{ Avatar: AvatarMock }}>
+      <MessageProvider value={{}}>
+        <EmojiProvider
+          value={{
+            Emoji: emojiComponentMock.Emoji,
+            emojiConfig: emojiDataMock,
+            EmojiIndex: emojiComponentMock.EmojiIndex,
+            EmojiPicker: emojiComponentMock.EmojiPicker,
+          }}
+        >
+          <ReactionSelector handleReaction={handleReactionMock} {...props} />
+        </EmojiProvider>
+      </MessageProvider>
+    </ComponentProvider>,
+  );
 
 describe('ReactionSelector', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should render each of default emojis if reactionOptions prop is not specified', () => {
-    renderComponent();
+  it('should render each of default emojis if reactionOptions prop is not specified', async () => {
+    const { container } = renderComponent();
 
     defaultMinimalEmojis.forEach((emoji) => {
-      expect(EmojiComponentMock).toHaveBeenCalledWith(
-        expect.objectContaining({ emoji }),
-        {},
-      );
+      expect(EmojiComponentMock).toHaveBeenCalledWith(expect.objectContaining({ emoji }), {});
     });
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render each of reactionOptions if specified', () => {
+  it('should render each of reactionOptions if specified', async () => {
     const reactionOptions = [
-      { id: 'angry', emoji: 'angry' },
-      { id: 'banana', emoji: 'banana' },
+      { emoji: 'angry', id: 'angry' },
+      { emoji: 'banana', id: 'banana' },
     ];
-    renderComponent({ reactionOptions });
+    const { container } = renderComponent({ reactionOptions });
 
     reactionOptions.forEach((emoji) => {
       expect(EmojiComponentMock).toHaveBeenCalledWith(
@@ -62,31 +89,35 @@ describe('ReactionSelector', () => {
         {},
       );
     });
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render an avatar for the latest user that gave a certain reaction', () => {
-    const aliceReaction = generateReaction({ user: alice, type: 'love' });
-    renderComponent({
+  it('should render an avatar for the latest user that gave a certain reaction', async () => {
+    const aliceReaction = generateReaction({ type: 'love', user: alice });
+    const { container } = renderComponent({
       latest_reactions: [aliceReaction],
       reaction_counts: { love: 1 },
     });
 
     expect(AvatarMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: alice.name,
         image: alice.image,
+        name: alice.name,
       }),
       {},
     );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render the count of reactions for each reaction', () => {
+  it('should render the count of reactions for each reaction', async () => {
     const love = 1;
     const angry = 2;
-    const { getByText } = renderComponent({
+    const { container, getByText } = renderComponent({
       reaction_counts: {
-        love,
         angry,
+        love,
       },
     });
 
@@ -97,20 +128,22 @@ describe('ReactionSelector', () => {
     expect(angryCount).toBeInTheDocument();
     expect(loveCount.parentElement).toHaveAttribute('data-text', 'love');
     expect(angryCount.parentElement).toHaveAttribute('data-text', 'angry');
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
   it('should show / hide tooltip when hovering the avatar of the latest reactor', async () => {
-    const aliceReaction = generateReaction({ user: alice, type: 'love' });
-    const bobReaction = generateReaction({ user: bob, type: 'love' });
-    const { findByText, getByTestId } = renderComponent({
+    const aliceReaction = generateReaction({ type: 'love', user: alice });
+    const bobReaction = generateReaction({ type: 'love', user: bob });
+    const { container, findByText, getByTestId } = renderComponent({
       latest_reactions: [aliceReaction, bobReaction],
       reaction_counts: { love: 2 },
     });
 
     expect(AvatarMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: alice.name,
         image: alice.image,
+        name: alice.name,
       }),
       {},
     );
@@ -130,6 +163,8 @@ describe('ReactionSelector', () => {
 
     expect(aliceTooltipText).not.toBeInTheDocument();
     expect(bobTooltipText).not.toBeInTheDocument();
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
   it('should add reverse class if the prop is set to true', () => {
@@ -145,13 +180,15 @@ describe('ReactionSelector', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('should call handleReaction if an emoji is clicked', () => {
-    const { getByTestId } = renderComponent();
+  it('should call handleReaction if an emoji is clicked', async () => {
+    const { container, getByTestId } = renderComponent();
 
     const emoji = getByTestId('emoji-love');
 
     fireEvent.click(emoji);
 
-    expect(handleReactionMock).toHaveBeenCalledWith('love');
+    expect(handleReactionMock).toHaveBeenCalledWith('love', expect.any(Object));
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

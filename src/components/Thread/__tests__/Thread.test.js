@@ -1,77 +1,132 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import {
-  generateUser,
-  generateMessage,
-  useMockedApis,
-  getTestClientWithUser,
-  getOrCreateChannelApi,
-  generateChannel,
-} from 'mock-builders';
-import { Message as MessageMock } from '../../Message';
-import { MessageList as MessageListMock } from '../../MessageList';
-import { MessageInput as MessageInputMock } from '../../MessageInput';
-import Thread from '../Thread';
-import { ChannelContext, TranslationContext } from '../../../context';
 
-jest.mock('../../Message', () => ({
+import { Thread } from '../Thread';
+
+import { Message as MessageMock } from '../../Message/Message';
+import { MessageInputSmall as MessageInputSmallMock } from '../../MessageInput/MessageInputSmall';
+import { MessageList as MessageListMock } from '../../MessageList';
+import { useMessageInputContext } from '../../../context/MessageInputContext';
+
+import {
+  emojiComponentMock,
+  emojiDataMock,
+  generateChannel,
+  generateMessage,
+  generateUser,
+  getOrCreateChannelApi,
+  getTestClientWithUser,
+  useMockedApis,
+} from '../../../mock-builders';
+
+import { ChannelActionProvider } from '../../../context/ChannelActionContext';
+import { ChannelStateProvider } from '../../../context/ChannelStateContext';
+import { ChatProvider } from '../../../context/ChatContext';
+import { ComponentProvider } from '../../../context/ComponentContext';
+import { EmojiProvider } from '../../../context/EmojiContext';
+import { TranslationProvider } from '../../../context/TranslationContext';
+
+jest.mock('../../Message/Message', () => ({
   Message: jest.fn(() => <div />),
 }));
-jest.mock('../../MessageList', () => ({
+jest.mock('../../MessageList/MessageList', () => ({
   MessageList: jest.fn(() => <div />),
 }));
-jest.mock('../../MessageInput', () => ({
-  MessageInput: jest.fn(() => <div />),
+jest.mock('../../MessageInput/MessageInputSmall', () => ({
+  MessageInputSmall: jest.fn(() => <div />),
 }));
 
-const alice = generateUser({ name: 'alice', id: 'alice' });
-const bob = generateUser({ name: 'bob', id: 'bob' });
-const threadStart = generateMessage({ user: alice, reply_count: 2 });
-const reply1 = generateMessage({ user: bob, parent_id: threadStart.id });
-const reply2 = generateMessage({ user: alice, parent_id: threadStart.id });
+let chatClient;
+const alice = generateUser({ id: 'alice', name: 'alice' });
+const bob = generateUser({ id: 'bob', name: 'bob' });
+const threadStart = generateMessage({ reply_count: 2, user: alice });
+const reply1 = generateMessage({ parent_id: threadStart.id, user: bob });
+const reply2 = generateMessage({ parent_id: threadStart.id, user: alice });
 
-const channelContextMock = {
-  channel: {}, // required prop from context in class-based component, so providing empty object here
+const mockedChannel = {
+  off: jest.fn(),
+  state: {
+    members: {},
+  },
+};
+const channelStateContextMock = {
+  channel: mockedChannel,
   thread: threadStart,
-  threadMessages: [reply1, reply2],
-  loadMoreThread: jest.fn(() => Promise.resolve()),
-  closeThread: jest.fn(),
   threadHasMore: true,
   threadLoadingMore: false,
+  threadMessages: [reply1, reply2],
 };
 
-const i18nMock = jest.fn((key) => key);
+const emojiContextMock = {
+  Emoji: emojiComponentMock.Emoji,
+  emojiConfig: emojiDataMock,
+  EmojiIndex: emojiComponentMock.EmojiIndex,
+  EmojiPicker: emojiComponentMock.EmojiPicker,
+};
 
-const renderComponent = (props = {}, channelContextOverrides = {}) =>
+const channelActionContextMock = {
+  closeThread: jest.fn(),
+  loadMoreThread: jest.fn(() => Promise.resolve()),
+};
+
+const i18nMock = jest.fn((key, props) => {
+  if (key === 'replyCount' && props.count === 1) return '1 reply';
+  else if (key === 'replyCount' && props.count > 1) return '2 replies';
+  return key;
+});
+
+const renderComponent = ({
+  chatClient,
+  threadProps = {},
+  channelStateOverrides = {},
+  channelActionOverrides = {},
+  componentOverrides = {},
+}) =>
   render(
-    <TranslationContext.Provider value={{ t: i18nMock }}>
-      <ChannelContext.Provider
-        value={{ ...channelContextMock, ...channelContextOverrides }}
-      >
-        <Thread {...props} />
-      </ChannelContext.Provider>
-    </TranslationContext.Provider>,
+    <ChatProvider value={{ client: chatClient, latestMessageDatesByChannels: {} }}>
+      <ChannelStateProvider value={{ ...channelStateContextMock, ...channelStateOverrides }}>
+        <ChannelActionProvider value={{ ...channelActionContextMock, ...channelActionOverrides }}>
+          <EmojiProvider value={emojiContextMock}>
+            <ComponentProvider value={{ ...componentOverrides }}>
+              <TranslationProvider value={{ t: i18nMock }}>
+                <Thread {...threadProps} />
+              </TranslationProvider>
+            </ComponentProvider>
+          </EmojiProvider>
+        </ChannelActionProvider>
+      </ChannelStateProvider>
+    </ChatProvider>,
   );
 
 describe('Thread', () => {
+  beforeAll(async () => {
+    chatClient = await getTestClientWithUser();
+  });
+
   // Note: testing actual scroll behavior is not feasible because jsdom does not implement
   // e.g. scrollTop, scrollHeight, etc.
 
-  afterEach(jest.clearAllMocks);
+  afterEach(() => {
+    cleanup();
+    jest.clearAllMocks();
+  });
 
   it('should render the reply count', () => {
-    const { getByText } = renderComponent();
+    const { getByText } = renderComponent({ chatClient });
 
-    expect(i18nMock).toHaveBeenCalledWith('{{ replyCount }} replies', {
-      replyCount: threadStart.reply_count,
+    expect(i18nMock).toHaveBeenCalledWith('replyCount', {
+      count: threadStart.reply_count,
     });
-    expect(getByText('{{ replyCount }} replies')).toBeInTheDocument();
+    expect(getByText('2 replies')).toBeInTheDocument();
   });
 
   it('should render the message that starts the thread', () => {
-    renderComponent();
+    renderComponent({
+      chatClient,
+      threadProps: { Message: MessageMock },
+    });
 
     expect(MessageMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -81,18 +136,61 @@ describe('Thread', () => {
     );
   });
 
-  it('should render the MessageList component with the correct props', () => {
-    const additionalMessageListProps = { propName: 'value' };
-    renderComponent({ Message: MessageMock, additionalMessageListProps });
+  it('should render the MessageList component with the correct props without date separators', () => {
+    const additionalMessageListProps = {
+      loadingMore: false,
+      loadMore: channelActionContextMock.threadLoadingMore,
+      propName: 'value',
+      read: {},
+    };
+    renderComponent({
+      chatClient,
+      threadProps: {
+        additionalMessageListProps,
+        Message: MessageMock,
+      },
+    });
 
     expect(MessageListMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        disableDateSeparator: true,
+        hasMore: channelStateContextMock.threadHasMore,
+        loadingMore: channelActionContextMock.threadLoadingMore,
+        loadMore: channelStateContextMock.loadMoreThread,
         Message: MessageMock,
-        messages: channelContextMock.threadMessages,
+        messages: channelStateContextMock.threadMessages,
         threadList: true,
-        loadMore: channelContextMock.loadMoreThread,
-        hasMore: channelContextMock.threadHasMore,
-        loadingMore: channelContextMock.threadLoadingMore,
+        ...additionalMessageListProps,
+      }),
+      {},
+    );
+  });
+
+  it('should render the MessageList component with date separators if enabled', () => {
+    const additionalMessageListProps = {
+      loadingMore: false,
+      loadMore: channelActionContextMock.threadLoadingMore,
+      propName: 'value',
+      read: {},
+    };
+    renderComponent({
+      chatClient,
+      threadProps: {
+        additionalMessageListProps,
+        enableDateSeparator: true,
+        Message: MessageMock,
+      },
+    });
+
+    expect(MessageListMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disableDateSeparator: false,
+        hasMore: channelStateContextMock.threadHasMore,
+        loadingMore: channelActionContextMock.threadLoadingMore,
+        loadMore: channelStateContextMock.loadMoreThread,
+        Message: MessageMock,
+        messages: channelStateContextMock.threadMessages,
+        threadList: true,
         ...additionalMessageListProps,
       }),
       {},
@@ -101,52 +199,51 @@ describe('Thread', () => {
 
   it('should render the default MessageInput if nothing was passed into the prop', () => {
     const additionalMessageInputProps = { propName: 'value' };
-    renderComponent({ autoFocus: true, additionalMessageInputProps });
+    renderComponent({
+      chatClient,
+      threadProps: {
+        additionalMessageInputProps,
+        autoFocus: true,
+      },
+    });
 
-    expect(MessageInputMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        parent: threadStart,
-        focus: true,
-        ...additionalMessageInputProps,
-      }),
-      {},
-    );
+    expect(MessageInputSmallMock).toHaveBeenCalledWith({}, {});
   });
 
   it('should render a custom MessageInput if it is passed as a prop', () => {
     const additionalMessageInputProps = { propName: 'value' };
-    const CustomMessageInputMock = jest.fn(() => <div />);
+    const messageInputContextConsumerFn = jest.fn();
+    const CustomMessageInputMock = jest.fn(() => {
+      messageInputContextConsumerFn(useMessageInputContext());
+      return <div />;
+    });
 
     renderComponent({
-      MessageInput: CustomMessageInputMock,
-      autoFocus: true,
-      additionalMessageInputProps,
+      chatClient,
+      threadProps: {
+        additionalMessageInputProps,
+        autoFocus: true,
+        Input: CustomMessageInputMock,
+      },
     });
-    expect(CustomMessageInputMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        parent: threadStart,
-        focus: true,
-        ...additionalMessageInputProps,
-      }),
-      {},
-    );
+
+    expect(CustomMessageInputMock).toHaveBeenCalledWith({}, {});
+    expect(messageInputContextConsumerFn).toHaveBeenCalledWith(expect.any(Object));
   });
 
   it('should render a custom ThreadHeader if it is passed as a prop', async () => {
-    const CustomThreadHeader = jest.fn(() => (
-      <div data-testid="custom-thread-header" />
-    ));
+    const CustomThreadHeader = jest.fn(() => <div data-testid='custom-thread-header' />);
 
     const { getByTestId } = renderComponent({
-      ThreadHeader: CustomThreadHeader,
+      chatClient,
+      componentOverrides: { ThreadHeader: CustomThreadHeader },
     });
 
     await waitFor(() => {
       expect(getByTestId('custom-thread-header')).toBeInTheDocument();
       expect(CustomThreadHeader).toHaveBeenCalledWith(
         expect.objectContaining({
-          closeThread: channelContextMock.closeThread,
-          t: i18nMock,
+          closeThread: channelActionContextMock.closeThread,
           thread: threadStart,
         }),
         {},
@@ -155,55 +252,51 @@ describe('Thread', () => {
   });
 
   it('should call the closeThread callback if the button is pressed', () => {
-    const { getByTestId } = renderComponent();
+    const { getByTestId } = renderComponent({ chatClient });
 
     fireEvent.click(getByTestId('close-button'));
 
-    expect(channelContextMock.closeThread).toHaveBeenCalledTimes(1);
+    expect(channelActionContextMock.closeThread).toHaveBeenCalledTimes(1);
   });
 
   it('should assign the str-chat__thread--full modifier class if the fullWidth prop is set to true', () => {
-    const { container } = renderComponent({ fullWidth: true });
-    expect(
-      container.querySelector('.str-chat__thread--full'),
-    ).toBeInTheDocument();
+    const { container } = renderComponent({ chatClient, threadProps: { fullWidth: true } });
+    expect(container.querySelector('.str-chat__thread--full')).toBeInTheDocument();
   });
 
   it('should not assign the str-chat__thread--full modifier class if the fullWidth prop is set to false', () => {
-    const { container } = renderComponent();
-    expect(
-      container.querySelector('.str-chat__thread--full'),
-    ).not.toBeInTheDocument();
+    const { container } = renderComponent({ chatClient });
+    expect(container.querySelector('.str-chat__thread--full')).not.toBeInTheDocument();
   });
 
-  it('should not render anything if the thread prop is falsy', () => {
-    const { container } = renderComponent({ thread: null });
+  it('should not render anything if the thread in context is falsy', () => {
+    const { container } = renderComponent({
+      channelStateOverrides: { thread: null },
+      chatClient,
+    });
 
-    expect(
-      container.querySelector('.str-chat__thread'),
-    ).not.toBeInTheDocument();
+    expect(container.querySelector('.str-chat__thread')).not.toBeInTheDocument();
   });
 
   it('should call the loadMoreThread callback on mount if the thread start has a non-zero reply count', () => {
-    renderComponent();
+    renderComponent({ chatClient });
 
-    expect(channelContextMock.loadMoreThread).toHaveBeenCalledTimes(1);
+    expect(channelActionContextMock.loadMoreThread).toHaveBeenCalledTimes(1);
   });
 
   it('should render null if replies is disabled', async () => {
     const client = await getTestClientWithUser();
-    const ch = generateChannel({ config: { replies: false } });
+    const ch = generateChannel({ getConfig: () => ({ replies: false }) });
+    const channelConfig = ch.getConfig();
     useMockedApis(client, [getOrCreateChannelApi(ch)]);
     const channel = client.channel('messaging', ch.id);
     await channel.watch();
 
     const tree = renderer
       .create(
-        <ChannelContext.Provider
-          value={{ ...channelContextMock, client, channel }}
-        >
+        <ChannelStateProvider value={{ ...channelStateContextMock, channel, channelConfig }}>
           <Thread />
-        </ChannelContext.Provider>,
+        </ChannelStateProvider>,
       )
       .toJSON();
 

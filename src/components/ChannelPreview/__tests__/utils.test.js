@@ -1,22 +1,18 @@
 import '@testing-library/jest-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 
 import {
-  useMockedApis,
   generateChannel,
-  generateMessage,
   generateImageAttachment,
-  getTestClientWithUser,
-  getOrCreateChannelApi,
   generateMember,
+  generateMessage,
   generateUser,
+  getOrCreateChannelApi,
+  getTestClientWithUser,
+  useMockedApis,
 } from 'mock-builders';
 
-import {
-  getLatestMessagePreview,
-  getDisplayTitle,
-  getDisplayImage,
-} from '../utils';
+import { getDisplayImage, getDisplayTitle, getLatestMessagePreview } from '../utils';
 
 describe('ChannelPreview utils', () => {
   const clientUser = generateUser();
@@ -38,35 +34,22 @@ describe('ChannelPreview utils', () => {
 
   describe('getLatestMessagePreview', () => {
     const channelWithEmptyMessage = generateChannel();
-    const customMessage = generateMessage();
-    const channelWithTextMessage = generateChannel({
-      messages: [customMessage],
-    });
     const channelWithDeletedMessage = generateChannel({
       messages: [generateMessage({ deleted_at: new Date() })],
     });
     const channelWithAttachmentMessage = generateChannel({
       messages: [
         generateMessage({
-          text: undefined,
           attachments: [generateImageAttachment()],
+          text: undefined,
         }),
       ],
     });
 
     it.each([
       ['Nothing yet...', 'channelWithEmptyMessage', channelWithEmptyMessage],
-      [
-        'Message deleted',
-        'channelWithDeletedMessage',
-        channelWithDeletedMessage,
-      ],
-      [
-        '🏙 Attachment...',
-        'channelWithAttachmentMessage',
-        channelWithAttachmentMessage,
-      ],
-      [customMessage.text, 'channelWithTextMessage', channelWithTextMessage],
+      ['Message deleted', 'channelWithDeletedMessage', channelWithDeletedMessage],
+      ['🏙 Attachment...', 'channelWithAttachmentMessage', channelWithAttachmentMessage],
     ])('should return %s for %s', async (expectedValue, testCaseName, c) => {
       const t = (text) => text;
       const channel = await getQueriedChannelInstance(c);
@@ -76,10 +59,8 @@ describe('ChannelPreview utils', () => {
 
   describe('getDisplayTitle', () => {
     it('should return channel name, if it exists', async () => {
-      const name = uuidv4();
-      const channel = await getQueriedChannelInstance(
-        generateChannel({ channel: { name } }),
-      );
+      const name = nanoid();
+      const channel = await getQueriedChannelInstance(generateChannel({ channel: { name } }));
 
       expect(getDisplayTitle(channel, chatClient.user)).toBe(name);
     });
@@ -88,10 +69,7 @@ describe('ChannelPreview utils', () => {
       const otherUser = generateUser();
       const channel = await getQueriedChannelInstance(
         generateChannel({
-          members: [
-            generateMember({ user: otherUser }),
-            generateMember({ user: clientUser }),
-          ],
+          members: [generateMember({ user: otherUser }), generateMember({ user: clientUser })],
         }),
       );
       expect(getDisplayTitle(channel, chatClient.user)).toBe(otherUser.name);
@@ -100,10 +78,8 @@ describe('ChannelPreview utils', () => {
 
   describe('getDisplayImage', () => {
     it('should return channel image, if it exists', async () => {
-      const image = uuidv4();
-      const channel = await getQueriedChannelInstance(
-        generateChannel({ channel: { image } }),
-      );
+      const image = nanoid();
+      const channel = await getQueriedChannelInstance(generateChannel({ channel: { image } }));
 
       expect(getDisplayImage(channel, chatClient.user)).toBe(image);
     });
@@ -112,10 +88,7 @@ describe('ChannelPreview utils', () => {
       const otherUser = generateUser();
       const channel = await getQueriedChannelInstance(
         generateChannel({
-          members: [
-            generateMember({ user: otherUser }),
-            generateMember({ user: clientUser }),
-          ],
+          members: [generateMember({ user: otherUser }), generateMember({ user: clientUser })],
         }),
       );
       expect(getDisplayImage(channel, chatClient.user)).toBe(otherUser.image);

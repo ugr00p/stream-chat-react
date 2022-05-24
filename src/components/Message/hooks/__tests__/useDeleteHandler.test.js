@@ -1,8 +1,12 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
-import { getTestClient, generateMessage, generateChannel } from 'mock-builders';
-import { ChannelContext } from '../../../../context';
+
 import { useDeleteHandler } from '../useDeleteHandler';
+
+import { ChatProvider } from '../../../../context/ChatContext';
+import { ChannelActionProvider } from '../../../../context/ChannelActionContext';
+import { ChannelStateProvider } from '../../../../context/ChannelStateContext';
+import { generateChannel, generateMessage, getTestClient } from '../../../../mock-builders';
 
 const deleteMessage = jest.fn(() => Promise.resolve(generateMessage()));
 const updateMessage = jest.fn();
@@ -17,15 +21,11 @@ async function renderUseDeleteHandler(message = generateMessage()) {
     updateMessage,
   });
   const wrapper = ({ children }) => (
-    <ChannelContext.Provider
-      value={{
-        channel,
-        client,
-        updateMessage,
-      }}
-    >
-      {children}
-    </ChannelContext.Provider>
+    <ChatProvider value={{ client }}>
+      <ChannelStateProvider value={{ channel }}>
+        <ChannelActionProvider value={{ updateMessage }}>{children}</ChannelActionProvider>
+      </ChannelStateProvider>
+    </ChatProvider>
   );
   const { result } = renderHook(() => useDeleteHandler(message), { wrapper });
   return result.current;
@@ -54,9 +54,7 @@ describe('useDeleteHandler custom hook', () => {
   it('should update the message with the result of deletion', async () => {
     const message = generateMessage();
     const deletedMessage = generateMessage();
-    deleteMessage.mockImplementationOnce(() =>
-      Promise.resolve({ message: deletedMessage }),
-    );
+    deleteMessage.mockImplementationOnce(() => Promise.resolve({ message: deletedMessage }));
     const handleDelete = await renderUseDeleteHandler(message);
     await handleDelete(mouseEventMock);
     expect(updateMessage).toHaveBeenCalledWith(deletedMessage);

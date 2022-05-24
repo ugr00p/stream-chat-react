@@ -1,33 +1,34 @@
 import React from 'react';
-import { render, waitFor, act } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+import { ChannelPreview } from '../ChannelPreview';
+import { Chat } from '../../Chat';
+
+import { ChatContext } from '../../../context/ChatContext';
+
 import {
-  useMockedApis,
-  queryChannelsApi,
-  generateChannel,
-  generateMessage,
+  dispatchMessageDeletedEvent,
   dispatchMessageNewEvent,
   dispatchMessageUpdatedEvent,
-  dispatchMessageDeletedEvent,
-  getTestClientWithUser,
+  dispatchUserUpdatedEvent,
+  generateChannel,
+  generateMember,
+  generateMessage,
+  generateUser,
   getRandomInt,
+  getTestClientWithUser,
+  queryChannelsApi,
+  useMockedApis,
 } from 'mock-builders';
 
-import { ChatContext } from '../../../context';
-import ChannelPreview from '../ChannelPreview';
-
-const PreviewUIComponent = (props) => {
-  return (
-    <>
-      <div data-testid="channel-id">{props.channel.id}</div>
-      <div data-testid="unread-count">{props.unread}</div>
-      <div data-testid="last-event-message">
-        {props.lastMessage && props.lastMessage.text}
-      </div>
-    </>
-  );
-};
+const PreviewUIComponent = (props) => (
+  <>
+    <div data-testid='channel-id'>{props.channel.id}</div>
+    <div data-testid='unread-count'>{props.unread}</div>
+    <div data-testid='last-event-message'>{props.lastMessage && props.lastMessage.text}</div>
+  </>
+);
 
 const expectUnreadCountToBe = async (getByTestId, expectedValue) => {
   await waitFor(() => {
@@ -44,25 +45,22 @@ describe('ChannelPreview', () => {
   let chatClientUthred;
   let c0;
   let c1;
-  const renderComponent = (props, renderer) => {
-    return renderer(
+  const renderComponent = (props, renderer) =>
+    renderer(
       <ChatContext.Provider
         value={{
+          channel: props.activeChannel,
           client: chatClientUthred,
           setActiveChannel: () => jest.fn(),
-          channel: props.activeChannel,
         }}
       >
         <ChannelPreview Preview={PreviewUIComponent} {...props} />
       </ChatContext.Provider>,
     );
-  };
 
   beforeEach(async () => {
     chatClientUthred = await getTestClientWithUser({ id: 'uthred' });
-    useMockedApis(chatClientUthred, [
-      queryChannelsApi([generateChannel(), generateChannel()]),
-    ]);
+    useMockedApis(chatClientUthred, [queryChannelsApi([generateChannel(), generateChannel()])]);
 
     [c0, c1] = await chatClientUthred.queryChannels({}, {});
   });
@@ -74,8 +72,8 @@ describe('ChannelPreview', () => {
 
     const { getByTestId, rerender } = renderComponent(
       {
-        channel: c0,
         activeChannel: c1,
+        channel: c0,
       },
       render,
     );
@@ -84,13 +82,45 @@ describe('ChannelPreview', () => {
 
     renderComponent(
       {
-        channel: c0,
         activeChannel: c0,
+        channel: c0,
       },
       rerender,
     );
 
     await expectUnreadCountToBe(getByTestId, 0);
+  });
+
+  it('should refresh unread counts on forced update', async () => {
+    const originalUnreadCount = 100;
+    const newUnreadCount = 200;
+    jest
+      .spyOn(c0, 'countUnread')
+      .mockImplementation()
+      .mockImplementationOnce(() => originalUnreadCount)
+      .mockImplementationOnce(() => newUnreadCount);
+    c0.muteStatus = () => false;
+
+    const { getByTestId, rerender } = renderComponent(
+      {
+        activeChannel: c1,
+        channel: c0,
+        channelUpdateCount: 0,
+      },
+      render,
+    );
+
+    await expectUnreadCountToBe(getByTestId, originalUnreadCount);
+
+    renderComponent(
+      {
+        activeChannel: c1,
+        channel: c0,
+        channelUpdateCount: 1,
+      },
+      rerender,
+    );
+    await expectUnreadCountToBe(getByTestId, newUnreadCount);
   });
 
   const eventCases = [
@@ -106,8 +136,8 @@ describe('ChannelPreview', () => {
 
       const { getByTestId } = renderComponent(
         {
+          activteChannel: c1,
           channel: c0,
-          activeChannel: c1,
         },
         render,
       );
@@ -131,8 +161,8 @@ describe('ChannelPreview', () => {
 
       const { getByTestId } = renderComponent(
         {
-          channel: c0,
           activeChannel: c1,
+          channel: c0,
         },
         render,
       );
@@ -152,8 +182,8 @@ describe('ChannelPreview', () => {
     it('should set unreadCount to 0, in case of active channel', async () => {
       const { getByTestId } = renderComponent(
         {
-          channel: c0,
           activeChannel: c0,
+          channel: c0,
         },
         render,
       );
@@ -170,14 +200,12 @@ describe('ChannelPreview', () => {
     it('should set unreadCount to 0, in case of muted channel', async () => {
       const channelMuteSpy = jest
         .spyOn(c0, 'muteStatus')
-        .mockImplementation(() => {
-          return { muted: true };
-        });
+        .mockImplementation(() => ({ muted: true }));
 
       const { getByTestId } = renderComponent(
         {
-          channel: c0,
           activeChannel: c1,
+          channel: c0,
         },
         render,
       );
@@ -193,6 +221,105 @@ describe('ChannelPreview', () => {
         dispatcher(chatClientUthred, message, c0);
       });
       await expectUnreadCountToBe(getByTestId, 0);
+    });
+  });
+
+  describe('user.updated', () => {
+    let chatClient;
+    let channels;
+    let channelState;
+    let otherUser;
+    const MockAvatar = ({ image, name }) => (
+      <>
+        <div className='avatar-name'>{name}</div>
+        <div className='avatar-image'>{image}</div>
+      </>
+    );
+
+    const channelPreviewProps = {
+      Avatar: MockAvatar,
+    };
+
+    beforeEach(async () => {
+      const activeUser = generateUser({
+        custom: 'custom1',
+        id: 'id1',
+        image: 'image1',
+        name: 'name1',
+      });
+      otherUser = generateUser({
+        custom: 'custom2',
+        id: 'id2',
+        image: 'image2',
+        name: 'name2',
+      });
+      channelState = generateChannel({
+        members: [generateMember({ user: activeUser }), generateMember({ user: otherUser })],
+        messages: [generateMessage({ user: activeUser }), generateMessage({ user: otherUser })],
+      });
+      chatClient = await getTestClientWithUser(activeUser);
+      useMockedApis(chatClient, [queryChannelsApi([channelState])]);
+      channels = await chatClient.queryChannels();
+    });
+
+    it("should update the direct messaging channel's preview if other user's name has changed", async () => {
+      const updatedAttribute = { name: 'new-name' };
+      const channel = channels[0];
+      render(
+        <Chat client={chatClient}>
+          <ChannelPreview {...channelPreviewProps} channel={channel} />
+        </Chat>,
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByText(updatedAttribute.name)).not.toBeInTheDocument(),
+      );
+      act(() => {
+        dispatchUserUpdatedEvent(chatClient, { ...otherUser, ...updatedAttribute });
+      });
+      await waitFor(() =>
+        expect(screen.queryAllByText(updatedAttribute.name).length).toBeGreaterThan(0),
+      );
+    });
+
+    it("should update the direct messaging channel's preview if other user's image has changed", async () => {
+      const updatedAttribute = { image: 'new-image' };
+      const channel = channels[0];
+      render(
+        <Chat client={chatClient}>
+          <ChannelPreview {...channelPreviewProps} channel={channel} />
+        </Chat>,
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByText(updatedAttribute.image)).not.toBeInTheDocument(),
+      );
+      act(() => {
+        dispatchUserUpdatedEvent(chatClient, { ...otherUser, ...updatedAttribute });
+      });
+      await waitFor(() =>
+        expect(screen.queryAllByText(updatedAttribute.image).length).toBeGreaterThan(0),
+      );
+    });
+
+    it("should not update the direct messaging channel's preview if other user attribute than name or image has changed", async () => {
+      const updatedAttribute = { custom: 'new-custom' };
+      const channel = channels[0];
+      render(
+        <Chat client={chatClient}>
+          <ChannelPreview {...channelPreviewProps} channel={channel} />
+        </Chat>,
+      );
+
+      await waitFor(() =>
+        expect(screen.queryByText(updatedAttribute.custom)).not.toBeInTheDocument(),
+      );
+      act(() => {
+        dispatchUserUpdatedEvent(chatClient, { ...otherUser, ...updatedAttribute });
+      });
+      await waitFor(() =>
+        expect(screen.queryByText(updatedAttribute.custom)).not.toBeInTheDocument(),
+      );
     });
   });
 });

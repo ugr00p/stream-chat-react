@@ -1,17 +1,16 @@
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 
-export const generateMessage = (options) => {
-  return {
-    __html: '<p>regular</p>',
-    id: uuidv4(),
-    text: uuidv4(),
-    type: 'regular',
-    html: '<p>regular</p>',
-    attachments: [],
-    created_at: new Date(),
-    updated_at: new Date(),
-    user: null,
-    status: 'received',
-    ...options,
-  };
-};
+export const generateMessage = (options) => ({
+  __html: '<p>regular</p>',
+  attachments: [],
+  created_at: new Date(),
+  html: '<p>regular</p>',
+  id: nanoid(),
+  pinned_at: null,
+  status: 'received',
+  text: nanoid(),
+  type: 'regular',
+  updated_at: new Date(),
+  user: null,
+  ...options,
+});

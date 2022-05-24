@@ -1,9 +1,10 @@
+/* eslint-disable jest-dom/prefer-to-have-class */
 import React from 'react';
 import renderer from 'react-test-renderer';
 import { cleanup, render } from '@testing-library/react';
 // import '@testing-library/jest-dom';
 
-import CustomNotification from '../CustomNotification';
+import { CustomNotification } from '../CustomNotification';
 
 afterEach(cleanup); // eslint-disable-line
 
@@ -21,6 +22,7 @@ describe('CustomNotification', () => {
       .toJSON();
     expect(tree).toMatchInlineSnapshot(`
       <div
+        aria-live="polite"
         className="str-chat__custom-notification notification-undefined"
         data-testid="custom-notification"
       >
@@ -38,8 +40,6 @@ describe('CustomNotification', () => {
       </CustomNotification>,
     );
 
-    expect(getByTestId('custom-notification').className).toContain(
-      `notification-${type}`,
-    );
+    expect(getByTestId('custom-notification').className).toContain(`notification-${type}`);
   });
 });

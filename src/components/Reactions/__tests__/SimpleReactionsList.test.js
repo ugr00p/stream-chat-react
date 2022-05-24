@@ -1,15 +1,21 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { generateReaction } from 'mock-builders';
-import { NimbleEmoji as EmojiComponentMock } from 'emoji-mart';
-import SimpleReactionsList from '../SimpleReactionsList';
+import EmojiComponentMock from 'emoji-mart/dist-modern/components/emoji/nimble-emoji';
+import { toHaveNoViolations } from 'jest-axe';
+import { axe } from '../../../../axe-helper';
+expect.extend(toHaveNoViolations);
 
-jest.mock('emoji-mart', () => ({
-  NimbleEmoji: jest.fn(({ emoji }) => (
-    <div data-testid={`emoji-${emoji.id}`} />
-  )),
-}));
+import { SimpleReactionsList } from '../SimpleReactionsList';
+
+import { EmojiProvider } from '../../../context/EmojiContext';
+import { MessageProvider } from '../../../context/MessageContext';
+
+import { emojiComponentMock, emojiDataMock, generateReaction } from '../../../mock-builders';
+
+jest.mock('emoji-mart/dist-modern/components/emoji/nimble-emoji', () =>
+  jest.fn(({ emoji }) => <div data-testid={`emoji-${emoji.id}`} />),
+);
 
 const handleReactionMock = jest.fn();
 const loveEmojiTestId = 'emoji-love';
@@ -25,12 +31,23 @@ const renderComponent = ({ reaction_counts = {}, ...props }) => {
 
   return {
     ...render(
-      <SimpleReactionsList
-        reaction_counts={reaction_counts}
-        reactions={reactions}
-        handleReaction={handleReactionMock}
-        {...props}
-      />,
+      <MessageProvider value={{}}>
+        <EmojiProvider
+          value={{
+            Emoji: emojiComponentMock.Emoji,
+            emojiConfig: emojiDataMock,
+            EmojiIndex: emojiComponentMock.EmojiIndex,
+            EmojiPicker: emojiComponentMock.EmojiPicker,
+          }}
+        >
+          <SimpleReactionsList
+            handleReaction={handleReactionMock}
+            reaction_counts={reaction_counts}
+            reactions={reactions}
+            {...props}
+          />
+        </EmojiProvider>
+      </MessageProvider>,
     ),
     reactions,
   };
@@ -48,89 +65,91 @@ const expectEmojiToHaveBeenRendered = (id) => {
 describe('SimpleReactionsList', () => {
   afterEach(jest.clearAllMocks);
 
-  it('should not render anything if there are no reactions', () => {
+  it('should not render anything if there are no reactions', async () => {
     const { container } = renderComponent({
       reaction_counts: {},
     });
     expect(container).toBeEmptyDOMElement();
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render the total reaction count', () => {
-    const { getByText } = renderComponent({
+  it('should render the total reaction count', async () => {
+    const { container, getByText } = renderComponent({
       reaction_counts: {
-        love: 5,
         angry: 2,
+        love: 5,
       },
     });
     const count = getByText('7');
     expect(count).toBeInTheDocument();
-    expect(count).toHaveClass(
-      'str-chat__simple-reactions-list-item--last-number',
-    );
+    expect(count).toHaveClass('str-chat__simple-reactions-list-item--last-number');
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render an emoji for each type of reaction', () => {
+  it('should render an emoji for each type of reaction', async () => {
     const reaction_counts = {
-      love: 5,
       angry: 2,
+      love: 5,
     };
-    renderComponent({ reaction_counts });
+    const { container } = renderComponent({ reaction_counts });
 
-    expect(EmojiComponentMock).toHaveBeenCalledTimes(
-      Object.keys(reaction_counts).length,
-    );
+    expect(EmojiComponentMock).toHaveBeenCalledTimes(Object.keys(reaction_counts).length);
 
     Object.keys(reaction_counts).forEach(expectEmojiToHaveBeenRendered);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should handle custom reaction options', () => {
+  it('should handle custom reaction options', async () => {
     const reaction_counts = {
       banana: 1,
       cowboy: 2,
     };
 
-    renderComponent({
+    const { container } = renderComponent({
       reaction_counts,
       reactionOptions: [
-        { id: 'banana', emoji: '🍌' },
-        { id: 'cowboy', emoji: '🤠' },
+        { emoji: '🍌', id: 'banana' },
+        { emoji: '🤠', id: 'cowboy' },
       ],
     });
 
-    expect(EmojiComponentMock).toHaveBeenCalledTimes(
-      Object.keys(reaction_counts).length,
-    );
+    expect(EmojiComponentMock).toHaveBeenCalledTimes(Object.keys(reaction_counts).length);
 
     Object.keys(reaction_counts).forEach(expectEmojiToHaveBeenRendered);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should call handleReaction callback if a reaction emoji is clicked', () => {
+  it('should call handleReaction callback if a reaction emoji is clicked', async () => {
     const reaction_counts = {
       love: 1,
     };
 
-    const { getByTestId } = renderComponent({ reaction_counts });
+    const { container, getByTestId } = renderComponent({ reaction_counts });
 
     fireEvent.click(getByTestId(loveEmojiTestId));
 
-    expect(handleReactionMock).toHaveBeenCalledWith('love');
+    expect(handleReactionMock).toHaveBeenCalledWith('love', expect.any(Object));
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 
-  it('should render a tooltip with all users that reacted a certain way if the emoji is hovered', () => {
+  it('should render a tooltip with all users that reacted a certain way if the emoji is hovered', async () => {
     const reaction_counts = {
       love: 3,
     };
 
-    const { reactions, getByTestId, queryByText } = renderComponent({
+    const { container, getByTestId, queryByText, reactions } = renderComponent({
       reaction_counts,
     });
 
     fireEvent.mouseEnter(getByTestId(loveEmojiTestId));
 
     reactions.forEach(({ user }) => {
-      expect(
-        queryByText(user.name || user.id, { exact: false }),
-      ).toBeInTheDocument();
+      expect(queryByText(user.name || user.id, { exact: false })).toBeInTheDocument();
     });
 
     fireEvent.mouseLeave(getByTestId(loveEmojiTestId));
@@ -138,5 +157,7 @@ describe('SimpleReactionsList', () => {
     reactions.forEach(({ user }) => {
       expect(queryByText(user.id, { exact: false })).not.toBeInTheDocument();
     });
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

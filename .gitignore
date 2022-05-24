@@ -24,6 +24,9 @@ coverage
 # nyc test coverage
 .nyc_output
 
+# playwright artifacts
+test-results
+
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
@@ -60,6 +63,7 @@ typings/
 
 # dotenv environment variables file
 .env
+/.env.local
 /.env.development
 /.env.production
 
@@ -70,5 +74,4 @@ client/dist
 /.virtualgo
 .vscode/
 coverage.out
-
-/built
+built

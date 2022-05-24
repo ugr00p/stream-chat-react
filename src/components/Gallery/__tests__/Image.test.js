@@ -1,11 +1,10 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import React from 'react';
 import renderer from 'react-test-renderer';
-import { cleanup, render, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
-import ImageComponent from '../Image';
+import { ImageComponent } from '../Image';
 
 const mockImageAssets = 'https://placeimg.com/640/480/any';
 
@@ -13,9 +12,7 @@ afterEach(cleanup); // eslint-disable-line
 
 describe('Image', () => {
   it('should render component with default props', () => {
-    const tree = renderer
-      .create(<ImageComponent images={mockImageAssets} />)
-      .toJSON();
+    const tree = renderer.create(<ImageComponent images={mockImageAssets} />).toJSON();
     expect(tree).toMatchSnapshot();
   });
 
@@ -23,24 +20,14 @@ describe('Image', () => {
     it('should prevent javascript protocol in image src', () => {
       // eslint-disable-next-line no-script-url
       const xssJavascriptUri = 'javascript:alert("p0wn3d")';
-      const { getByTestId } = render(
-        <ImageComponent image_url={xssJavascriptUri} />,
-      );
-      expect(getByTestId('image-test')).not.toHaveAttribute(
-        'src',
-        xssJavascriptUri,
-      );
+      const { getByTestId } = render(<ImageComponent image_url={xssJavascriptUri} />);
+      expect(getByTestId('image-test')).not.toHaveAttribute('src', xssJavascriptUri);
     });
     it('should prevent javascript protocol in thumbnail src', () => {
       // eslint-disable-next-line no-script-url
       const xssJavascriptUri = 'javascript:alert("p0wn3d")';
-      const { getByTestId } = render(
-        <ImageComponent thumb_url={xssJavascriptUri} />,
-      );
-      expect(getByTestId('image-test')).not.toHaveAttribute(
-        'src',
-        xssJavascriptUri,
-      );
+      const { getByTestId } = render(<ImageComponent thumb_url={xssJavascriptUri} />);
+      expect(getByTestId('image-test')).not.toHaveAttribute('src', xssJavascriptUri);
     });
     it('should prevent dataUris in image src', () => {
       const xssDataUri = 'data:image/svg+xml;base64,DANGEROUSENCODEDSVG';
@@ -56,13 +43,11 @@ describe('Image', () => {
 
   it('should open modal on image click', async () => {
     jest.spyOn(console, 'warn').mockImplementation(() => null);
-    const { getByTestId, getByTitle } = render(
-      <ImageComponent images={mockImageAssets} />,
-    );
+    const { getByTestId, getByTitle } = render(<ImageComponent images={mockImageAssets} />);
     fireEvent.click(getByTestId('image-test'));
 
     await waitFor(() => {
-      expect(getByTitle('Close (esc)')).toBeInTheDocument();
+      expect(getByTitle('Close')).toBeInTheDocument();
     });
   });
 });

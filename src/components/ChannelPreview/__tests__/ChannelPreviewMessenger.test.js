@@ -1,36 +1,38 @@
 import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import renderer from 'react-test-renderer';
+import { toHaveNoViolations } from 'jest-axe';
+import { axe } from '../../../../axe-helper';
+expect.extend(toHaveNoViolations);
 
 import {
-  useMockedApis,
-  generateUser,
   generateChannel,
-  getTestClientWithUser,
+  generateUser,
   getOrCreateChannelApi,
+  getTestClientWithUser,
+  useMockedApis,
 } from 'mock-builders';
 
-import ChannelPreviewMessenger from '../ChannelPreviewMessenger';
+import { ChannelPreviewMessenger } from '../ChannelPreviewMessenger';
 
 describe('ChannelPreviewMessenger', () => {
   const clientUser = generateUser();
   let chatClient;
   let channel;
-  const renderComponent = (props) => {
-    return (
+  const renderComponent = (props) => (
+    <div aria-label='Select Channel' role='listbox'>
       <ChannelPreviewMessenger
         channel={channel}
-        latestMessage="This is latest message !!!"
-        unread={10}
-        latestMessageLength={6}
-        displayTitle="Channel name"
-        displayImage="https://randomimage.com/src.jpg"
+        displayImage='https://randomimage.com/src.jpg'
+        displayTitle='Channel name'
+        latestMessage='Latest message!'
         setActiveChannel={jest.fn()}
+        unread={10}
         {...props}
       />
-    );
-  };
+    </div>
+  );
 
   const initializeChannel = async (c) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -53,7 +55,7 @@ describe('ChannelPreviewMessenger', () => {
 
   it('should call setActiveChannel on click', async () => {
     const setActiveChannel = jest.fn();
-    const { getByTestId } = render(
+    const { container, getByTestId } = render(
       renderComponent({
         setActiveChannel,
         watchers: {},
@@ -71,5 +73,7 @@ describe('ChannelPreviewMessenger', () => {
       expect(setActiveChannel).toHaveBeenCalledTimes(1);
       expect(setActiveChannel).toHaveBeenCalledWith(channel, {});
     });
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

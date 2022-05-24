@@ -1,13 +1,16 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
+
+import { useUserRole } from '../useUserRole';
+
+import { ChannelStateProvider } from '../../../../context/ChannelStateContext';
+import { ChatProvider } from '../../../../context/ChatContext';
 import {
-  getTestClientWithUser,
   generateChannel,
   generateMessage,
   generateUser,
-} from 'mock-builders';
-import { ChannelContext } from '../../../../context';
-import { useUserRole } from '../useUserRole';
+  getTestClientWithUser,
+} from '../../../../mock-builders';
 
 const getConfig = jest.fn();
 const alice = generateUser({ name: 'alice' });
@@ -16,25 +19,25 @@ const bob = generateUser({ name: 'bob' });
 async function renderUserRoleHook(
   message = generateMessage(),
   channelProps,
-  channelContextValue,
+  channelStateContextValue,
+  clientContextValue,
 ) {
   const client = await getTestClientWithUser(alice);
   const channel = generateChannel({
     getConfig,
+    state: { membership: {} },
     ...channelProps,
   });
+
   const wrapper = ({ children }) => (
-    <ChannelContext.Provider
-      value={{
-        channel,
-        client,
-        ...channelContextValue,
-      }}
-    >
-      {children}
-    </ChannelContext.Provider>
+    <ChatProvider value={{ client, ...clientContextValue }}>
+      <ChannelStateProvider value={{ channel, ...channelStateContextValue }}>
+        {children}
+      </ChannelStateProvider>
+    </ChatProvider>
   );
-  const { result } = renderHook(() => useUserRole(message), { wrapper });
+
+  const { result } = renderHook(() => useUserRole(message, false), { wrapper });
   return result.current;
 }
 
@@ -55,20 +58,13 @@ describe('useUserRole custom hook', () => {
     ['moderator', false],
     ['channel_moderator', false],
     ['owner', false],
-  ])(
-    'should tell if user is admin when user has %s role',
-    async (role, expected) => {
-      const message = generateMessage();
-      const adminUser = generateUser({ role });
-      const clientMock = await getTestClientWithUser(adminUser);
-      const { isAdmin } = await renderUserRoleHook(
-        message,
-        {},
-        { client: clientMock },
-      );
-      expect(isAdmin).toBe(expected);
-    },
-  );
+  ])('should tell if user is admin when user has %s role', async (role, expected) => {
+    const message = generateMessage();
+    const adminUser = generateUser({ role });
+    const clientMock = await getTestClientWithUser(adminUser);
+    const { isAdmin } = await renderUserRoleHook(message, {}, {}, { client: clientMock });
+    expect(isAdmin).toBe(expected);
+  });
 
   it.each([
     ['admin', true],
@@ -138,23 +134,26 @@ describe('useUserRole custom hook', () => {
     ['admin', true],
     ['moderator', true],
     ['channel_moderator', true],
-    ['owner', true],
-  ])(
-    'should allow user to edit or delete message if user role is %s',
-    async (role, expected) => {
-      const message = generateMessage();
-      const { canDeleteMessage, canEditMessage } = await renderUserRoleHook(
-        message,
-        {
-          state: {
-            membership: {
-              role,
-            },
+    ['owner', false],
+  ])('should allow user to edit or delete message if user role is %s', async (role, expected) => {
+    const message = generateMessage();
+    const { canDelete, canEdit } = await renderUserRoleHook(
+      message,
+      {
+        state: {
+          membership: {
+            role,
           },
         },
-      );
-      expect(canEditMessage).toBe(expected);
-      expect(canDeleteMessage).toBe(expected);
-    },
-  );
+      },
+      {
+        channelCapabilities: {
+          'delete-any-message': expected,
+          'update-any-message': expected,
+        },
+      },
+    );
+    expect(canEdit).toBe(expected);
+    expect(canDelete).toBe(expected);
+  });
 });

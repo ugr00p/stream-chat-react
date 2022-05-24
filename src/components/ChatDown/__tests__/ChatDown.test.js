@@ -3,7 +3,7 @@ import renderer from 'react-test-renderer';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-import ChatDown from '../ChatDown';
+import { ChatDown } from '../ChatDown';
 
 describe('ChatDown', () => {
   afterEach(cleanup);
@@ -28,6 +28,19 @@ describe('ChatDown', () => {
 
     await waitFor(() => {
       expect(getByTestId('chatdown-img')).toHaveAttribute('src', image);
+    });
+
+    const tree = renderer.create(Component).toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+
+  it('should render custom image component', async () => {
+    const ImageComponent = () => <div data-testid={'chatdown-img-custom'}>custom</div>;
+    const Component = <ChatDown image={<ImageComponent />} />;
+    const { getByTestId } = render(Component);
+
+    await waitFor(() => {
+      expect(getByTestId('chatdown-img-custom')).toBeInTheDocument();
     });
 
     const tree = renderer.create(Component).toJSON();

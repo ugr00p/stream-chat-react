@@ -4,16 +4,18 @@ import renderer from 'react-test-renderer';
 import '@testing-library/jest-dom';
 
 import {
-  useMockedApis,
-  getOrCreateChannelApi,
   generateChannel,
-  generateMessage,
   generateMember,
+  generateMessage,
   generateUser,
+  getOrCreateChannelApi,
   getTestClientWithUser,
+  useMockedApis,
 } from '../../../mock-builders';
 
-import VirtualizedMessageList from '../VirtualizedMessageList';
+import { usePrependedMessagesCount } from '../hooks/usePrependMessagesCount';
+import { VirtualizedMessageList } from '../VirtualizedMessageList';
+
 import { Chat } from '../../Chat';
 import { Channel } from '../../Channel';
 
@@ -25,10 +27,9 @@ jest.mock('react-virtuoso', () => {
       <Virtuoso
         ref={ref}
         {...props}
-        initialItemCount={20}
-        overscan={0}
+        fixedItemHeight={30}
         initialTopMostItemIndex={0}
-        itemHeight={30}
+        overscan={0}
       />
     )),
   };
@@ -39,14 +40,12 @@ jest.mock('../../Loading', () => ({
 }));
 
 jest.mock('../../Message', () => ({
-  FixedHeightMessage: jest.fn(({ groupedByUser }) => {
-    return (
-      <div data-testid="msg">
-        FixedHeightMessage groupedByUser:
-        {groupedByUser ? 'true' : 'false'}
-      </div>
-    );
-  }),
+  FixedHeightMessage: jest.fn(({ groupedByUser }) => (
+    <div data-testid='msg'>
+      FixedHeightMessage groupedByUser:
+      {groupedByUser ? 'true' : 'false'}
+    </div>
+  )),
 }));
 
 async function createChannel(empty = false) {
@@ -66,7 +65,7 @@ async function createChannel(empty = false) {
   const channel = client.channel('messaging', mockedChannel.id);
   await channel.watch();
 
-  return { client, channel };
+  return { channel, client };
 }
 
 // simple test since Virtuoso heavily relies on document height and jsdom doesn't support it
@@ -75,18 +74,65 @@ describe('VirtualizedMessageList', () => {
   beforeEach(jest.clearAllMocks);
 
   it('should render the list without any message', async () => {
-    const { client, channel } = await createChannel(true);
+    const { channel, client } = await createChannel(true);
     let tree;
-    await renderer.act(async () => {
-      tree = await renderer.create(
+
+    function createNodeMock(element) {
+      if (element.type === 'div') {
+        return {
+          addEventListener() {},
+          removeEventListener() {},
+        };
+      }
+      return null;
+    }
+
+    await renderer.act(() => {
+      tree = renderer.create(
         <Chat client={client}>
           <Channel channel={channel}>
             <VirtualizedMessageList />
           </Channel>
         </Chat>,
+        {
+          createNodeMock,
+        },
       );
     });
 
     expect(tree.toJSON()).toMatchSnapshot();
+  });
+});
+
+describe('usePrependedMessagesCount', () => {
+  const TestCase = ({ messages }) => {
+    const prependCount = usePrependedMessagesCount(messages);
+    return <div>{prependCount}</div>;
+  };
+
+  it('calculates the prepended messages using the id prop', async () => {
+    const render = await renderer.create(<TestCase messages={[]} />);
+    const expectPrependCount = (count) => {
+      expect(render.root.findByType('div').props.children).toStrictEqual(count);
+    };
+
+    expectPrependCount(0);
+
+    await renderer.act(async () => {
+      await render.update(<TestCase messages={[{ id: 'a' }]} />);
+      expectPrependCount(0);
+    });
+
+    await renderer.act(async () => {
+      await render.update(<TestCase messages={[{ id: 'c' }, { id: 'b' }, { id: 'a' }]} />);
+      expectPrependCount(2);
+    });
+
+    await renderer.act(async () => {
+      await render.update(
+        <TestCase messages={[{ id: 'e' }, { id: 'd' }, { id: 'c' }, { id: 'b' }, { id: 'a' }]} />,
+      );
+      expectPrependCount(4);
+    });
   });
 });
