@@ -45,7 +45,6 @@ import { DropzoneProvider } from '../MessageInput/DropzoneProvider';
 import {
   ChannelActionContextValue,
   ChannelActionProvider,
-  MessageAttachments,
   MessageToSend,
 } from '../../context/ChannelActionContext';
 import {
@@ -143,7 +142,7 @@ export type ChannelProps<
   Message?: ComponentContextValue<StreamChatGenerics>['Message'];
   /** Custom UI component for a deleted message, defaults to and accepts same props as: [MessageDeleted](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/MessageDeleted.tsx) */
   MessageDeleted?: ComponentContextValue<StreamChatGenerics>['MessageDeleted'];
-  /** Custom UI component that displays message and connection status notifications in the `MessageList`, defaults to and accepts same props as [DefaultMessageListNotifications](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageList.tsx) */
+  /** Custom UI component that displays message and connection status notifications in the `MessageList`, defaults to and accepts same props as [DefaultMessageListNotifications](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageListNotifications.tsx) */
   MessageListNotifications?: ComponentContextValue<StreamChatGenerics>['MessageListNotifications'];
   /** Custom UI component to display a notification when scrolled up the list and new messages arrive, defaults to and accepts same props as [MessageNotification](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageNotification.tsx) */
   MessageNotification?: ComponentContextValue<StreamChatGenerics>['MessageNotification'];
@@ -191,19 +190,32 @@ export type ChannelProps<
   VirtualMessage?: ComponentContextValue<StreamChatGenerics>['VirtualMessage'];
 };
 
-const JUMP_MESSAGE_PAGE_SIZE = 25;
-
 const UnMemoizedChannel = <
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
   V extends CustomTrigger = CustomTrigger
 >(
   props: PropsWithChildren<ChannelProps<StreamChatGenerics, V>>,
 ) => {
-  const { channel: propsChannel, EmptyPlaceholder = null } = props;
+  const {
+    channel: propsChannel,
+    EmptyPlaceholder = null,
+    LoadingErrorIndicator,
+    LoadingIndicator,
+  } = props;
 
-  const { channel: contextChannel } = useChatContext<StreamChatGenerics>('Channel');
+  const { channel: contextChannel, channelsQueryState } = useChatContext<StreamChatGenerics>(
+    'Channel',
+  );
 
   const channel = propsChannel || contextChannel;
+
+  if (channelsQueryState.queryInProgress === 'reload' && LoadingIndicator) {
+    return <LoadingIndicator size={25} />;
+  }
+
+  if (channelsQueryState.error && LoadingErrorIndicator) {
+    return <LoadingErrorIndicator error={channelsQueryState.error} />;
+  }
 
   if (!channel?.cid) return EmptyPlaceholder;
 
@@ -259,7 +271,9 @@ const ChannelInner = <
 
   const [state, dispatch] = useReducer<ChannelStateReducer<StreamChatGenerics>>(
     channelReducer,
-    initialState,
+    // channel.initialized === false if client.channels() was not called, e.g. ChannelList is not used
+    // => Channel will call channel.watch() in useLayoutEffect => state.loading is used to signal the watch() call state
+    { ...initialState, loading: !channel.initialized },
   );
 
   const isMounted = useIsMounted();
@@ -510,16 +524,18 @@ const ChannelInner = <
     return queryResponse.messages.length;
   };
 
-  const jumpToMessage = async (messageId: string) => {
+  const clearHighlightedMessageTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const jumpToMessage = async (messageId: string, messageLimit = 100) => {
     dispatch({ loadingMore: true, type: 'setLoadingMore' });
-    await channel.state.loadMessageIntoState(messageId);
+    await channel.state.loadMessageIntoState(messageId, undefined, messageLimit);
 
     /**
      * if the message we are jumping to has less than half of the page size older messages,
      * we have jumped to the beginning of the channel.
      */
     const indexOfMessage = channel.state.messages.findIndex((message) => message.id === messageId);
-    const hasMoreMessages = indexOfMessage >= Math.floor(JUMP_MESSAGE_PAGE_SIZE / 2);
+    const hasMoreMessages = indexOfMessage >= Math.floor(messageLimit / 2);
 
     loadMoreFinished(hasMoreMessages, channel.state.messages);
     dispatch({
@@ -528,7 +544,12 @@ const ChannelInner = <
       type: 'jumpToMessageFinished',
     });
 
-    setTimeout(() => {
+    if (clearHighlightedMessageTimeoutId.current) {
+      clearTimeout(clearHighlightedMessageTimeoutId.current);
+    }
+
+    clearHighlightedMessageTimeoutId.current = setTimeout(() => {
+      clearHighlightedMessageTimeoutId.current = null;
       dispatch({ type: 'clearHighlightedMessage' });
     }, 500);
   };
@@ -590,8 +611,26 @@ const ChannelInner = <
         messageResponse = await channel.sendMessage(messageData);
       }
 
-      // replace it after send is completed
-      if (messageResponse?.message) {
+      let existingMessage;
+      for (let i = channel.state.messages.length - 1; i >= 0; i--) {
+        const msg = channel.state.messages[i];
+        if (msg.id === messageData.id) {
+          existingMessage = msg;
+          break;
+        }
+      }
+
+      const responseTimestamp = new Date(messageResponse?.message?.updated_at || 0).getTime();
+      const existingMessageTimestamp = existingMessage?.updated_at?.getTime() || 0;
+      const responseIsTheNewest = responseTimestamp > existingMessageTimestamp;
+
+      // Replace the message payload after send is completed
+      // We need to check for the newest message payload, because on slow network, the response can arrive later than WS events message.new, message.updated.
+      // Always override existing message in status "sending"
+      if (
+        messageResponse?.message &&
+        (responseIsTheNewest || existingMessage?.status === 'sending')
+      ) {
         updateMessage({
           ...messageResponse.message,
           status: 'received',
@@ -606,26 +645,30 @@ const ChannelInner = <
 
       updateMessage({
         ...message,
+        error: parsedError,
         errorStatusCode: (parsedError.status as number) || undefined,
         status: 'failed',
       });
     }
   };
 
-  const createMessagePreview = (
-    text: string,
-    attachments: MessageAttachments<StreamChatGenerics>,
-    parent: StreamMessage<StreamChatGenerics> | undefined,
-    mentioned_users: UserResponse<StreamChatGenerics>[],
+  const sendMessage = async (
+    {
+      attachments = [],
+      mentioned_users = [],
+      parent,
+      text = '',
+    }: MessageToSend<StreamChatGenerics>,
+    customMessageData?: Partial<Message<StreamChatGenerics>>,
   ) => {
-    const clientSideID = `${client.userID}-${nanoid()}`;
+    channel.state.filterErrorMessages();
 
-    return ({
+    const messagePreview = {
       __html: text,
       attachments,
       created_at: new Date(),
       html: text,
-      id: clientSideID,
+      id: customMessageData?.id ?? `${client.userID}-${nanoid()}`,
       mentioned_users,
       reactions: [],
       status: 'sending',
@@ -633,21 +676,7 @@ const ChannelInner = <
       type: 'regular',
       user: client.user,
       ...(parent?.id ? { parent_id: parent.id } : null),
-    } as unknown) as MessageResponse<StreamChatGenerics>;
-  };
-
-  const sendMessage = async (
-    {
-      attachments = [],
-      mentioned_users = [],
-      parent = undefined,
-      text = '',
-    }: MessageToSend<StreamChatGenerics>,
-    customMessageData?: Partial<Message<StreamChatGenerics>>,
-  ) => {
-    channel.state.filterErrorMessages();
-
-    const messagePreview = createMessagePreview(text, attachments, parent, mentioned_users);
+    };
 
     updateMessage(messagePreview);
 

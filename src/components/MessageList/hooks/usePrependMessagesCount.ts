@@ -6,16 +6,19 @@ import type { DefaultStreamChatGenerics } from '../../../types/types';
 
 export function usePrependedMessagesCount<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
->(messages: StreamMessage<StreamChatGenerics>[]) {
-  const currentFirstMessageId = messages?.[0]?.id;
-  const firstMessageId = useRef(currentFirstMessageId);
-  const earliestMessageId = useRef(currentFirstMessageId);
+>(messages: StreamMessage<StreamChatGenerics>[], hasDateSeparator: boolean) {
+  const firstRealMessageIndex = hasDateSeparator ? 1 : 0;
+  const firstMessageId = useRef<string>();
+  const earliestMessageId = useRef<string>();
   const previousNumItemsPrepended = useRef(0);
 
   const numItemsPrepended = useMemo(() => {
     if (!messages || !messages.length) {
+      previousNumItemsPrepended.current = 0;
       return 0;
     }
+
+    const currentFirstMessageId = messages?.[firstRealMessageIndex]?.id;
     // if no new messages were prepended, return early (same amount as before)
     if (currentFirstMessageId === earliestMessageId.current) {
       return previousNumItemsPrepended.current;
@@ -34,9 +37,9 @@ export function usePrependedMessagesCount<
       }
     }
 
-    // if no match has found, we have jumped
+    // if no match has found, we have jumped - reset the prepend item count.
     firstMessageId.current = currentFirstMessageId;
-
+    previousNumItemsPrepended.current = 0;
     return 0;
     // TODO: there's a bug here, the messages prop is the same array instance (something mutates it)
     // that's why the second dependency is necessary

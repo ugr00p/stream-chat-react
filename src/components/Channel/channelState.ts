@@ -177,6 +177,7 @@ export const channelReducer = <
         hasMore,
         loadingMore: false,
         messages,
+        suppressAutoscroll: false,
       };
     }
 
@@ -216,8 +217,8 @@ export const channelReducer = <
 
     case 'setLoadingMore': {
       const { loadingMore } = action;
-      // supporess the autoscroll behavior
-      return { ...state, loadingMore, suppressAutoscroll: true };
+      // suppress the autoscroll behavior
+      return { ...state, loadingMore, suppressAutoscroll: loadingMore };
     }
 
     case 'setLoadingMoreNewer': {

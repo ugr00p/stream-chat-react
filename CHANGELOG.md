@@ -1,3 +1,150 @@
+## [9.5.3](https://github.com/GetStream/stream-chat-react/compare/v9.5.2...v9.5.3) (2023-04-17)
+
+
+### Bug Fixes
+
+* prevent overwriting sent message on slow network ([#1996](https://github.com/GetStream/stream-chat-react/issues/1996)) ([8208223](https://github.com/GetStream/stream-chat-react/commit/82082237c5a37b592371aba4e443ef50c6263a82))
+
+## [9.5.2](https://github.com/GetStream/stream-chat-react/compare/v9.5.1...v9.5.2) (2022-09-20)
+
+
+### Bug Fixes
+
+* **Attachment:** reduce the number of re-renders ([#1766](https://github.com/GetStream/stream-chat-react/issues/1766)) ([e6e126a](https://github.com/GetStream/stream-chat-react/commit/e6e126af57fc3d53017df545e559195182cd7dae))
+* edge case of prepend count not being reset when jumping ([#1765](https://github.com/GetStream/stream-chat-react/issues/1765)) ([#1768](https://github.com/GetStream/stream-chat-react/issues/1768)) ([b67a456](https://github.com/GetStream/stream-chat-react/commit/b67a456589f3d6638c64b85394f2b6da6c2ca283))
+* include range configuration for v9 ([7e803a2](https://github.com/GetStream/stream-chat-react/commit/7e803a2cd71b9b69592065586a0deb4db6dae244)), closes [#1770](https://github.com/GetStream/stream-chat-react/issues/1770)
+
+## [9.5.1](https://github.com/GetStream/stream-chat-react/compare/v9.5.0...v9.5.1) (2022-09-08)
+
+
+### Bug Fixes
+
+* avoid race condition crash in jumping ([488a1b1](https://github.com/GetStream/stream-chat-react/commit/488a1b1981eeecedb5d26b22dff581f6cf9a5338))
+
+# [9.5.0](https://github.com/GetStream/stream-chat-react/compare/v9.4.1...v9.5.0) (2022-08-29)
+
+
+### Bug Fixes
+
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([61c4eec](https://github.com/GetStream/stream-chat-react/commit/61c4eecf5c03ab36109a94b7afa5f678e99fcc8b)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+* prevent double submissions in korean ([#1720](https://github.com/GetStream/stream-chat-react/issues/1720)) ([5d781d8](https://github.com/GetStream/stream-chat-react/commit/5d781d896cb9153bcf3554d04714215c0bbf5c12))
+* replace FileReader with URL.createObjectURL ([#1701](https://github.com/GetStream/stream-chat-react/issues/1701)) ([c8a490e](https://github.com/GetStream/stream-chat-react/commit/c8a490ebc53da03c2b0f064de88c0cb634ed2a70))
+* **Vite:** add emoji-mart (emoji, picker) re-export ([#1724](https://github.com/GetStream/stream-chat-react/issues/1724)) ([c90cf4b](https://github.com/GetStream/stream-chat-react/commit/c90cf4bfc6b6aa74233fd041200e8180a70604e4))
+
+
+### Features
+
+* increase and support overriding jump to message limit ([#1718](https://github.com/GetStream/stream-chat-react/issues/1718)) ([8c720f4](https://github.com/GetStream/stream-chat-react/commit/8c720f41e349f753a126ad5e062c1475e3893771))
+
+## [9.4.1](https://github.com/GetStream/stream-chat-react/compare/v9.4.0...v9.4.1) (2022-08-04)
+
+
+### Bug Fixes
+
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([#1703](https://github.com/GetStream/stream-chat-react/issues/1703)) ([8010889](https://github.com/GetStream/stream-chat-react/commit/801088972032dcfd0374b00aa424a5952b7e72ae)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+
+# [9.4.0](https://github.com/GetStream/stream-chat-react/compare/v9.3.0...v9.4.0) (2022-08-03)
+
+
+### Bug Fixes
+
+* detect mentions of users who have email as their name ([#1698](https://github.com/GetStream/stream-chat-react/issues/1698)) ([367b7c4](https://github.com/GetStream/stream-chat-react/commit/367b7c4cb30454140ff113e2b0a2671a14d9d276))
+
+
+### Features
+
+* allow to send custom message data when editing a message ([#1696](https://github.com/GetStream/stream-chat-react/issues/1696)) ([05eae28](https://github.com/GetStream/stream-chat-react/commit/05eae28cd04f1605ae3fb1cd5767fa4bbbd067d3))
+
+# [9.3.0](https://github.com/GetStream/stream-chat-react/compare/v9.2.0...v9.3.0) (2022-07-29)
+
+
+### Bug Fixes
+
+* scroll to bottom on new message notification click after message list pagination ([#1689](https://github.com/GetStream/stream-chat-react/issues/1689)) ([d8f4bc5](https://github.com/GetStream/stream-chat-react/commit/d8f4bc57a602e5deeefeb0c8419658c61c7e695a))
+* update types for suggestions ([#1691](https://github.com/GetStream/stream-chat-react/issues/1691)) ([bb7442c](https://github.com/GetStream/stream-chat-react/commit/bb7442cbf4bb709ac477fc59f0ee35afb60888d5)), closes [#1659](https://github.com/GetStream/stream-chat-react/issues/1659)
+
+
+### Features
+
+* **message-status:** extendable user information in read-by tooltip ([#1670](https://github.com/GetStream/stream-chat-react/issues/1670)) ([902029a](https://github.com/GetStream/stream-chat-react/commit/902029a3c9f7a720d0265dcfeb1957b17b8bdc9a))
+
+# [9.2.0](https://github.com/GetStream/stream-chat-react/compare/v9.1.5...v9.2.0) (2022-07-26)
+
+
+### Features
+
+* add autoscrollToBottom to message context ([#1681](https://github.com/GetStream/stream-chat-react/issues/1681)) ([a616184](https://github.com/GetStream/stream-chat-react/commit/a6161843509c55e9b432f4f66dfb344f0faa8b18))
+
+## [9.1.5](https://github.com/GetStream/stream-chat-react/compare/v9.1.4...v9.1.5) (2022-07-15)
+
+
+### Bug Fixes
+
+* align user role checks with channel membership, deprecate isModerator, isAdmin, isOwner ([#1666](https://github.com/GetStream/stream-chat-react/issues/1666)) ([31f0916](https://github.com/GetStream/stream-chat-react/commit/31f09168fafe054c102ea85905243a1915fb957d))
+* allow quoting quoted messages ([#1662](https://github.com/GetStream/stream-chat-react/issues/1662)) ([36dbc82](https://github.com/GetStream/stream-chat-react/commit/36dbc82df0c17939f603f6f6c33acb472cd40f9b))
+* **Channel:** allow usage of custom message ID in sendMessage ([#1663](https://github.com/GetStream/stream-chat-react/issues/1663)) ([41bae84](https://github.com/GetStream/stream-chat-react/commit/41bae841568e661339277e0b241be4cbe83b2030))
+* initial load earlier in vml persists the position ([#1640](https://github.com/GetStream/stream-chat-react/issues/1640)) ([dd53d5c](https://github.com/GetStream/stream-chat-react/commit/dd53d5c1fe2707d8807cfec341fbbdd612ff7cfd)), closes [/github.com/petyosi/react-virtuoso/blob/master/e2e/prepend-items.test.ts#L27-L34](https://github.com//github.com/petyosi/react-virtuoso/blob/master/e2e/prepend-items.test.ts/issues/L27-L34)
+
+## [9.1.4](https://github.com/GetStream/stream-chat-react/compare/v9.1.3...v9.1.4) (2022-06-22)
+
+
+### Bug Fixes
+
+* respect updates to messageActions prop, support messageActions overrides in Thread ([#1634](https://github.com/GetStream/stream-chat-react/issues/1634)) ([aed8e01](https://github.com/GetStream/stream-chat-react/commit/aed8e0159b12f221d8a8716c1998ccff29f5cc73)), closes [#1627](https://github.com/GetStream/stream-chat-react/issues/1627)
+
+## [9.1.3](https://github.com/GetStream/stream-chat-react/compare/v9.1.2...v9.1.3) (2022-06-19)
+
+
+### Bug Fixes
+
+* correct calculation of scrollback with date separators ([#1628](https://github.com/GetStream/stream-chat-react/issues/1628)) ([88a4d64](https://github.com/GetStream/stream-chat-react/commit/88a4d6413c15b52d394ab338c8348664debfd1a2))
+* upgrade react-player to its latest version ([#1629](https://github.com/GetStream/stream-chat-react/issues/1629)) ([8848700](https://github.com/GetStream/stream-chat-react/commit/88487001de49dceded0bd950f35d527a0c2526e1))
+
+## [9.1.2](https://github.com/GetStream/stream-chat-react/compare/v9.1.1...v9.1.2) (2022-06-13)
+
+
+### Bug Fixes
+
+* add check if window is defined before using ResizeObserve ([f04e23e](https://github.com/GetStream/stream-chat-react/commit/f04e23e2f07edc2bba7bee85ac297e1a7b920c2b))
+
+## [9.1.1](https://github.com/GetStream/stream-chat-react/compare/v9.1.0...v9.1.1) (2022-06-10)
+
+
+### Bug Fixes
+
+* calculate jumped-to-message position correctly by keeping the loading indicator mounted ([671375a](https://github.com/GetStream/stream-chat-react/commit/671375ab3ad89b4a4bd011748264f00021fe144b))
+
+# [9.1.0](https://github.com/GetStream/stream-chat-react/compare/v9.0.0...v9.1.0) (2022-06-03)
+
+
+### Bug Fixes
+
+* filter out OG scraped images from attachments ([#1598](https://github.com/GetStream/stream-chat-react/issues/1598)) ([9d9c8b9](https://github.com/GetStream/stream-chat-react/commit/9d9c8b99339c58eb435dbe57703a991b8c671dd0))
+
+
+### Features
+
+* add optional renderChannels prop to ChannelList ([#1572](https://github.com/GetStream/stream-chat-react/issues/1572)) ([8edca9e](https://github.com/GetStream/stream-chat-react/commit/8edca9e64b7494d0900cafa5194186cf3c273cd1))
+* lift channels query state to chat context ([#1606](https://github.com/GetStream/stream-chat-react/issues/1606)) ([ed4febc](https://github.com/GetStream/stream-chat-react/commit/ed4febc864f9a5e476e13a4bbcf434c167f3e8d7))
+* use ResizeObserver to keep Channel scrolled to bottom on page load ([#1608](https://github.com/GetStream/stream-chat-react/issues/1608)) ([c33e155](https://github.com/GetStream/stream-chat-react/commit/c33e1552747ed8a60ffb7da1313451603db07d80))
+
+## [9.0.0](https://github.com/GetStream/stream-chat-react/compare/v8.2.0...v9.0.0) (2022-05-17)
+
+### Bug Fixes
+
+* display textarea defaultValue in MessageInput ([#1570](https://github.com/GetStream/stream-chat-react/issues/1570)) ([516a56b](https://github.com/GetStream/stream-chat-react/commit/516a56b8b8a24739f66c0d7b47c159d6bca7d3be))
+
+### Features
+
+* **MessageInput:** add shouldSubmit, remove keycodeSubmitKeys ([8e2cddd](https://github.com/GetStream/stream-chat-react/pull/1534/commits/8e2cdddddd256ec1ab77ba2bc7d59a40cfba7b11)), closes [#1530](https://github.com/GetStream/stream-chat-react/issues/1530)
+* add support for React 18 ([#1534](https://github.com/GetStream/stream-chat-react/issues/1534)) ([39cedcb](https://github.com/GetStream/stream-chat-react/commit/39cedcb8d0821e4bb6e8061349ae52132aa32c45))
+
+### BREAKING CHANGES
+
+* **MessageInput:** property  has been fully removed and replaced by the  property
+which should handle custom submit "trigger" functionality.
+Both `listener.js` and usage of key codes were outdated and caused unnecessary issues.
+
 # [8.2.0](https://github.com/GetStream/stream-chat-react/compare/v8.1.3...v8.2.0) (2022-05-17)
 
 
@@ -25,7 +172,6 @@
 
 * display overlay "X more" on Gallery only if more images uploaded than displayed ([#1526](https://github.com/GetStream/stream-chat-react/issues/1526)) ([ed47cd1](https://github.com/GetStream/stream-chat-react/commit/ed47cd1e0d2df6b2af72ae33e5c1b2efffec1591))
 
-# Changelog
 
 ## [8.1.1](https://github.com/GetStream/stream-chat-react/compare/v8.1.0...v8.1.1) (2022-04-18)
 

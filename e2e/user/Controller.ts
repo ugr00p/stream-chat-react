@@ -1,10 +1,9 @@
 import type { Page } from '@playwright/test';
 
-import  selectors  from './selectors';
+import selectors from './selectors';
 
 export class Controller {
-  constructor(private baseURL: string | undefined, private page: Page) {
-  }
+  constructor(private baseURL: string | undefined, private page: Page) {}
 
   async openStory(story: string, waitForPresence: string) {
     await Promise.all([
@@ -34,6 +33,13 @@ export class Controller {
     ]);
   }
 
+  async sendOtherUserMessage() {
+    await Promise.all([
+      this.page.waitForResponse((r) => r.url().includes('/message') && r.ok()),
+      this.page.click(selectors.buttonAddOtherUserMessage),
+    ]);
+  }
+
   async sendOtherUserReply() {
     await Promise.all([
       this.page.waitForResponse((r) => r.url().includes('/message') && r.ok()),
@@ -47,5 +53,9 @@ export class Controller {
 
   async deleteOtherUserLastReply() {
     await this.page.click(selectors.controlsBtnDeleteOtherUserLastReply);
+  }
+
+  async deleteOtherUserLastMessage() {
+    await this.page.click(selectors.controlsBtnDeleteOtherUserLastMessage);
   }
 }

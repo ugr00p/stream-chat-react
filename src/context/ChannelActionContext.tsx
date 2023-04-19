@@ -1,7 +1,9 @@
 import React, { PropsWithChildren, useContext } from 'react';
 
 import type {
+  APIErrorResponse,
   Attachment,
+  ErrorFromResponse,
   Message,
   UpdatedMessage,
   UpdateMessageAPIResponse,
@@ -23,6 +25,7 @@ export type MessageToSend<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = {
   attachments?: MessageAttachments<StreamChatGenerics>;
+  error?: ErrorFromResponse<APIErrorResponse>;
   errorStatusCode?: number;
   id?: string;
   mentioned_users?: UserResponse<StreamChatGenerics>[];
@@ -46,7 +49,7 @@ export type ChannelActionContextValue<
     message: UpdatedMessage<StreamChatGenerics>,
   ) => Promise<UpdateMessageAPIResponse<StreamChatGenerics> | void>;
   jumpToLatestMessage: () => Promise<void>;
-  jumpToMessage: (messageId: string) => Promise<void>;
+  jumpToMessage: (messageId: string, limit?: number) => Promise<void>;
   loadMore: (limit?: number) => Promise<number>;
   loadMoreNewer: (limit?: number) => Promise<number>;
   loadMoreThread: () => Promise<void>;
