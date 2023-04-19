@@ -1,30 +1,53 @@
-import React from 'react';
-
-import {
-  isAudioAttachment,
-  isFileAttachment,
-  isGalleryAttachmentType,
-  isImageAttachment,
-  isMediaAttachment,
-  renderAudio,
-  renderCard,
-  renderFile,
-  renderGallery,
-  renderImage,
-  renderMedia,
-} from './utils';
-
+import React, { useMemo } from 'react';
 import type { ReactPlayerProps } from 'react-player';
 import type { Attachment as StreamAttachment } from 'stream-chat';
+
+import {
+  GroupedRenderedAttachment,
+  isAudioAttachment,
+  isFileAttachment,
+  isMediaAttachment,
+  isScrapedContent,
+  isUploadedImage,
+} from './utils';
+
+import {
+  AudioContainer,
+  CardContainer,
+  FileContainer,
+  GalleryContainer,
+  ImageContainer,
+  MediaContainer,
+  UnsupportedAttachmentContainer,
+} from './AttachmentContainer';
 
 import type { AttachmentActionsProps } from './AttachmentActions';
 import type { AudioProps } from './Audio';
 import type { CardProps } from './Card';
 import type { FileAttachmentProps } from './FileAttachment';
 import type { GalleryProps, ImageProps } from '../Gallery';
+import type { UnsupportedAttachmentProps } from './UnsupportedAttachment';
 import type { ActionHandlerReturnType } from '../Message/hooks/useActionHandler';
 
 import type { DefaultStreamChatGenerics } from '../../types/types';
+
+const CONTAINER_MAP = {
+  audio: AudioContainer,
+  card: CardContainer,
+  file: FileContainer,
+  media: MediaContainer,
+  unsupported: UnsupportedAttachmentContainer,
+} as const;
+
+export const ATTACHMENT_GROUPS_ORDER = [
+  'card',
+  'gallery',
+  'image',
+  'media',
+  'audio',
+  'file',
+  'unsupported',
+] as const;
 
 export type AttachmentProps<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
@@ -47,6 +70,8 @@ export type AttachmentProps<
   Image?: React.ComponentType<ImageProps>;
   /** Custom UI component for displaying a media type attachment, defaults to `ReactPlayer` from 'react-player' */
   Media?: React.ComponentType<ReactPlayerProps>;
+  /** Custom UI component for displaying unsupported attachment types, defaults to NullComponent */
+  UnsupportedAttachment?: React.ComponentType<UnsupportedAttachmentProps>;
 };
 
 /**
@@ -57,54 +82,95 @@ export const Attachment = <
 >(
   props: AttachmentProps<StreamChatGenerics>,
 ) => {
-  const { attachments, ...rest } = props;
+  const { attachments } = props;
 
-  const gallery = {
-    images: attachments?.filter(
-      (attachment) =>
-        attachment.type === 'image' && !(attachment.og_scrape_url || attachment.title_link),
-    ),
-    type: 'gallery',
-  };
-
-  const newAttachments =
-    gallery.images.length >= 2
-      ? [
-          ...attachments.filter(
-            (attachment) =>
-              !(
-                attachment.type === 'image' && !(attachment.og_scrape_url || attachment.title_link)
-              ),
-          ),
-          gallery,
-        ]
-      : attachments;
+  const groupedAttachments = useMemo(() => renderGroupedAttachments(props), [attachments]);
 
   return (
-    <>
-      {newAttachments.map((attachment) => {
-        if (isGalleryAttachmentType(attachment)) {
-          return renderGallery({ ...rest, attachment });
-        }
-
-        if (isImageAttachment(attachment)) {
-          return renderImage({ ...rest, attachment });
-        }
-
-        if (isAudioAttachment(attachment)) {
-          return renderAudio({ ...rest, attachment });
-        }
-
-        if (isFileAttachment(attachment)) {
-          return renderFile({ ...rest, attachment });
-        }
-
-        if (isMediaAttachment(attachment)) {
-          return renderMedia({ ...rest, attachment });
-        }
-
-        return renderCard({ ...rest, attachment });
-      })}
-    </>
+    <div className='str-chat__attachment-list'>
+      {ATTACHMENT_GROUPS_ORDER.reduce(
+        (acc, groupName) => [...acc, ...groupedAttachments[groupName]],
+        [] as React.ReactNode[],
+      )}
+    </div>
   );
+};
+
+const renderGroupedAttachments = <
+  StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
+>({
+  attachments,
+  ...rest
+}: AttachmentProps<StreamChatGenerics>): GroupedRenderedAttachment => {
+  const uploadedImages: StreamAttachment<StreamChatGenerics>[] = attachments.filter((attachment) =>
+    isUploadedImage(attachment),
+  );
+
+  const containers = attachments
+    .filter((attachment) => !isUploadedImage(attachment))
+    .reduce<GroupedRenderedAttachment>(
+      (typeMap, attachment) => {
+        const attachmentType = getAttachmentType(attachment);
+
+        const Container = CONTAINER_MAP[attachmentType];
+        typeMap[attachmentType].push(
+          <Container
+            key={`${attachmentType}-${typeMap[attachmentType].length}`}
+            {...rest}
+            attachment={attachment}
+          />,
+        );
+
+        return typeMap;
+      },
+      {
+        audio: [],
+        card: [],
+        file: [],
+        media: [],
+        unsupported: [],
+        // not used in reduce
+        // eslint-disable-next-line sort-keys
+        image: [],
+        // eslint-disable-next-line sort-keys
+        gallery: [],
+      },
+    );
+
+  if (uploadedImages.length > 1) {
+    containers['gallery'] = [
+      <GalleryContainer
+        key='gallery-container'
+        {...rest}
+        attachment={{
+          images: uploadedImages,
+          type: 'gallery',
+        }}
+      />,
+    ];
+  } else if (uploadedImages.length === 1) {
+    containers['image'] = [
+      <ImageContainer key='image-container' {...rest} attachment={uploadedImages[0]} />,
+    ];
+  }
+
+  return containers;
+};
+
+const getAttachmentType = <
+  StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
+>(
+  attachment: AttachmentProps<StreamChatGenerics>['attachments'][number],
+): keyof typeof CONTAINER_MAP => {
+  if (isScrapedContent(attachment)) {
+    return 'card';
+  } else if (isMediaAttachment(attachment)) {
+    return 'media';
+  } else if (isAudioAttachment(attachment)) {
+    return 'audio';
+  } else if (isFileAttachment(attachment)) {
+    return 'file';
+  }
+
+  return 'unsupported';
 };

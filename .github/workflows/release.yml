@@ -5,7 +5,8 @@ on:
       - master
       - main
       - beta
-
+env:
+  NODE_OPTIONS: --max_old_space_size=4096
 jobs:
   release:
     name: Release
@@ -21,8 +22,10 @@ jobs:
           node-version: 'lts/*'
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Validate CommonJS bundle
+        run: yarn validate-cjs
       - name: Release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn semantic-release

@@ -48,3 +48,5 @@ export const getRandomInt = (min, max) => {
 export * from './api';
 export * from './event';
 export * from './generator';
+export * from './translator';
+export * from './utils';

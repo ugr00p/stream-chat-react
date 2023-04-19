@@ -1,6 +1,8 @@
 name: Test
 
 on: [push]
+env:
+  NODE_OPTIONS: --max_old_space_size=4096
 
 jobs:
   tsc:
@@ -54,8 +56,9 @@ jobs:
           E2E_APP_SECRET: ${{ secrets.E2E_APP_SECRET }}
           E2E_TEST_USER_1_TOKEN: ${{ secrets.E2E_TEST_USER_1_TOKEN }}
           E2E_TEST_USER_2_TOKEN: ${{ secrets.E2E_TEST_USER_2_TOKEN }}
-          E2E_ADDITIONAL_CHANNELS: mr-channel-1, mr-channel-2
+          E2E_ADDITIONAL_CHANNELS: mr-channel-1, mr-channel-2, edit-message-channel, pin-message-channel
           E2E_LONG_MESSAGE_LISTS_CHANNEL: navigate-long-message-lists
+          E2E_ATTACHMENT_SIZING_CHANNEL: attachment-sizing
 
       - name: 🎥 Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -69,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [14, 16]
+        node: [16, 18]
     name: Test with Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v3
@@ -93,3 +96,6 @@ jobs:
           yarn lint
           yarn coverage
           yarn validate-translations
+
+      - name: 🧪 Validate CommonJS bundle with ${{ matrix.node }}
+        run: yarn validate-cjs

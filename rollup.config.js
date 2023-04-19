@@ -1,5 +1,5 @@
 import babel from '@rollup/plugin-babel';
-import commonjs from 'rollup-plugin-commonjs';
+import commonjs from '@rollup/plugin-commonjs';
 import image from '@rollup/plugin-image';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
@@ -13,7 +13,6 @@ import replace from '@rollup/plugin-replace';
 import builtins from '@stream-io/rollup-plugin-node-builtins';
 import { terser } from 'rollup-plugin-terser';
 import { prepend } from 'rollup-plugin-insert';
-import PropTypes from 'prop-types';
 import process from 'process';
 import pkg from './package.json';
 
@@ -33,6 +32,7 @@ const externalDependencies = [
   '@braintree/sanitize-url',
   '@fortawesome/free-regular-svg-icons',
   '@fortawesome/react-fontawesome',
+  '@juggle/resize-observer',
   '@stream-io/transliterate',
   'custom-event',
   /dayjs/,
@@ -45,15 +45,15 @@ const externalDependencies = [
   'lodash.isequal',
   'lodash.throttle',
   'lodash.uniqby',
-  'mdast-util-find-and-replace',
   'mml-react',
+  'nanoid',
   'pretty-bytes',
   'prop-types',
   'react-fast-compare',
   /react-file-utils/,
   'react-images',
+  'react-image-gallery',
   'react-is',
-  /react-markdown/,
   'react-player',
   'react-textarea-autosize',
   'react-virtuoso',
@@ -61,7 +61,7 @@ const externalDependencies = [
   /uuid/,
 ];
 
-const basePlugins = [
+const basePlugins = ({ useBrowserResolve = false }) => [
   replace({
     preventAssignment: true,
     'process.env.NODE_ENV': JSON.stringify('production'),
@@ -69,25 +69,24 @@ const basePlugins = [
   // Remove peer-dependencies from final bundle
   external(),
   image(),
+  resolve({
+    browser: useBrowserResolve,
+  }),
   typescript(),
   babel({
     babelHelpers: 'runtime',
     exclude: 'node_modules/**',
   }),
-  commonjs({
-    namedExports: {
-      'node_modules/linkifyjs/index.js': ['find'],
-      'node_modules/react-is/index.js': ['isValidElementType'],
-      'prop-types': Object.keys(PropTypes),
-    },
-  }),
+  commonjs(),
   // import files as data-uris or es modules
   url(),
   copy({
     targets: [
       { dest: 'dist/assets', src: './node_modules/@stream-io/stream-chat-css/dist/assets/*' },
-      { dest: 'dist/css', src: './node_modules/@stream-io/stream-chat-css/dist/css/index.css' },
+      { dest: 'dist/css', src: './node_modules/@stream-io/stream-chat-css/dist/css/*' },
       { dest: 'dist/scss', src: './node_modules/@stream-io/stream-chat-css/dist/scss/*' },
+      { dest: 'dist/css/v2', src: './node_modules/@stream-io/stream-chat-css/dist/v2/css/*' },
+      { dest: 'dist/scss/v2', src: './node_modules/@stream-io/stream-chat-css/dist/v2/scss/*' },
     ],
     verbose: process.env.VERBOSE,
     watch: process.env.ROLLUP_WATCH,
@@ -107,7 +106,7 @@ const normalBundle = {
       sourcemap: true,
     },
   ],
-  plugins: [...basePlugins],
+  plugins: [...basePlugins({ useBrowserResolve: false })],
 };
 
 const fullBrowserBundle = ({ min } = { min: false }) => ({
@@ -126,16 +125,13 @@ const fullBrowserBundle = ({ min } = { min: false }) => ({
     },
   ],
   plugins: [
-    ...basePlugins,
+    ...basePlugins({ useBrowserResolve: true }),
     {
       load: (id) => (id.match(/.s?css$/) ? '' : null),
       name: 'ignore-css-and-scss',
       resolveId: (importee) => (importee.match(/.s?css$/) ? importee : null),
     },
     builtins(),
-    resolve({
-      browser: true,
-    }),
     globals({
       buffer: false,
       dirname: false,

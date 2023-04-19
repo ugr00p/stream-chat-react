@@ -1,14 +1,17 @@
+import '@testing-library/jest-dom';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import renderer from 'react-test-renderer';
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
 
-import { Thread } from '../Thread';
-
-import { Message as MessageMock } from '../../Message/Message';
-import { MessageInputSmall as MessageInputSmallMock } from '../../MessageInput/MessageInputSmall';
-import { MessageList as MessageListMock } from '../../MessageList';
-import { useMessageInputContext } from '../../../context/MessageInputContext';
+import {
+  ChannelActionProvider,
+  ChannelStateProvider,
+  ChatProvider,
+  ComponentProvider,
+  EmojiProvider,
+  TranslationProvider,
+  useMessageInputContext,
+} from '../../../context';
 
 import {
   emojiComponentMock,
@@ -21,18 +24,19 @@ import {
   useMockedApis,
 } from '../../../mock-builders';
 
-import { ChannelActionProvider } from '../../../context/ChannelActionContext';
-import { ChannelStateProvider } from '../../../context/ChannelStateContext';
-import { ChatProvider } from '../../../context/ChatContext';
-import { ComponentProvider } from '../../../context/ComponentContext';
-import { EmojiProvider } from '../../../context/EmojiContext';
-import { TranslationProvider } from '../../../context/TranslationContext';
+import { Message as MessageMock } from '../../Message/Message';
+import { MessageInputSmall as MessageInputSmallMock } from '../../MessageInput/MessageInputSmall';
+import { MessageList as MessageListMock } from '../../MessageList';
+import { Thread } from '../Thread';
 
 jest.mock('../../Message/Message', () => ({
   Message: jest.fn(() => <div />),
 }));
 jest.mock('../../MessageList/MessageList', () => ({
   MessageList: jest.fn(() => <div />),
+}));
+jest.mock('../../MessageList/VirtualizedMessageList', () => ({
+  VirtualizedMessageList: jest.fn(() => <div />),
 }));
 jest.mock('../../MessageInput/MessageInputSmall', () => ({
   MessageInputSmall: jest.fn(() => <div />),
@@ -41,9 +45,9 @@ jest.mock('../../MessageInput/MessageInputSmall', () => ({
 let chatClient;
 const alice = generateUser({ id: 'alice', name: 'alice' });
 const bob = generateUser({ id: 'bob', name: 'bob' });
-const threadStart = generateMessage({ reply_count: 2, user: alice });
-const reply1 = generateMessage({ parent_id: threadStart.id, user: bob });
-const reply2 = generateMessage({ parent_id: threadStart.id, user: alice });
+const parentMessage = generateMessage({ reply_count: 2, user: alice });
+const reply1 = generateMessage({ parent_id: parentMessage.id, user: bob });
+const reply2 = generateMessage({ parent_id: parentMessage.id, user: alice });
 
 const mockedChannel = {
   off: jest.fn(),
@@ -53,7 +57,7 @@ const mockedChannel = {
 };
 const channelStateContextMock = {
   channel: mockedChannel,
-  thread: threadStart,
+  thread: parentMessage,
   threadHasMore: true,
   threadLoadingMore: false,
   threadMessages: [reply1, reply2],
@@ -113,29 +117,6 @@ describe('Thread', () => {
     jest.clearAllMocks();
   });
 
-  it('should render the reply count', () => {
-    const { getByText } = renderComponent({ chatClient });
-
-    expect(i18nMock).toHaveBeenCalledWith('replyCount', {
-      count: threadStart.reply_count,
-    });
-    expect(getByText('2 replies')).toBeInTheDocument();
-  });
-
-  it('should render the message that starts the thread', () => {
-    renderComponent({
-      chatClient,
-      threadProps: { Message: MessageMock },
-    });
-
-    expect(MessageMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: threadStart,
-      }),
-      {},
-    );
-  });
-
   it('should render the MessageList component with the correct props without date separators', () => {
     const additionalMessageListProps = {
       loadingMore: false,
@@ -155,6 +136,7 @@ describe('Thread', () => {
       expect.objectContaining({
         disableDateSeparator: true,
         hasMore: channelStateContextMock.threadHasMore,
+        head: expect.objectContaining({ type: expect.objectContaining({ name: 'ThreadHead' }) }),
         loadingMore: channelActionContextMock.threadLoadingMore,
         loadMore: channelStateContextMock.loadMoreThread,
         Message: MessageMock,
@@ -186,6 +168,7 @@ describe('Thread', () => {
       expect.objectContaining({
         disableDateSeparator: false,
         hasMore: channelStateContextMock.threadHasMore,
+        head: expect.objectContaining({ type: expect.objectContaining({ name: 'ThreadHead' }) }),
         loadingMore: channelActionContextMock.threadLoadingMore,
         loadMore: channelStateContextMock.loadMoreThread,
         Message: MessageMock,
@@ -244,7 +227,7 @@ describe('Thread', () => {
       expect(CustomThreadHeader).toHaveBeenCalledWith(
         expect.objectContaining({
           closeThread: channelActionContextMock.closeThread,
-          thread: threadStart,
+          thread: parentMessage,
         }),
         {},
       );
@@ -259,6 +242,23 @@ describe('Thread', () => {
     expect(channelActionContextMock.closeThread).toHaveBeenCalledTimes(1);
   });
 
+  it('should pass messageActions prop to the used messageList', () => {
+    const messageActions = ['edit', 'reply', 'delete'];
+    renderComponent({
+      chatClient,
+      threadProps: {
+        messageActions,
+      },
+    });
+
+    expect(MessageListMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messageActions,
+      }),
+      expect.anything(), // refOrContext
+    );
+  });
+
   it('should assign the str-chat__thread--full modifier class if the fullWidth prop is set to true', () => {
     const { container } = renderComponent({ chatClient, threadProps: { fullWidth: true } });
     expect(container.querySelector('.str-chat__thread--full')).toBeInTheDocument();
@@ -267,6 +267,22 @@ describe('Thread', () => {
   it('should not assign the str-chat__thread--full modifier class if the fullWidth prop is set to false', () => {
     const { container } = renderComponent({ chatClient });
     expect(container.querySelector('.str-chat__thread--full')).not.toBeInTheDocument();
+  });
+
+  it('should assign str-chat__thread--virtualized class to the root in virtualized mode', () => {
+    const { container } = renderComponent({
+      chatClient,
+      threadProps: { virtualized: true },
+    });
+    expect(container.querySelector('.str-chat__thread--virtualized')).toBeInTheDocument();
+  });
+
+  it('should not assign str-chat__thread--virtualized class to the root in non-virtualized mode', () => {
+    const { container } = renderComponent({
+      chatClient,
+      threadProps: { virtualized: false },
+    });
+    expect(container.querySelector('.str-chat__thread--virtualized')).not.toBeInTheDocument();
   });
 
   it('should not render anything if the thread in context is falsy', () => {

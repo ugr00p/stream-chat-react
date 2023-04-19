@@ -11,18 +11,24 @@ import { MessageActions } from '../MessageActions';
 
 import { MessageContextValue, useMessageContext } from '../../context/MessageContext';
 
-import type { DefaultStreamChatGenerics } from '../../types/types';
+import type { DefaultStreamChatGenerics, IconProps } from '../../types/types';
 
 export type MessageOptionsProps<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = Partial<Pick<MessageContextValue<StreamChatGenerics>, 'handleOpenThread'>> & {
-  ActionsIcon?: React.FunctionComponent;
+  /* Custom component rendering the icon used in message actions button. This button invokes the message actions menu. */
+  ActionsIcon?: React.ComponentType<IconProps>;
   displayLeft?: boolean;
+  /* If true, show the `ThreadIcon` and enable navigation into a `Thread` component. */
   displayReplies?: boolean;
+  /* React mutable ref that can be placed on the message root `div` of MessageActions component */
   messageWrapperRef?: React.RefObject<HTMLDivElement>;
-  ReactionIcon?: React.FunctionComponent;
+  /* Custom component rendering the icon used in a button invoking reactions selector for a given message. */
+  ReactionIcon?: React.ComponentType<IconProps>;
+  /* Theme string to be added to CSS class names. */
   theme?: string;
-  ThreadIcon?: React.FunctionComponent;
+  /* Custom component rendering the icon used in a message options button opening thread */
+  ThreadIcon?: React.ComponentType<IconProps>;
 };
 
 const UnMemoizedMessageOptions = <

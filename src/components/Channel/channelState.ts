@@ -177,6 +177,7 @@ export const channelReducer = <
         hasMore,
         loadingMore: false,
         messages,
+        suppressAutoscroll: false,
       };
     }
 
@@ -206,6 +207,7 @@ export const channelReducer = <
         ...state,
         thread: message,
         threadMessages: message.id ? { ...channel.state.threads }[message.id] || [] : [],
+        threadSuppressAutoscroll: false,
       };
     }
 
@@ -216,8 +218,8 @@ export const channelReducer = <
 
     case 'setLoadingMore': {
       const { loadingMore } = action;
-      // supporess the autoscroll behavior
-      return { ...state, loadingMore, suppressAutoscroll: true };
+      // suppress the autoscroll behavior
+      return { ...state, loadingMore, suppressAutoscroll: loadingMore };
     }
 
     case 'setLoadingMoreNewer': {
@@ -242,6 +244,7 @@ export const channelReducer = <
       return {
         ...state,
         threadLoadingMore: true,
+        threadSuppressAutoscroll: true,
       };
     }
 
@@ -276,6 +279,7 @@ export const initialState = {
   threadHasMore: true,
   threadLoadingMore: false,
   threadMessages: [],
+  threadSuppressAutoscroll: false,
   typing: {},
   watcherCount: 0,
   watchers: {},

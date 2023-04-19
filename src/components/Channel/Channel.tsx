@@ -24,6 +24,7 @@ import {
   UserResponse,
 } from 'stream-chat';
 import { nanoid } from 'nanoid';
+import clsx from 'clsx';
 
 import { channelReducer, ChannelStateReducer, initialState } from './channelState';
 import { commonEmoji, defaultMinimalEmojis, emojiSetDef } from './emojiData';
@@ -36,16 +37,15 @@ import { OnMentionAction, useMentionsHandlers } from './hooks/useMentionsHandler
 import { Attachment as DefaultAttachment } from '../Attachment/Attachment';
 import {
   LoadingErrorIndicator as DefaultLoadingErrorIndicator,
-  LoadingIndicator as DefaultLoadingIndicator,
   LoadingErrorIndicatorProps,
 } from '../Loading';
+import { LoadingChannel as DefaultLoadingIndicator } from './LoadingChannel';
 import { MessageSimple } from '../Message/MessageSimple';
 import { DropzoneProvider } from '../MessageInput/DropzoneProvider';
 
 import {
   ChannelActionContextValue,
   ChannelActionProvider,
-  MessageAttachments,
   MessageToSend,
 } from '../../context/ChannelActionContext';
 import {
@@ -58,14 +58,34 @@ import { useChatContext } from '../../context/ChatContext';
 import { EmojiConfig, EmojiContextValue, EmojiProvider } from '../../context/EmojiContext';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { TypingProvider } from '../../context/TypingContext';
+
+import {
+  DEFAULT_INITIAL_CHANNEL_PAGE_SIZE,
+  DEFAULT_NEXT_CHANNEL_PAGE_SIZE,
+  DEFAULT_THREAD_PAGE_SIZE,
+} from '../../constants/limits';
+
+import { hasMoreMessagesProbably, hasNotMoreMessages } from '../MessageList/utils';
 import defaultEmojiData from '../../stream-emoji.json';
+import { makeAddNotifications } from './utils';
 
 import type { Data as EmojiMartData } from 'emoji-mart';
 
+import type { MessageProps } from '../Message/types';
 import type { MessageInputProps } from '../MessageInput/MessageInput';
 
-import type { CustomTrigger, DefaultStreamChatGenerics, GiphyVersions } from '../../types/types';
-import { makeAddNotifications } from './utils';
+import type {
+  CustomTrigger,
+  DefaultStreamChatGenerics,
+  GiphyVersions,
+  ImageAttachmentSizeHandler,
+  VideoAttachmentSizeHandler,
+} from '../../types/types';
+import { useChannelContainerClasses } from './hooks/useChannelContainerClasses';
+import {
+  getImageAttachmentConfiguration,
+  getVideoAttachmentConfiguration,
+} from '../Attachment/attachment-sizing';
 
 export type ChannelProps<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
@@ -131,6 +151,8 @@ export type ChannelProps<
   giphyVersion?: GiphyVersions;
   /** Custom UI component to render at the top of the `MessageList` */
   HeaderComponent?: ComponentContextValue<StreamChatGenerics>['HeaderComponent'];
+  /** A custom function to provide size configuration for image attachments */
+  imageAttachmentSizeHandler?: ImageAttachmentSizeHandler;
   /** Custom UI component handling how the message input is rendered, defaults to and accepts the same props as [MessageInputFlat](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageInput/MessageInputFlat.tsx) */
   Input?: ComponentContextValue<StreamChatGenerics>['Input'];
   /** Custom UI component to be shown if the channel query fails, defaults to and accepts same props as: [LoadingErrorIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Loading/LoadingErrorIndicator.tsx) */
@@ -143,7 +165,7 @@ export type ChannelProps<
   Message?: ComponentContextValue<StreamChatGenerics>['Message'];
   /** Custom UI component for a deleted message, defaults to and accepts same props as: [MessageDeleted](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/MessageDeleted.tsx) */
   MessageDeleted?: ComponentContextValue<StreamChatGenerics>['MessageDeleted'];
-  /** Custom UI component that displays message and connection status notifications in the `MessageList`, defaults to and accepts same props as [DefaultMessageListNotifications](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageList.tsx) */
+  /** Custom UI component that displays message and connection status notifications in the `MessageList`, defaults to and accepts same props as [DefaultMessageListNotifications](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageListNotifications.tsx) */
   MessageListNotifications?: ComponentContextValue<StreamChatGenerics>['MessageListNotifications'];
   /** Custom UI component to display a notification when scrolled up the list and new messages arrive, defaults to and accepts same props as [MessageNotification](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageList/MessageNotification.tsx) */
   MessageNotification?: ComponentContextValue<StreamChatGenerics>['MessageNotification'];
@@ -157,6 +179,8 @@ export type ChannelProps<
   MessageSystem?: ComponentContextValue<StreamChatGenerics>['MessageSystem'];
   /** Custom UI component to display a timestamp on a message, defaults to and accepts same props as: [MessageTimestamp](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/MessageTimestamp.tsx) */
   MessageTimestamp?: ComponentContextValue<StreamChatGenerics>['MessageTimestamp'];
+  /** Custom UI component for viewing message's image attachments, defaults to and accepts the same props as [ModalGallery](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Gallery/ModalGallery.tsx) */
+  ModalGallery?: ComponentContextValue<StreamChatGenerics>['ModalGallery'];
   /** Whether to allow multiple attachment uploads */
   multipleUploads?: boolean;
   /** Custom action handler function to run on click of an @mention in a message */
@@ -177,8 +201,12 @@ export type ChannelProps<
   ReactionsList?: ComponentContextValue<StreamChatGenerics>['ReactionsList'];
   /** Custom UI component for send button, defaults to and accepts same props as: [SendButton](https://github.com/GetStream/stream-chat-react/blob/master/src/components/MessageInput/icons.tsx) */
   SendButton?: ComponentContextValue<StreamChatGenerics>['SendButton'];
+  /** You can turn on/off thumbnail generation for video attachments */
+  shouldGenerateVideoThumbnail?: boolean;
   /** If true, skips the message data string comparison used to memoize the current channel messages (helpful for channels with 1000s of messages) */
   skipMessageDataMemoization?: boolean;
+  /** Custom UI component that displays thread's parent or other message at the top of the `MessageList`, defaults to and accepts same props as [MessageSimple](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/MessageSimple.tsx) */
+  ThreadHead?: React.ComponentType<MessageProps<StreamChatGenerics>>;
   /** Custom UI component to display the header of a `Thread`, defaults to and accepts same props as: [DefaultThreadHeader](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Thread/Thread.tsx) */
   ThreadHeader?: ComponentContextValue<StreamChatGenerics>['ThreadHeader'];
   /** Custom UI component to display the start of a threaded `MessageList`, defaults to and accepts same props as: [DefaultThreadStart](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Thread/Thread.tsx) */
@@ -187,11 +215,11 @@ export type ChannelProps<
   TriggerProvider?: ComponentContextValue<StreamChatGenerics>['TriggerProvider'];
   /** Custom UI component for the typing indicator, defaults to and accepts same props as: [TypingIndicator](https://github.com/GetStream/stream-chat-react/blob/master/src/components/TypingIndicator/TypingIndicator.tsx) */
   TypingIndicator?: ComponentContextValue<StreamChatGenerics>['TypingIndicator'];
-  /** Custom UI component to display a message in the `VirtualizedMessageList`, defaults to and accepts same props as: [FixedHeightMessage](https://github.com/GetStream/stream-chat-react/blob/master/src/components/Message/FixedHeightMessage.tsx) */
+  /** A custom function to provide size configuration for video attachments */
+  videoAttachmentSizeHandler?: VideoAttachmentSizeHandler;
+  /** Custom UI component to display a message in the `VirtualizedMessageList`, does not have a default implementation */
   VirtualMessage?: ComponentContextValue<StreamChatGenerics>['VirtualMessage'];
 };
-
-const JUMP_MESSAGE_PAGE_SIZE = 25;
 
 const UnMemoizedChannel = <
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
@@ -199,14 +227,48 @@ const UnMemoizedChannel = <
 >(
   props: PropsWithChildren<ChannelProps<StreamChatGenerics, V>>,
 ) => {
-  const { channel: propsChannel, EmptyPlaceholder = null } = props;
+  const {
+    channel: propsChannel,
+    EmptyPlaceholder = null,
+    LoadingErrorIndicator,
+    LoadingIndicator = DefaultLoadingIndicator,
+  } = props;
 
-  const { channel: contextChannel } = useChatContext<StreamChatGenerics>('Channel');
+  const {
+    channel: contextChannel,
+    channelsQueryState,
+    customClasses,
+    theme,
+  } = useChatContext<StreamChatGenerics>('Channel');
+  const { channelClass, chatClass } = useChannelContainerClasses({
+    customClasses,
+  });
 
   const channel = propsChannel || contextChannel;
 
-  if (!channel?.cid) return EmptyPlaceholder;
+  const className = clsx(chatClass, theme, channelClass);
 
+  if (channelsQueryState.queryInProgress === 'reload' && LoadingIndicator) {
+    return (
+      <div className={className}>
+        <LoadingIndicator />
+      </div>
+    );
+  }
+
+  if (channelsQueryState.error && LoadingErrorIndicator) {
+    return (
+      <div className={className}>
+        <LoadingErrorIndicator error={channelsQueryState.error} />
+      </div>
+    );
+  }
+
+  if (!channel?.cid) {
+    return <div className={className}>{EmptyPlaceholder}</div>;
+  }
+
+  // @ts-ignore
   return <ChannelInner {...props} channel={channel} key={channel.cid} />;
 };
 
@@ -247,9 +309,14 @@ const ChannelInner = <
     latestMessageDatesByChannels,
     mutes,
     theme,
-    useImageFlagEmojisOnWindows,
   } = useChatContext<StreamChatGenerics>('Channel');
   const { t } = useTranslationContext('Channel');
+  const {
+    channelClass,
+    chatClass,
+    chatContainerClass,
+    windowsEmojiClass,
+  } = useChannelContainerClasses({ customClasses });
 
   const [channelConfig, setChannelConfig] = useState(channel.getConfig());
   const [notifications, setNotifications] = useState<ChannelNotifications>([]);
@@ -259,7 +326,9 @@ const ChannelInner = <
 
   const [state, dispatch] = useReducer<ChannelStateReducer<StreamChatGenerics>>(
     channelReducer,
-    initialState,
+    // channel.initialized === false if client.channels() was not called, e.g. ChannelList is not used
+    // => Channel will call channel.watch() in useLayoutEffect => state.loading is used to signal the watch() call state
+    { ...initialState, loading: !channel.initialized },
   );
 
   const isMounted = useIsMounted();
@@ -308,7 +377,7 @@ const ChannelInner = <
 
   const markReadThrottled = throttle(markRead, 500, { leading: true, trailing: true });
 
-  const handleEvent = (event: Event<StreamChatGenerics>) => {
+  const handleEvent = async (event: Event<StreamChatGenerics>) => {
     if (event.message) {
       dispatch({
         channel,
@@ -365,6 +434,18 @@ const ChannelInner = <
       }
     }
 
+    if (event.type === 'user.deleted') {
+      const oldestID = channel.state?.messages?.[0]?.id;
+
+      /**
+       * As the channel state is not normalized we re-fetch the channel data. Thus, we avoid having to search for user references in the channel state.
+       */
+      await channel.query({
+        messages: { id_lt: oldestID, limit: DEFAULT_NEXT_CHANNEL_PAGE_SIZE },
+        watchers: { limit: DEFAULT_NEXT_CHANNEL_PAGE_SIZE },
+      });
+    }
+
     throttledCopyStateFromChannel();
   };
 
@@ -415,7 +496,7 @@ const ChannelInner = <
       client.off('user.deleted', handleEvent);
       notificationTimeouts.forEach(clearTimeout);
     };
-  }, [channel.cid, doMarkReadRequest]);
+  }, [channel.cid, doMarkReadRequest, channelConfig?.read_events]);
 
   useEffect(() => {
     if (!state.thread) return;
@@ -442,7 +523,7 @@ const ChannelInner = <
     },
   );
 
-  const loadMore = async (limit = 100) => {
+  const loadMore = async (limit = DEFAULT_NEXT_CHANNEL_PAGE_SIZE) => {
     if (!online.current || !window.navigator.onLine) return 0;
 
     // prevent duplicate loading events...
@@ -453,7 +534,11 @@ const ChannelInner = <
     }
 
     // initial state loads with up to 25 messages, so if less than 25 no need for additional query
-    if (channel.state.messages.length < 25) {
+    const notHasMore = hasNotMoreMessages(
+      channel.state.messages.length,
+      DEFAULT_INITIAL_CHANNEL_PAGE_SIZE,
+    );
+    if (notHasMore) {
       loadMoreFinished(false, channel.state.messages);
       return channel.state.messages.length;
     }
@@ -510,16 +595,18 @@ const ChannelInner = <
     return queryResponse.messages.length;
   };
 
-  const jumpToMessage = async (messageId: string) => {
+  const clearHighlightedMessageTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const jumpToMessage = async (messageId: string, messageLimit = 100) => {
     dispatch({ loadingMore: true, type: 'setLoadingMore' });
-    await channel.state.loadMessageIntoState(messageId);
+    await channel.state.loadMessageIntoState(messageId, undefined, messageLimit);
 
     /**
      * if the message we are jumping to has less than half of the page size older messages,
      * we have jumped to the beginning of the channel.
      */
     const indexOfMessage = channel.state.messages.findIndex((message) => message.id === messageId);
-    const hasMoreMessages = indexOfMessage >= Math.floor(JUMP_MESSAGE_PAGE_SIZE / 2);
+    const hasMoreMessages = indexOfMessage >= Math.floor(messageLimit / 2);
 
     loadMoreFinished(hasMoreMessages, channel.state.messages);
     dispatch({
@@ -528,7 +615,12 @@ const ChannelInner = <
       type: 'jumpToMessageFinished',
     });
 
-    setTimeout(() => {
+    if (clearHighlightedMessageTimeoutId.current) {
+      clearTimeout(clearHighlightedMessageTimeoutId.current);
+    }
+
+    clearHighlightedMessageTimeoutId.current = setTimeout(() => {
+      clearHighlightedMessageTimeoutId.current = null;
       dispatch({ type: 'clearHighlightedMessage' });
     }, 500);
   };
@@ -590,8 +682,26 @@ const ChannelInner = <
         messageResponse = await channel.sendMessage(messageData);
       }
 
-      // replace it after send is completed
-      if (messageResponse?.message) {
+      let existingMessage;
+      for (let i = channel.state.messages.length - 1; i >= 0; i--) {
+        const msg = channel.state.messages[i];
+        if (msg.id === messageData.id) {
+          existingMessage = msg;
+          break;
+        }
+      }
+
+      const responseTimestamp = new Date(messageResponse?.message?.updated_at || 0).getTime();
+      const existingMessageTimestamp = existingMessage?.updated_at?.getTime() || 0;
+      const responseIsTheNewest = responseTimestamp > existingMessageTimestamp;
+
+      // Replace the message payload after send is completed
+      // We need to check for the newest message payload, because on slow network, the response can arrive later than WS events message.new, message.updated.
+      // Always override existing message in status "sending"
+      if (
+        messageResponse?.message &&
+        (responseIsTheNewest || existingMessage?.status === 'sending')
+      ) {
         updateMessage({
           ...messageResponse.message,
           status: 'received',
@@ -606,26 +716,30 @@ const ChannelInner = <
 
       updateMessage({
         ...message,
+        error: parsedError,
         errorStatusCode: (parsedError.status as number) || undefined,
         status: 'failed',
       });
     }
   };
 
-  const createMessagePreview = (
-    text: string,
-    attachments: MessageAttachments<StreamChatGenerics>,
-    parent: StreamMessage<StreamChatGenerics> | undefined,
-    mentioned_users: UserResponse<StreamChatGenerics>[],
+  const sendMessage = async (
+    {
+      attachments = [],
+      mentioned_users = [],
+      parent,
+      text = '',
+    }: MessageToSend<StreamChatGenerics>,
+    customMessageData?: Partial<Message<StreamChatGenerics>>,
   ) => {
-    const clientSideID = `${client.userID}-${nanoid()}`;
+    channel.state.filterErrorMessages();
 
-    return ({
+    const messagePreview = {
       __html: text,
       attachments,
       created_at: new Date(),
       html: text,
-      id: clientSideID,
+      id: customMessageData?.id ?? `${client.userID}-${nanoid()}`,
       mentioned_users,
       reactions: [],
       status: 'sending',
@@ -633,21 +747,7 @@ const ChannelInner = <
       type: 'regular',
       user: client.user,
       ...(parent?.id ? { parent_id: parent.id } : null),
-    } as unknown) as MessageResponse<StreamChatGenerics>;
-  };
-
-  const sendMessage = async (
-    {
-      attachments = [],
-      mentioned_users = [],
-      parent = undefined,
-      text = '',
-    }: MessageToSend<StreamChatGenerics>,
-    customMessageData?: Partial<Message<StreamChatGenerics>>,
-  ) => {
-    channel.state.filterErrorMessages();
-
-    const messagePreview = createMessagePreview(text, attachments, parent, mentioned_users);
+    };
 
     updateMessage(messagePreview);
 
@@ -678,9 +778,9 @@ const ChannelInner = <
 
   const openThread = (
     message: StreamMessage<StreamChatGenerics>,
-    event: React.BaseSyntheticEvent,
+    event?: React.BaseSyntheticEvent,
   ) => {
-    event.preventDefault();
+    event?.preventDefault();
     setQuotedMessage((current) => {
       if (current?.parent_id !== message?.parent_id) {
         return undefined;
@@ -691,8 +791,8 @@ const ChannelInner = <
     dispatch({ channel, message, type: 'openThread' });
   };
 
-  const closeThread = (event: React.BaseSyntheticEvent) => {
-    event.preventDefault();
+  const closeThread = (event?: React.BaseSyntheticEvent) => {
+    event?.preventDefault();
     dispatch({ type: 'closeThread' });
   };
 
@@ -711,7 +811,7 @@ const ChannelInner = <
     { leading: true, trailing: true },
   );
 
-  const loadMoreThread = async () => {
+  const loadMoreThread = async (limit: number = DEFAULT_THREAD_PAGE_SIZE) => {
     if (state.threadLoadingMore || !state.thread) return;
 
     dispatch({ type: 'startLoadingThread' });
@@ -723,7 +823,6 @@ const ChannelInner = <
 
     const oldMessages = channel.state.threads[parentID] || [];
     const oldestMessageID = oldMessages[0]?.id;
-    const limit = 50;
 
     try {
       const queryResponse = await channel.getReplies(parentID, {
@@ -731,7 +830,7 @@ const ChannelInner = <
         limit,
       });
 
-      const threadHasMoreMessages = queryResponse.messages.length === limit;
+      const threadHasMoreMessages = hasMoreMessagesProbably(queryResponse.messages.length, limit);
       const newThreadMessages = channel.state.threads[parentID] || [];
 
       // next set loadingMore to false so we can start asking for more data
@@ -755,11 +854,14 @@ const ChannelInner = <
     channelConfig,
     dragAndDropWindow,
     giphyVersion: props.giphyVersion || 'fixed_height',
+    imageAttachmentSizeHandler: props.imageAttachmentSizeHandler || getImageAttachmentConfiguration,
     maxNumberOfFiles,
     multipleUploads,
     mutes,
     notifications,
     quotedMessage,
+    shouldGenerateVideoThumbnail: props.shouldGenerateVideoThumbnail || true,
+    videoAttachmentSizeHandler: props.videoAttachmentSizeHandler || getVideoAttachmentConfiguration,
     watcher_count: state.watcherCount,
   });
 
@@ -813,12 +915,14 @@ const ChannelInner = <
       MessageStatus: props.MessageStatus,
       MessageSystem: props.MessageSystem,
       MessageTimestamp: props.MessageTimestamp,
+      ModalGallery: props.ModalGallery,
       PinIndicator: props.PinIndicator,
       QuotedMessage: props.QuotedMessage,
       QuotedMessagePreview: props.QuotedMessagePreview,
       ReactionSelector: props.ReactionSelector,
       ReactionsList: props.ReactionsList,
       SendButton: props.SendButton,
+      ThreadHead: props.ThreadHead,
       ThreadHeader: props.ThreadHeader,
       ThreadStart: props.ThreadStart,
       TriggerProvider: props.TriggerProvider,
@@ -842,22 +946,11 @@ const ChannelInner = <
     typing,
   });
 
-  const chatClass = customClasses?.chat || 'str-chat';
-  const chatContainerClass = customClasses?.chatContainer || 'str-chat__container';
-  const channelClass = customClasses?.channel || 'str-chat-channel';
-  const windowsEmojiClass =
-    useImageFlagEmojisOnWindows && navigator.userAgent.match(/Win/)
-      ? 'str-chat--windows-flags'
-      : '';
-
-  const OptionalMessageInputProvider = useMemo(
-    () => (dragAndDropWindow ? DropzoneProvider : React.Fragment),
-    [dragAndDropWindow],
-  );
+  const className = clsx(chatClass, theme, channelClass);
 
   if (state.error) {
     return (
-      <div className={`${chatClass} ${channelClass} ${theme}`}>
+      <div className={className}>
         <LoadingErrorIndicator error={state.error} />
       </div>
     );
@@ -865,31 +958,32 @@ const ChannelInner = <
 
   if (state.loading) {
     return (
-      <div className={`${chatClass} ${channelClass} ${theme}`}>
-        <LoadingIndicator size={25} />
+      <div className={className}>
+        <LoadingIndicator />
       </div>
     );
   }
 
   if (!channel.watch) {
     return (
-      <div className={`${chatClass} ${channelClass} ${theme}`}>
+      <div className={className}>
         <div>{t<string>('Channel Missing')}</div>
       </div>
     );
   }
 
   return (
-    <div className={`${chatClass} ${channelClass} ${theme} ${windowsEmojiClass}`}>
+    <div className={clsx(className, windowsEmojiClass)}>
       <ChannelStateProvider value={channelStateContextValue}>
         <ChannelActionProvider value={channelActionContextValue}>
           <ComponentProvider value={componentContextValue}>
             <EmojiProvider value={emojiContextValue}>
               <TypingProvider value={typingContextValue}>
                 <div className={`${chatContainerClass}`}>
-                  <OptionalMessageInputProvider {...optionalMessageInputProps}>
-                    {children}
-                  </OptionalMessageInputProvider>
+                  {dragAndDropWindow && (
+                    <DropzoneProvider {...optionalMessageInputProps}>{children}</DropzoneProvider>
+                  )}
+                  {!dragAndDropWindow && <>{children}</>}
                 </div>
               </TypingProvider>
             </EmojiProvider>

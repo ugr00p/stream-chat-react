@@ -10,8 +10,9 @@ export type UseScrollLocationLogicParams<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = {
   hasMoreNewer: boolean;
+  listElement: HTMLDivElement | null;
+  loadMoreScrollThreshold: number;
   suppressAutoscroll: boolean;
-  currentUserId?: string;
   messages?: StreamMessage<StreamChatGenerics>[];
   scrolledUpThreshold?: number;
 };
@@ -21,49 +22,52 @@ export const useScrollLocationLogic = <
 >(
   params: UseScrollLocationLogicParams<StreamChatGenerics>,
 ) => {
-  const { messages = [], scrolledUpThreshold = 200, hasMoreNewer, suppressAutoscroll } = params;
+  const {
+    loadMoreScrollThreshold,
+    messages = [],
+    scrolledUpThreshold = 200,
+    hasMoreNewer,
+    suppressAutoscroll,
+    listElement,
+  } = params;
 
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [wrapperRect, setWrapperRect] = useState<DOMRect>();
 
+  const [isMessageListScrolledToBottom, setIsMessageListScrolledToBottom] = useState(true);
   const closeToBottom = useRef(false);
   const closeToTop = useRef(false);
-  const listRef = useRef<HTMLDivElement>(null);
+  const scrollCounter = useRef({ autoScroll: 0, scroll: 0 });
 
   const scrollToBottom = useCallback(() => {
-    if (!listRef.current?.scrollTo || hasMoreNewer || suppressAutoscroll) {
+    if (!listElement?.scrollTo || hasMoreNewer || suppressAutoscroll) {
       return;
     }
 
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
+    scrollCounter.current.autoScroll += 1;
+    listElement.scrollTo({
+      top: listElement.scrollHeight,
     });
     setHasNewMessages(false);
-
-    // this is hacky and unreliable, but that was the current implementation so not breaking it
-    setTimeout(() => {
-      listRef.current?.scrollTo({
-        top: listRef.current.scrollHeight,
-      });
-    }, 200);
-  }, [listRef, hasMoreNewer, suppressAutoscroll]);
+  }, [listElement, hasMoreNewer, suppressAutoscroll]);
 
   useLayoutEffect(() => {
-    if (listRef?.current) {
-      setWrapperRect(listRef.current.getBoundingClientRect());
+    if (listElement) {
+      setWrapperRect(listElement.getBoundingClientRect());
       scrollToBottom();
     }
-  }, [listRef, hasMoreNewer]);
+  }, [listElement, hasMoreNewer]);
 
   const updateScrollTop = useMessageListScrollManager({
+    loadMoreScrollThreshold,
     messages,
     onScrollBy: (scrollBy) => {
-      listRef.current?.scrollBy({ top: scrollBy });
+      listElement?.scrollBy({ top: scrollBy });
     },
 
     scrollContainerMeasures: () => ({
-      offsetHeight: listRef.current?.offsetHeight || 0,
-      scrollHeight: listRef.current?.scrollHeight || 0,
+      offsetHeight: listElement?.offsetHeight || 0,
+      scrollHeight: listElement?.scrollHeight || 0,
     }),
     scrolledUpThreshold,
     scrollToBottom,
@@ -80,30 +84,25 @@ export const useScrollLocationLogic = <
       const offsetHeight = element.offsetHeight;
       const scrollHeight = element.scrollHeight;
 
+      const prevCloseToBottom = closeToBottom.current;
       closeToBottom.current = scrollHeight - (scrollTop + offsetHeight) < scrolledUpThreshold;
       closeToTop.current = scrollTop < scrolledUpThreshold;
 
       if (closeToBottom.current) {
         setHasNewMessages(false);
       }
+      if (prevCloseToBottom && !closeToBottom.current) {
+        setIsMessageListScrolledToBottom(false);
+      } else if (!prevCloseToBottom && closeToBottom.current) {
+        setIsMessageListScrolledToBottom(true);
+      }
     },
     [updateScrollTop, closeToTop, closeToBottom, scrolledUpThreshold],
   );
 
-  const onMessageLoadCaptured = useCallback(() => {
-    /**
-     * A load event (emitted by e.g. an <img>) was captured on a message.
-     * In some cases, the loaded asset is larger than the placeholder, which means we have to scroll down.
-     */
-    if (closeToBottom.current && !closeToTop.current) {
-      scrollToBottom();
-    }
-  }, [closeToTop, closeToBottom, scrollToBottom]);
-
   return {
     hasNewMessages,
-    listRef,
-    onMessageLoadCaptured,
+    isMessageListScrolledToBottom,
     onScroll,
     scrollToBottom,
     wrapperRect,

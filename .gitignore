@@ -74,4 +74,3 @@ client/dist
 /.virtualgo
 .vscode/
 coverage.out
-built

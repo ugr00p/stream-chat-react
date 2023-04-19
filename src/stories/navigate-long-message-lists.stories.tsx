@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import '@stream-io/stream-chat-css/dist/css/index.css';
 import React, { useEffect } from 'react';
 import type { ChannelSort } from 'stream-chat';
 import {
@@ -27,7 +26,7 @@ if (!channelId || typeof channelId !== 'string') {
 
 const OtherUserControlButtons = () => {
   const { client } = useChatContext();
-  const { channel, threadMessages } = useChannelStateContext();
+  const { channel, messages, threadMessages } = useChannelStateContext();
   const lastMessage = channel.state.messages.slice(-1)[0];
   return (
     <>
@@ -52,6 +51,27 @@ const OtherUserControlButtons = () => {
         }}
       >
         Delete other user&apos;s last reply
+      </button>
+      <button
+        data-testid='add-other-user-message'
+        onClick={() =>
+          channel.sendMessage({
+            text: "Other user's message",
+          })
+        }
+      >
+        Receive a message
+      </button>
+      <button
+        data-testid='delete-other-last-message'
+        onClick={async () => {
+          const lastMessage = messages?.slice(-1)[0];
+          if (lastMessage) {
+            await client.deleteMessage(lastMessage.id, true);
+          }
+        }}
+      >
+        Delete other user&apos;s last message
       </button>
     </>
   );
@@ -86,10 +106,10 @@ const SetThreadOpen = () => {
   const { messages } = useChannelStateContext();
 
   useEffect(() => {
-    if (messages) {
-      const lastMsg = messages.slice(-1)[0];
-      openThread(lastMsg, { preventDefault: () => null } as any);
-    }
+    if (!messages) return;
+    const [lastMsg] = messages.slice(-1);
+
+    if (lastMsg) openThread(lastMsg, { preventDefault: () => null } as any);
   }, [messages]);
 
   return null;
@@ -138,6 +158,12 @@ const OtherUserControls = () => {
 
 const WrappedConnectedUser = ({ token, userId }: Omit<ConnectedUserProps, 'children'>) => (
   <div style={{ display: 'flex', flexDirection: 'column' }}>
+    {/* FIXME: temporary fix for screenshot tests */}
+    <style>{`
+	 	.str-chat__thread .str-chat__message-data.str-chat__message-simple-data {
+			 visibility: hidden;
+		}
+	 `}</style>
     <div className={userId}>
       <ConnectedUser token={token} userId={userId}>
         <ChannelList
@@ -167,14 +193,4 @@ export const User1 = () => {
     throw new Error('expected TEST_USER_1_TOKEN');
   }
   return <WrappedConnectedUser token={user1Token} userId={user1Id} />;
-};
-
-export const User2 = () => {
-  if (!user2Id || typeof user2Id !== 'string') {
-    throw new Error('expected TEST_USER_2');
-  }
-  if (!user2Token || typeof user2Token !== 'string') {
-    throw new Error('expected TEST_USER_2_TOKEN');
-  }
-  return <WrappedConnectedUser token={user2Token} userId={user2Id} />;
 };

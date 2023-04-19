@@ -10,6 +10,7 @@ export const useCreateChatContext = <
 ) => {
   const {
     channel,
+    channelsQueryState,
     client,
     closeMobileNav,
     customClasses,
@@ -20,10 +21,13 @@ export const useCreateChatContext = <
     openMobileNav,
     setActiveChannel,
     theme,
+    themeVersion,
     useImageFlagEmojisOnWindows,
   } = value;
 
   const channelCid = channel?.cid;
+  const channelsQueryError = channelsQueryState.error;
+  const channelsQueryInProgress = channelsQueryState.queryInProgress;
   const clientValues = `${client.clientID}${Object.keys(client.activeChannels).length}${
     Object.keys(client.listeners).length
   }${client.mutedChannels.length}
@@ -33,6 +37,7 @@ export const useCreateChatContext = <
   const chatContext: ChatContextValue<StreamChatGenerics> = useMemo(
     () => ({
       channel,
+      channelsQueryState,
       client,
       closeMobileNav,
       customClasses,
@@ -43,9 +48,18 @@ export const useCreateChatContext = <
       openMobileNav,
       setActiveChannel,
       theme,
+      themeVersion,
       useImageFlagEmojisOnWindows,
     }),
-    [channelCid, clientValues, getAppSettings, mutedUsersLength, navOpen],
+    [
+      channelCid,
+      channelsQueryError,
+      channelsQueryInProgress,
+      clientValues,
+      getAppSettings,
+      mutedUsersLength,
+      navOpen,
+    ],
   );
 
   return chatContext;

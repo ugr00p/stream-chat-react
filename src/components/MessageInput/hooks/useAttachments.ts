@@ -43,8 +43,10 @@ export const useAttachments = <
   // If multipleUploads is false, we only want to allow a single upload.
   const maxFilesAllowed = !multipleUploads ? 1 : maxNumberOfFiles || apiMaxNumberOfFiles;
 
-  const numberOfImages = Object.values(imageUploads).filter(({ state }) => state !== 'failed')
-    .length;
+  // OG attachments should not be counted towards "numberOfImages"
+  const numberOfImages = Object.values(imageUploads).filter(
+    ({ og_scrape_url, state }) => state !== 'failed' && !og_scrape_url,
+  ).length;
   const numberOfFiles = Object.values(fileUploads).filter(({ state }) => state !== 'failed').length;
   const numberOfUploads = numberOfImages + numberOfFiles;
 
@@ -61,7 +63,13 @@ export const useAttachments = <
             file.type.startsWith('image/') &&
             !file.type.endsWith('.photoshop') // photoshop files begin with 'image/'
           ) {
-            dispatch({ file, id, state: 'uploading', type: 'setImageUpload' });
+            dispatch({
+              file,
+              id,
+              previewUri: URL.createObjectURL?.(file),
+              state: 'uploading',
+              type: 'setImageUpload',
+            });
           } else if (file instanceof File && !noFiles) {
             dispatch({ file, id, state: 'uploading', type: 'setFileUpload' });
           }

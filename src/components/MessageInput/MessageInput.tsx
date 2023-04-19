@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { PropsWithChildren } from 'react';
 import type { Message } from 'stream-chat';
 
 import { DefaultTriggerProvider } from './DefaultTriggerProvider';
@@ -14,7 +14,7 @@ import { MessageInputContextProvider } from '../../context/MessageInputContext';
 
 import type { Channel, SendFileAPIResponse } from 'stream-chat';
 
-import type { SearchQueryParams } from '../ChannelSearch/ChannelSearch';
+import type { SearchQueryParams } from '../ChannelSearch/hooks/useChannelSearch';
 import type { MessageToSend } from '../../context/ChannelActionContext';
 
 import type { CustomTrigger, DefaultStreamChatGenerics } from '../../types/types';
@@ -126,17 +126,22 @@ const UnMemoizedMessageInput = <
   >('MessageInput');
 
   const Input = PropInput || ContextInput || MessageInputFlat;
-  const OptionalMessageInputProvider = useMemo(
-    () => (dragAndDropWindow ? React.Fragment : MessageInputProvider),
-    [dragAndDropWindow],
-  );
+
+  if (dragAndDropWindow)
+    return (
+      <>
+        <TriggerProvider>
+          <Input />
+        </TriggerProvider>
+      </>
+    );
 
   return (
-    <OptionalMessageInputProvider {...props}>
+    <MessageInputProvider {...props}>
       <TriggerProvider>
         <Input />
       </TriggerProvider>
-    </OptionalMessageInputProvider>
+    </MessageInputProvider>
   );
 };
 

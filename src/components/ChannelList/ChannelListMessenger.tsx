@@ -3,7 +3,7 @@ import React, { PropsWithChildren } from 'react';
 import { ChatDown, ChatDownProps } from '../ChatDown/ChatDown';
 import { LoadingChannels } from '../Loading/LoadingChannels';
 
-import type { Channel } from 'stream-chat';
+import type { APIErrorResponse, Channel, ErrorFromResponse } from 'stream-chat';
 
 import type { DefaultStreamChatGenerics } from '../../types/types';
 
@@ -11,7 +11,7 @@ export type ChannelListMessengerProps<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = {
   /** Whether or not the channel query request returned an errored response */
-  error?: boolean;
+  error: ErrorFromResponse<APIErrorResponse> | null;
   /** The channels currently loaded in the list, only defined if `sendChannelsToList` on `ChannelList` is true */
   loadedChannels?: Channel<StreamChatGenerics>[];
   /** Whether or not channels are currently loading */
@@ -34,7 +34,7 @@ export const ChannelListMessenger = <
 ) => {
   const {
     children,
-    error = false,
+    error = null,
     loading,
     LoadingErrorIndicator = ChatDown,
     LoadingIndicator = LoadingChannels,
@@ -49,10 +49,10 @@ export const ChannelListMessenger = <
   }
 
   return (
-    <div className='str-chat__channel-list-messenger'>
+    <div className='str-chat__channel-list-messenger str-chat__channel-list-messenger-react'>
       <div
         aria-label='Channel list'
-        className='str-chat__channel-list-messenger__main'
+        className='str-chat__channel-list-messenger__main str-chat__channel-list-messenger-react__main'
         role='listbox'
       >
         {children}

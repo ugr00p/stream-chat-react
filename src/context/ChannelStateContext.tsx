@@ -8,7 +8,13 @@ import type {
   ChannelState as StreamChannelState,
 } from 'stream-chat';
 
-import type { DefaultStreamChatGenerics, GiphyVersions, UnknownType } from '../types/types';
+import type {
+  DefaultStreamChatGenerics,
+  GiphyVersions,
+  ImageAttachmentSizeHandler,
+  UnknownType,
+  VideoAttachmentSizeHandler,
+} from '../types/types';
 
 export type ChannelNotifications = Array<{
   id: string;
@@ -42,6 +48,7 @@ export type ChannelState<
   threadHasMore?: boolean;
   threadLoadingMore?: boolean;
   threadMessages?: StreamMessage<StreamChatGenerics>[];
+  threadSuppressAutoscroll?: boolean;
   typing?: StreamChannelState<StreamChatGenerics>['typing'];
   watcherCount?: number;
   watchers?: StreamChannelState<StreamChatGenerics>['watchers'];
@@ -53,8 +60,11 @@ export type ChannelStateContextValue<
   channel: Channel<StreamChatGenerics>;
   channelCapabilities: Record<string, boolean>;
   channelConfig: ChannelConfigWithInfo<StreamChatGenerics> | undefined;
+  imageAttachmentSizeHandler: ImageAttachmentSizeHandler;
   multipleUploads: boolean;
   notifications: ChannelNotifications;
+  shouldGenerateVideoThumbnail: boolean;
+  videoAttachmentSizeHandler: VideoAttachmentSizeHandler;
   acceptedFiles?: string[];
   dragAndDropWindow?: boolean;
   giphyVersion?: GiphyVersions;

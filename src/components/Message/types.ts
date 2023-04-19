@@ -25,6 +25,8 @@ export type MessageProps<
   message: StreamMessage<StreamChatGenerics>;
   /** Additional props for underlying MessageInput component, [available props](https://getstream.io/chat/docs/sdk/react/message-input-components/message_input/#props) */
   additionalMessageInputProps?: MessageInputProps<StreamChatGenerics, V>;
+  /** Call this function to keep message list scrolled to the bottom when the scroll height increases, e.g. an element appears below the last message (only used in the `VirtualizedMessageList`) */
+  autoscrollToBottom?: () => void;
   /** If true, picking a reaction from the `ReactionSelector` component will close the selector */
   closeReactionSelectorOnClick?: boolean;
   /** Object containing custom message actions and function handlers */
@@ -51,7 +53,7 @@ export type MessageProps<
   getPinMessageErrorNotification?: (message: StreamMessage<StreamChatGenerics>) => string;
   /** If true, group messages sent by each user (only used in the `VirtualizedMessageList`) */
   groupedByUser?: boolean;
-  /** A list of styles to apply to this message, ie. top, bottom, single */
+  /** A list of styles to apply to this message, i.e. top, bottom, single */
   groupStyles?: GroupStyle[];
   /** Whether to highlight and focus the message on load */
   highlighted?: boolean;
@@ -89,7 +91,7 @@ export type MessageProps<
   ) => JSX.Element | null;
   /** Custom retry send message handler to override default in [ChannelActionContext](https://getstream.io/chat/docs/sdk/react/contexts/channel_action_context/) */
   retrySendMessage?: ChannelActionContextValue<StreamChatGenerics>['retrySendMessage'];
-  /** Whether or not the Message is in a Thread */
+  /** Whether the Message is in a Thread */
   threadList?: boolean;
   /** render HTML instead of markdown. Posting HTML is only allowed server-side */
   unsafeHTML?: boolean;

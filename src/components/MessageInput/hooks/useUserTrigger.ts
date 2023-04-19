@@ -8,9 +8,9 @@ import { UserItem } from '../../UserItem/UserItem';
 import { useChatContext } from '../../../context/ChatContext';
 import { useChannelStateContext } from '../../../context/ChannelStateContext';
 
-import type { SearchQueryParams } from '../../ChannelSearch/ChannelSearch';
 import type { UserResponse } from 'stream-chat';
 
+import type { SearchQueryParams } from '../../ChannelSearch/hooks/useChannelSearch';
 import type { UserTriggerSetting } from '../../MessageInput/DefaultTriggerProvider';
 
 import type { DefaultStreamChatGenerics } from '../../../types/types';
@@ -40,7 +40,7 @@ export const useUserTrigger = <
 
   const [searching, setSearching] = useState(false);
 
-  const { client, mutes } = useChatContext<StreamChatGenerics>('useUserTrigger');
+  const { client, mutes, themeVersion } = useChatContext<StreamChatGenerics>('useUserTrigger');
   const { channel } = useChannelStateContext<StreamChatGenerics>('useUserTrigger');
 
   const { members } = channel.state;
@@ -103,9 +103,13 @@ export const useUserTrigger = <
         {
           $or: [{ id: { $autocomplete: query } }, { name: { $autocomplete: query } }],
           id: { $ne: client.userID },
-          ...mentionQueryParams.filters,
+          ...(typeof mentionQueryParams.filters === 'function'
+            ? mentionQueryParams.filters(query)
+            : mentionQueryParams.filters),
         },
-        { id: 1, ...mentionQueryParams.sort },
+        Array.isArray(mentionQueryParams.sort)
+          ? [{ id: 1 }, ...mentionQueryParams.sort]
+          : { id: 1, ...mentionQueryParams.sort },
         { limit: 10, ...mentionQueryParams.options },
       );
 
@@ -168,7 +172,7 @@ export const useUserTrigger = <
 
         const matchingUsers = searchLocalUsers<StreamChatGenerics>(params);
 
-        const usersToShow = mentionQueryParams.options?.limit || 10;
+        const usersToShow = mentionQueryParams.options?.limit ?? (themeVersion === '2' ? 7 : 10);
         const data = matchingUsers.slice(0, usersToShow);
 
         if (onReady) onReady(filterMutes(data), query);

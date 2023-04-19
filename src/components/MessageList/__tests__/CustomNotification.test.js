@@ -23,7 +23,7 @@ describe('CustomNotification', () => {
     expect(tree).toMatchInlineSnapshot(`
       <div
         aria-live="polite"
-        className="str-chat__custom-notification notification-undefined"
+        className="str-chat__custom-notification notification-undefined str-chat__notification"
         data-testid="custom-notification"
       >
         children
@@ -41,5 +41,17 @@ describe('CustomNotification', () => {
     );
 
     expect(getByTestId('custom-notification').className).toContain(`notification-${type}`);
+  });
+
+  it('should add custom class to className', () => {
+    const className = 'custom-classname-xxx';
+
+    const { getByTestId } = render(
+      <CustomNotification active={true} className={className}>
+        x
+      </CustomNotification>,
+    );
+
+    expect(getByTestId('custom-notification').className).toContain(className);
   });
 });

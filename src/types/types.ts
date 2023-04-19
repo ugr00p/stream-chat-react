@@ -1,6 +1,14 @@
 import type { PropsWithChildren } from 'react';
 import type { LoadingIndicatorProps } from '../components/Loading/LoadingIndicator';
-import type { Event, ExtendableGenerics, LiteralStringForUnion, Mute } from 'stream-chat';
+import type {
+  APIErrorResponse,
+  Attachment,
+  ErrorFromResponse,
+  Event,
+  ExtendableGenerics,
+  LiteralStringForUnion,
+  Mute,
+} from 'stream-chat';
 
 export type UnknownType = Record<string, unknown>;
 export type PropsWithChildrenOnly = PropsWithChildren<Record<never, never>>;
@@ -46,6 +54,7 @@ export type DefaultMessageType<
 > = UnknownType & {
   customType?: CustomMessageType;
   date?: string | Date;
+  error?: ErrorFromResponse<APIErrorResponse>;
   errorStatusCode?: number;
   event?: Event<StreamChatGenerics>;
   unread?: boolean;
@@ -77,12 +86,46 @@ export type PaginatorProps = {
   loadNextPage: () => void;
   /** indicates if there is a next page to load */
   hasNextPage?: boolean;
+  /** indicates if there is a previous page to load */
+  hasPreviousPage?: boolean;
+  /** indicates whether a loading request is in progress */
+  isLoading?: boolean;
   /** The loading indicator to use */
   LoadingIndicator?: React.ComponentType<LoadingIndicatorProps>;
-  /** indicates if there there's currently any refreshing taking place */
+  /** callback to load the previous page */
+  loadPreviousPage?: () => void;
+  /**
+   * @desc indicates if there's currently any refreshing taking place
+   * @deprecated Use loading prop instead of refreshing. Planned for removal: https://github.com/GetStream/stream-chat-react/issues/1804
+   */
   refreshing?: boolean;
   /** display the items in opposite order */
   reverse?: boolean;
   /** Offset from when to start the loadNextPage call */
   threshold?: number;
 };
+
+export interface IconProps {
+  className?: string;
+}
+
+export type Dimensions = { height?: string; width?: string };
+
+export type ImageAttachmentConfiguration = {
+  url: string;
+};
+
+export type VideoAttachmentConfiguration = ImageAttachmentConfiguration & {
+  thumbUrl?: string;
+};
+
+export type ImageAttachmentSizeHandler = (
+  attachment: Attachment,
+  element: HTMLElement,
+) => ImageAttachmentConfiguration;
+
+export type VideoAttachmentSizeHandler = (
+  attachment: Attachment,
+  element: HTMLElement,
+  shouldGenerateVideoThumbnail: boolean,
+) => VideoAttachmentConfiguration;

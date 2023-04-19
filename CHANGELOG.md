@@ -1,3 +1,609 @@
+## [10.7.5](https://github.com/GetStream/stream-chat-react/compare/v10.7.4...v10.7.5) (2023-04-14)
+
+
+### Bug Fixes
+
+* prevent overwriting sent message on slow network ([#1993](https://github.com/GetStream/stream-chat-react/issues/1993)) ([5f5893a](https://github.com/GetStream/stream-chat-react/commit/5f5893ad829f6f716406b26dc4efc24d6a52f437))
+
+## [10.7.4](https://github.com/GetStream/stream-chat-react/compare/v10.7.3...v10.7.4) (2023-04-05)
+
+
+### Bug Fixes
+
+* update channel state on user.deleted event ([#1985](https://github.com/GetStream/stream-chat-react/issues/1985)) ([767d194](https://github.com/GetStream/stream-chat-react/commit/767d1949522e290d5f006e4ef7adcd9351dfc07b))
+
+## [10.7.3](https://github.com/GetStream/stream-chat-react/compare/v10.7.2...v10.7.3) (2023-03-16)
+
+
+### Bug Fixes
+
+* do not increase count of prepended VirtualizedMessageList messages of status "sending" or "failed" ([#1972](https://github.com/GetStream/stream-chat-react/issues/1972)) ([f1bf6fa](https://github.com/GetStream/stream-chat-react/commit/f1bf6fa8b21523e968b8eb9bb30ce5beb6eca9da))
+
+## [10.7.2](https://github.com/GetStream/stream-chat-react/compare/v10.7.1...v10.7.2) (2023-03-08)
+
+
+### Bug Fixes
+
+* update event handler upon channel config update ([#1969](https://github.com/GetStream/stream-chat-react/issues/1969)) ([bec1f14](https://github.com/GetStream/stream-chat-react/commit/bec1f146ba57047ccad3ca223fd73a65aeceb26c))
+
+## [10.7.1](https://github.com/GetStream/stream-chat-react/compare/v10.7.0...v10.7.1) (2023-03-03)
+
+
+### Bug Fixes
+
+* audit and upgrade packages with vulnerabilities ([#1959](https://github.com/GetStream/stream-chat-react/issues/1959)) ([a31a0bb](https://github.com/GetStream/stream-chat-react/commit/a31a0bb204f1c916ae7d4c3774241d39b0493ac8))
+
+# [10.7.0](https://github.com/GetStream/stream-chat-react/compare/v10.6.0...v10.7.0) (2023-02-24)
+
+
+### Bug Fixes
+
+* **Attachment:** sanitization of image sources ([#1953](https://github.com/GetStream/stream-chat-react/issues/1953)) ([1c5e640](https://github.com/GetStream/stream-chat-react/commit/1c5e640f23f9522225e15ca3553dac8dc9168206))
+* **MessageSystem:** duplicate element keys ([#1950](https://github.com/GetStream/stream-chat-react/issues/1950)) ([2f1df15](https://github.com/GetStream/stream-chat-react/commit/2f1df158d149a0991cc6d3b6dcc39a35263a6f16))
+
+
+### Features
+
+* **Attachments:** introduce UnsupportedAttachment component ([#1952](https://github.com/GetStream/stream-chat-react/issues/1952)) ([330b622](https://github.com/GetStream/stream-chat-react/commit/330b622ad7cd53f359ee7908990299332e3104ab))
+
+# [10.6.0](https://github.com/GetStream/stream-chat-react/compare/v10.5.0...v10.6.0) (2023-02-10)
+
+
+### Bug Fixes
+
+* make all ThreadProps.additionalParentMessageProps keys optional ([#1920](https://github.com/GetStream/stream-chat-react/issues/1920)) ([62de38f](https://github.com/GetStream/stream-chat-react/commit/62de38f0947a28b16adec435dc9d823bbdec7743))
+* make event optional for openThread in ChannelActionContext ([#1928](https://github.com/GetStream/stream-chat-react/issues/1928)) ([f144e9a](https://github.com/GetStream/stream-chat-react/commit/f144e9a130dad90093bf6425087e833503b5ead6))
+* reflect thread prop in Window component ([#1919](https://github.com/GetStream/stream-chat-react/issues/1919)) ([689514c](https://github.com/GetStream/stream-chat-react/commit/689514c2f9bcf36a2af8d9950518c0f3d4441d28))
+
+
+### Features
+
+* add custom class to ConnectionStatus component ([#1924](https://github.com/GetStream/stream-chat-react/issues/1924)) ([d008b96](https://github.com/GetStream/stream-chat-react/commit/d008b96e8c95a4c3537c98141ee3302a5c2a0c8f))
+
+# [10.5.0](https://github.com/GetStream/stream-chat-react/compare/v10.4.3...v10.5.0) (2023-01-13)
+
+
+### Bug Fixes
+
+* **renderText:** specify linkifyjs types to look for (`email` and `url`) ([#1902](https://github.com/GetStream/stream-chat-react/issues/1902)) ([b5e100e](https://github.com/GetStream/stream-chat-react/commit/b5e100ef0c2b6b3dd280f7a2943576c23148988f))
+
+
+### Features
+
+* **MessageInput:** extend mentionQueryParams to accept `filters` function  ([#1900](https://github.com/GetStream/stream-chat-react/issues/1900)) ([9c979f9](https://github.com/GetStream/stream-chat-react/commit/9c979f9e81c7be8b1aafce837a37f2f70d1907d9))
+
+## [10.4.3](https://github.com/GetStream/stream-chat-react/compare/v10.4.2...v10.4.3) (2023-01-05)
+
+
+### Bug Fixes
+
+* check for window with getComputedStyle ([#1888](https://github.com/GetStream/stream-chat-react/issues/1888)) ([bb7f38d](https://github.com/GetStream/stream-chat-react/commit/bb7f38d293e29325b2486f4e8dd766db6b67ad9d))
+* prevent duplicate pagination requests in InfiniteScroll ([#1885](https://github.com/GetStream/stream-chat-react/issues/1885)) ([cf5ec80](https://github.com/GetStream/stream-chat-react/commit/cf5ec804c0effbfc0f56308ef4effa837b6a82b3))
+
+## [10.4.2](https://github.com/GetStream/stream-chat-react/compare/v10.4.1...v10.4.2) (2022-12-16)
+
+
+### Bug Fixes
+
+* merge mentionQueryParams.sort configuration correctly ([#1869](https://github.com/GetStream/stream-chat-react/issues/1869)) ([6ec31af](https://github.com/GetStream/stream-chat-react/commit/6ec31af24e7a45e70c8f47f0e6ce9d475d1d004a))
+* **renderText:** special case @ symbol at the end of the message ([#1873](https://github.com/GetStream/stream-chat-react/issues/1873)) ([7dced57](https://github.com/GetStream/stream-chat-react/commit/7dced5729bed273282359886af078128c50ff35e))
+* **useCooldownTimer:** derive cooldown from last message ([#1879](https://github.com/GetStream/stream-chat-react/issues/1879)) ([8e63653](https://github.com/GetStream/stream-chat-react/commit/8e6365320b10b3f52b8ccbe9a55c330de9c672b9))
+
+## [10.4.1](https://github.com/GetStream/stream-chat-react/compare/v10.4.0...v10.4.1) (2022-11-18)
+
+
+### Bug Fixes
+
+* add linkify.test check before any URL instantiation ([#1838](https://github.com/GetStream/stream-chat-react/issues/1838)) ([ef1dd0a](https://github.com/GetStream/stream-chat-react/commit/ef1dd0ae5df511d0796c04808a08ee3ebfc00bc6))
+
+# [10.4.0](https://github.com/GetStream/stream-chat-react/compare/v10.3.1...v10.4.0) (2022-11-04)
+
+
+### Bug Fixes
+
+* remove props spreading on React.Fragment (dragAndDropWindow) ([#1835](https://github.com/GetStream/stream-chat-react/issues/1835)) ([40c799a](https://github.com/GetStream/stream-chat-react/commit/40c799a9ed863dba9da1207b32966fe16b00349b))
+* MessageSimple to apply renderText function from properties (#1824) ([7133b33](https://github.com/GetStream/stream-chat-react/pull/1824/commits/7133b331a336a1fd258038fe0de8b1bf7edc8ff6))
+
+
+### Features
+
+* export QuotedMessage component ([#1823](https://github.com/GetStream/stream-chat-react/issues/1823)) ([1850d30](https://github.com/GetStream/stream-chat-react/commit/1850d30306789b7cf220da373d5bea50697c5f3f))
+* added remark-gfm plugin (#1824) ([69a64c2](https://github.com/GetStream/stream-chat-react/pull/1824/commits/69a64c2fbc6935d69adb644167d50decf95faf11))
+
+
+### Performance Updates
+
+* upgrade react-markdown, update renderText function, adjust types (#1824) ([6afe663](https://github.com/GetStream/stream-chat-react/pull/1824/commits/6afe663e3c2d59de2c7d364fd5d89d0d65521e87))
+
+## [10.3.1](https://github.com/GetStream/stream-chat-react/compare/v10.3.0...v10.3.1) (2022-10-13)
+
+
+### Bug Fixes
+
+* add stream-chat@8.x.x to peerDependencies ([#1814](https://github.com/GetStream/stream-chat-react/issues/1814)) ([04bff7d](https://github.com/GetStream/stream-chat-react/commit/04bff7d28ae31ba2d4ba33937f132c92ca777671))
+
+# [10.3.0](https://github.com/GetStream/stream-chat-react/compare/v10.2.0...v10.3.0) (2022-10-11)
+
+
+### Bug Fixes
+
+* replace use of channel config with channelCapabilities to derive permission flags ([#1807](https://github.com/GetStream/stream-chat-react/issues/1807)) ([1143117](https://github.com/GetStream/stream-chat-react/commit/11431176f042dbf3438162770127b085183c613f))
+* unify paginator interface ([#1803](https://github.com/GetStream/stream-chat-react/issues/1803)) ([d65b7b9](https://github.com/GetStream/stream-chat-react/commit/d65b7b9c27bf41313390c18e4ddb155e080c463c)), closes [#1801](https://github.com/GetStream/stream-chat-react/issues/1801)
+
+
+### Features
+
+* add popper tooltip to SimpleReactionList items ([#1801](https://github.com/GetStream/stream-chat-react/issues/1801)) ([478f0f2](https://github.com/GetStream/stream-chat-react/commit/478f0f209a1e17db6ee1f61a945b22f763d02fb3))
+
+# [10.2.0](https://github.com/GetStream/stream-chat-react/compare/v10.1.2...v10.2.0) (2022-10-04)
+
+
+### Bug Fixes
+
+* add image attachment height from CSS ([f5a9729](https://github.com/GetStream/stream-chat-react/commit/f5a9729292e6d42042e02f5b3ca46efa98e5615e))
+* display messages in virtualized thread (theme v2) ([#1799](https://github.com/GetStream/stream-chat-react/issues/1799)) ([9c1a16f](https://github.com/GetStream/stream-chat-react/commit/9c1a16f196bafb7da858edf48370e5240e635108))
+* example app build error ([5430213](https://github.com/GetStream/stream-chat-react/commit/54302138791ea4d98c7d480be39fb778a207230e))
+* keep configuration parameter shouldGenerateVideoThumbnail in hook dep array ([50edd8b](https://github.com/GetStream/stream-chat-react/commit/50edd8b9abc562f51cf341397007a6d1ebf2f753))
+* refresh virtualizedmessagelist after sizing has been set ([afea3d7](https://github.com/GetStream/stream-chat-react/commit/afea3d712b1d90684c780c37996ecbc5d2211407))
+* replace Infinity in calc statements as browser support isn't great ([ebf89da](https://github.com/GetStream/stream-chat-react/commit/ebf89da53924461a5ac24acf603b65837ae5924d))
+* update attachment configuration if attachment changed ([a6295dd](https://github.com/GetStream/stream-chat-react/commit/a6295dd47eaabfa62275f17b9c7985aa4e0f8d56))
+* use useLayoutEffect for image and video height setting ([386fae7](https://github.com/GetStream/stream-chat-react/commit/386fae707e20c97db00f480776df83d2326aaa1a))
+
+
+### Features
+
+* check that attachment height style is available before using max-height ([79f6f1a](https://github.com/GetStream/stream-chat-react/commit/79f6f1a0e010215b9f0ea2072641c12f7222892a))
+* integrate new CDN capabilities ([1520a34](https://github.com/GetStream/stream-chat-react/commit/1520a34f27f6a3a3cf81e4ec3a7074f52f86053e))
+* update stream-chat-css version ([03166a9](https://github.com/GetStream/stream-chat-react/commit/03166a969960b81fe3d61b1a9e8d126df4e8a1dd))
+* use video thumbnails returned by backend ([f68c8b1](https://github.com/GetStream/stream-chat-react/commit/f68c8b195c66708b8fc28686477bbfb61b7556ec))
+
+## [10.1.2](https://github.com/GetStream/stream-chat-react/compare/v10.1.1...v10.1.2) (2022-09-30)
+
+
+### Bug Fixes
+
+* export all necessary components ([#1785](https://github.com/GetStream/stream-chat-react/issues/1785)) ([075f703](https://github.com/GetStream/stream-chat-react/commit/075f70389feb62f8638dbed0d1fd244f86829eb1))
+* update pinnedMessages context property on pin/unpin message ([#1784](https://github.com/GetStream/stream-chat-react/issues/1784)) ([15128ab](https://github.com/GetStream/stream-chat-react/commit/15128ab5f74e4f068bf6443c34eec8baf18f8453))
+
+## [10.1.1](https://github.com/GetStream/stream-chat-react/compare/v10.1.0...v10.1.1) (2022-09-20)
+
+
+### Bug Fixes
+
+* edge case of prepend count not being reset when jumping ([#1765](https://github.com/GetStream/stream-chat-react/issues/1765)) ([18ba8f8](https://github.com/GetStream/stream-chat-react/commit/18ba8f83261ec8157651721404906e0f00c92fd4))
+
+# [10.1.0](https://github.com/GetStream/stream-chat-react/compare/v10.0.2...v10.1.0) (2022-09-19)
+
+
+### Bug Fixes
+
+* **VirtualizedMessageList:** use memoized values as hook dependencies directly ([#1761](https://github.com/GetStream/stream-chat-react/issues/1761)) ([41d1d67](https://github.com/GetStream/stream-chat-react/commit/41d1d67e00dbbf7bd94a8bfa384df400aa0d62c4))
+
+
+### Features
+
+* provide close callback to app menu ([#1754](https://github.com/GetStream/stream-chat-react/issues/1754)) ([5202a5f](https://github.com/GetStream/stream-chat-react/commit/5202a5f5512ad72cd0dbcb974092d15bb675f826))
+
+## [10.0.2](https://github.com/GetStream/stream-chat-react/compare/v10.0.1...v10.0.2) (2022-09-14)
+
+
+### Bug Fixes
+
+* **ChannelList:** update class names order for theming variables ([#1747](https://github.com/GetStream/stream-chat-react/issues/1747)) ([80ec36e](https://github.com/GetStream/stream-chat-react/commit/80ec36e44e2f383c7eea46ce70aaf719e4d5c43a))
+* play video in attachment card theme v1 ([#1748](https://github.com/GetStream/stream-chat-react/issues/1748)) ([cd31d19](https://github.com/GetStream/stream-chat-react/commit/cd31d19ec90b784942821301a4164c0bac40a7f2))
+* **Textarea:** prevent caret movement on suggestion list item select ([#1732](https://github.com/GetStream/stream-chat-react/issues/1732)) ([be44762](https://github.com/GetStream/stream-chat-react/commit/be447621cfb118dcefa6d27a6d6ff2b26977e177))
+
+## [10.0.1](https://github.com/GetStream/stream-chat-react/compare/v10.0.0...v10.0.1) (2022-09-12)
+
+
+### Bug Fixes
+
+* remove useId from LoadingIndicatorIcon ([#1744](https://github.com/GetStream/stream-chat-react/issues/1744)) ([14bfeb6](https://github.com/GetStream/stream-chat-react/commit/14bfeb6c5f5c90f8fea1cb1f3e1bb67dce11ecf6))
+
+# [10.0.0](https://github.com/GetStream/stream-chat-react/compare/v9.5.1...v10.0.0) (2022-09-09)
+
+
+### Bug Fixes
+
+* add missing class str-chat__message-actions-list-item-button to CustomMessageActions root ([be16e40](https://github.com/GetStream/stream-chat-react/commit/be16e40613f8135ffac7b4b3b0e54dde34952f45))
+* add missing getChannels callback dependency "searching" ([a3307f7](https://github.com/GetStream/stream-chat-react/commit/a3307f73a2e133586b64f9adce3c3fa7e721cba9))
+* add str-chat__message--other class to MessageDeleted ([25f3190](https://github.com/GetStream/stream-chat-react/commit/25f3190cab15e190f13bcd67ad6b4776f5e5addc))
+* **Card:** prefer title_link over og_scrape_url ([843990e](https://github.com/GetStream/stream-chat-react/commit/843990e034a1dcccac0ed17a5f3c86ff73200301))
+* do not generate class names to contain string 'undefined', do not pass Media prop to Card ([40342fe](https://github.com/GetStream/stream-chat-react/commit/40342fe5ef4e78a228e653cda25a6cb08600ba7b))
+* **EditMessageForm:** remove circular dependency ([6218a65](https://github.com/GetStream/stream-chat-react/commit/6218a651cbcd5df0a8f10dbf7874ee1abe1c2278))
+* exit with non-zero status code if failed to provide args to merge-stream-chat-css-docs.sh ([a4719b9](https://github.com/GetStream/stream-chat-react/commit/a4719b9168ac3e34de88b2aa112eda338017f096))
+* File attachment UI in theme-v1 ([0a80bef](https://github.com/GetStream/stream-chat-react/commit/0a80bef1948559ed10f1f7d2fa0bc542a727a4d9))
+* File attachment UI in theme-v1 ([9604ca6](https://github.com/GetStream/stream-chat-react/commit/9604ca6f79fcd74d87c019352c8e5a155b00ab59))
+* **FilePreviewItem:** add file type for correct file icons ([6e6fce5](https://github.com/GetStream/stream-chat-react/commit/6e6fce5cba110bcf92cc365219d038355879ce37))
+* forward SearchInput prop to SearchBar ([16fc8f8](https://github.com/GetStream/stream-chat-react/commit/16fc8f8278cff7b2fe60dadf026307bdb2d0aeb7))
+* improve scrollToBottom with image attachments ([be8bb7a](https://github.com/GetStream/stream-chat-react/commit/be8bb7ae4a986cb6556674c1bec896c5539bb822))
+* **MessageInput:** add container className ([a5e7908](https://github.com/GetStream/stream-chat-react/commit/a5e7908e0e7d9e86cfa0d82b52b274ee75ac3d65))
+* **MessageInputFlat:** send button adjustments ([f456704](https://github.com/GetStream/stream-chat-react/commit/f456704a1b48a87612cc94b5bf0015a382e16783))
+* **MessageInput:** remove useId, add quotedMessage patch ([64e07d3](https://github.com/GetStream/stream-chat-react/commit/64e07d36a8589c2ceb5344b7c23b808808580a39))
+* **MessageInput:** update dropzone markup ([974802b](https://github.com/GetStream/stream-chat-react/commit/974802bebee8d0128772031e719868d9bfb4f797))
+* **MessageList:** prevent redundant calls to scroll to bottom, don't use ResizeObserver ([363676e](https://github.com/GetStream/stream-chat-react/commit/363676ea91a31da1991504233add53e05f500581))
+* **MessageStatus:** add V2 TooltipContainer component "shim" ([dcfbbfb](https://github.com/GetStream/stream-chat-react/commit/dcfbbfbc0d626df23f7e7cf8b53fab059fedbecd))
+* move card caption to card content and rename to source link ([c44bcd7](https://github.com/GetStream/stream-chat-react/commit/c44bcd771ce5fd677bf27fd3949c1d503941495f))
+* **QuotedMessagePreview:** use themingVersion instead of PreviewHeader property ([4f79b07](https://github.com/GetStream/stream-chat-react/commit/4f79b07d840c332ca14fc38fc5dd1dee43a4f1dd))
+* reduce mount/unmount of image attachments ([34082a4](https://github.com/GetStream/stream-chat-react/commit/34082a4600281a77c8792a1aad8a3c75b7bcd3c5))
+* Responsive layout ([7551650](https://github.com/GetStream/stream-chat-react/commit/7551650b3541d8dbd221659b0059cfd1e79c73c8))
+* show channel list if search input contains empty string ([b73dd2c](https://github.com/GetStream/stream-chat-react/commit/b73dd2cbec71ff7b423317b0a489d1c6ac03135e))
+* **SuggestionList:** update trigger limits ([2e1f025](https://github.com/GetStream/stream-chat-react/commit/2e1f025e2261be1f1c22239a6f2d06584b767351))
+* sync event listener keyDown type btw the image attachment and gallery modal ([51e7c14](https://github.com/GetStream/stream-chat-react/commit/51e7c14183c08b07792f7afb15606ab9affe9c34))
+* ThemingV2 beta adjustments ([#1728](https://github.com/GetStream/stream-chat-react/issues/1728)) ([785ee11](https://github.com/GetStream/stream-chat-react/commit/785ee11f736ff1e8698e47c5f1ca3e2b8a222bae))
+* **ThemingV2:** MessageInputFlat missing lodash/zipObject ([#1721](https://github.com/GetStream/stream-chat-react/issues/1721)) ([dd8a457](https://github.com/GetStream/stream-chat-react/commit/dd8a4576483d114d1c8f0f6c9bb383896d926a97))
+* **TypingIndicator:** adjust position of the indicator ([f5db199](https://github.com/GetStream/stream-chat-react/commit/f5db199593806e2f5ec46c742765d41f6c128547))
+* **TypingIndicator:** use MessageListMainPanel to position the indicator ([865cbc8](https://github.com/GetStream/stream-chat-react/commit/865cbc8f2e0e600307e912b8d888441de3f9a1ac))
+
+
+* Merge pull request #1697 from GetStream/theming-v2-user-testing ([2c133ad](https://github.com/GetStream/stream-chat-react/commit/2c133ad2a511773c0381d1edd9dbd7fe892e485e)), closes [#1697](https://github.com/GetStream/stream-chat-react/issues/1697)
+* Remove useMobilePress and useBreakpoint hooks (#1648) ([430bf24](https://github.com/GetStream/stream-chat-react/commit/430bf24db033c7a9010f259dc5fc326b1c768206)), closes [#1648](https://github.com/GetStream/stream-chat-react/issues/1648)
+
+
+### Features
+
+* adapt MessageOptions to theming v2 ([23c2d93](https://github.com/GetStream/stream-chat-react/commit/23c2d93cc2452f5711625a5a198d01d1a2d9d7c0))
+* adapt MessageStatus to theming v2 ([a5b0fae](https://github.com/GetStream/stream-chat-react/commit/a5b0fae589ae72eff24436ec06d49d16aad22106))
+* add "str-chat__message--error-message" class to message error div ([c4f7520](https://github.com/GetStream/stream-chat-react/commit/c4f7520aa0a113547a1f44834dcf9636df42fc00))
+* add Attachment icons for theming v2 ([97e8047](https://github.com/GetStream/stream-chat-react/commit/97e8047651b788d5eb588da99c9e7e0c67657873))
+* add Card component for theming v2 ([5f5341f](https://github.com/GetStream/stream-chat-react/commit/5f5341ff112658c75675cbf2a77b76aa80f330a3))
+* add class "str-chat__message-sender-avatar" to Avatar root to display it for sender only ([ecd0b4b](https://github.com/GetStream/stream-chat-react/commit/ecd0b4b255023d3f665dfebb651ea69e5b5885a2))
+* add class str-chat__message-list-scroll to virtuoso root element ([7d2284e](https://github.com/GetStream/stream-chat-react/commit/7d2284ea0dbc9342d1b98247980b23b83aa80472))
+* add common IconProps type ([3ff89bb](https://github.com/GetStream/stream-chat-react/commit/3ff89bb75a7204e0805e88ee61988a172932a394))
+* add FileAttachment component for theming v2 ([52acd80](https://github.com/GetStream/stream-chat-react/commit/52acd80b6b7ccd939aae357b0019f1b99975f585))
+* add group styles to virtualized message list items ([ff2044e](https://github.com/GetStream/stream-chat-react/commit/ff2044e7414bb57644767d3288d96cb76594646d))
+* add Message icons for theming v2 - MessageDeliveredIcon, MessageErrorIcon ([9ff9034](https://github.com/GetStream/stream-chat-react/commit/9ff9034aa036a382326bb737fc68cc28664ed856))
+* add ModalGallery to the ComponentContext ([27e149a](https://github.com/GetStream/stream-chat-react/commit/27e149a64ad0cbf05342e8a0132fb03c153da7eb))
+* add realistic giphy attachment generator ([e4c2a7b](https://github.com/GetStream/stream-chat-react/commit/e4c2a7bde291a9fdad51b336abadd233998558ec))
+* add str-chat__simple-message--error-failed class to str-chat__message-inner ([a5f8f94](https://github.com/GetStream/stream-chat-react/commit/a5f8f94a50239fbe8b3bc24c6cdb5c889d613193))
+* add str-chat-react__modal__inner class to str-chat__modal__inner ([0234522](https://github.com/GetStream/stream-chat-react/commit/0234522547d7d68754ae4cc7ba1e1bcfab509626))
+* add svg image class to attachment ([3d0237d](https://github.com/GetStream/stream-chat-react/commit/3d0237d3dad20b4aeb605c8bf78c7165f7469fd8))
+* add theme v2 class to CustomNotification ([037dc89](https://github.com/GetStream/stream-chat-react/commit/037dc89e7dd5035f162da610f02fbb575bd8efcb))
+* add theme v2 to Reaction components, extract shared logic ReactionList & SimpleReactionList ([f6a12d0](https://github.com/GetStream/stream-chat-react/commit/f6a12d0ca7b2fa939ba2a3f4319d2e02ff4daabe))
+* add themeVersion flag to ChatProps & ChatContext ([70cbfcb](https://github.com/GetStream/stream-chat-react/commit/70cbfcbce643b230d8f7c66f615b4cc9bde9b816))
+* add ThemeVersion type to ChatContext ([695f30a](https://github.com/GetStream/stream-chat-react/commit/695f30a0f6137c4c84f07ef8528e97f6666a40db))
+* add theming v2 changes for channel and channel header ([#1632](https://github.com/GetStream/stream-chat-react/issues/1632)) ([3f8fddb](https://github.com/GetStream/stream-chat-react/commit/3f8fddba0ad361fe00c39191324ec18de902ace5))
+* add theming v2 classes to MessageActions elements ([d62e04a](https://github.com/GetStream/stream-chat-react/commit/d62e04a8791338c5a4eef4b44a5a1e210bd6e2d7))
+* add theming v2 classes to QuotedMessage ([8c5d2ff](https://github.com/GetStream/stream-chat-react/commit/8c5d2ffd2517375dcad67a740207f0d76d720d4b))
+* add theming v2 classes to ReactionSelector & ReactionList ([fbedb42](https://github.com/GetStream/stream-chat-react/commit/fbedb42cf565922ac59b64779d70c64ecc074511))
+* add v2 classes to send and cancel button of EditMessageForm ([#1669](https://github.com/GetStream/stream-chat-react/issues/1669)) ([ab75c2c](https://github.com/GetStream/stream-chat-react/commit/ab75c2c8b51a54384d327fc97c0db3151ffaa10c))
+* adjust Audio widget for theming v2 ([f08c6f5](https://github.com/GetStream/stream-chat-react/commit/f08c6f5f3d06d856f2e0946a6fda8475c9c637c8))
+* adjust Gallery and Image widget for theming v2 ([de29a73](https://github.com/GetStream/stream-chat-react/commit/de29a7337d7472ac2a8541632a03f829beecee0c))
+* adjust MessageRepliesCountButton to theming v2, add classes ([5076fd5](https://github.com/GetStream/stream-chat-react/commit/5076fd5163e3394a0881b5fe7c1ac0f1252038fc))
+* adjust MessageSimple for theming v2 ([ebd4bd7](https://github.com/GetStream/stream-chat-react/commit/ebd4bd7758ae0afaf3547e281377f46b3b5dc6ab))
+* allow card image enlargement in modal ([47bf301](https://github.com/GetStream/stream-chat-react/commit/47bf301d75c4ad71bcbbc8f19f2dd28ecd136364))
+* apply theme-v2 to channel list and preview  ([#1603](https://github.com/GetStream/stream-chat-react/issues/1603)) ([cc88f1f](https://github.com/GetStream/stream-chat-react/commit/cc88f1fe5937fd837b70281d642db2c8af6e4159))
+* change the close icon for modal and remove Close text ([88a5f7c](https://github.com/GetStream/stream-chat-react/commit/88a5f7c6659e520b629bf735e3dba395c452ac5e))
+* compute the themeVersion value, remove themeVersion Chat prop ([3421087](https://github.com/GetStream/stream-chat-react/commit/34210879aaede5ecf63dc4c85da47440372af058))
+* convert attachment render functions into components, group attachments in order ([aeee078](https://github.com/GetStream/stream-chat-react/commit/aeee07884310043d08594a767b4a9c735bf2cfc6))
+* do not sanitize attachment scrape urls ([aa1624a](https://github.com/GetStream/stream-chat-react/commit/aa1624a619a89351217ad8e5512b4471512db4ba))
+* extract CardAudio and render only uploaded audio data in Audio component ([8027908](https://github.com/GetStream/stream-chat-react/commit/80279083cbd336cf3a8de2a5ce4658e1926aa838))
+* forward flag "disabled" to search input ([2ec25a1](https://github.com/GetStream/stream-chat-react/commit/2ec25a110a0f0c5c16af5a1e7d7bbe0633b095d3))
+* include the parent message in virtualized scrollable message list ([dd63427](https://github.com/GetStream/stream-chat-react/commit/dd63427376460ca964b8560fc6086adbe8049fa2))
+* message is considered top if it has reactions and bottom if the next message has reactions ([638aead](https://github.com/GetStream/stream-chat-react/commit/638aead0c3dd8202653d25351402f73c84f23909))
+* **MessageInput:** add drag & drop upload functionality ([e731b67](https://github.com/GetStream/stream-chat-react/commit/e731b676af8a9b9bfc81e87a0a3b5af506ab4ea0))
+* **ProgressBar:** add "seeking" feature to the progress bar ([0320864](https://github.com/GetStream/stream-chat-react/commit/032086456bb76a36f51fa701faf5f5fb60671548))
+* **ProgressBar:** add onClick property ([4d9d06c](https://github.com/GetStream/stream-chat-react/commit/4d9d06c9fa3aa2426fb61d78dc331856db6a02da))
+* remove avatar from the thread header ([dec0d8d](https://github.com/GetStream/stream-chat-react/commit/dec0d8ddaff5d87d130aa08e90f68b9270da145a))
+* remove deprecated components: MessageCommerce, MessageLivestream, MessageTeam ([9d75fb8](https://github.com/GetStream/stream-chat-react/commit/9d75fb892e20cbdfd705cc94210c2ae12a5f9650))
+* remove translations for deprecated components: MessageCommerce, MessageLivestream, MessageTeam ([e524d0a](https://github.com/GetStream/stream-chat-react/commit/e524d0a986c0f417d3a0c1106d1134856b32d5eb))
+* render cards for each attachment with scraped data ([0a59806](https://github.com/GetStream/stream-chat-react/commit/0a598067bf1dad6a8bb4451ba2338ec3ec0d5d9c))
+* show always ScrollToBottomButton on scroll up and show unread message count ([e554356](https://github.com/GetStream/stream-chat-react/commit/e5543560c8ae52c38980892cdc4bd86c201a9b58))
+* stop using FixedHeightMessage as default VirtualMessage component ([fc67915](https://github.com/GetStream/stream-chat-react/commit/fc67915f36c31c4302b325250376d8de8cb26eb2))
+* switch ladle to v2 ([ecd1cc6](https://github.com/GetStream/stream-chat-react/commit/ecd1cc6e2774ace8daed2e364a44db1d7ba48179))
+* **theming-v2:** add channel search for theme v2 ([#1685](https://github.com/GetStream/stream-chat-react/issues/1685)) ([b735c30](https://github.com/GetStream/stream-chat-react/commit/b735c30817e0113aec58761aa166351fae5691b9)), closes [#1669](https://github.com/GetStream/stream-chat-react/issues/1669)
+* **ThemingV2:** PopperTooltip component ([#1714](https://github.com/GetStream/stream-chat-react/issues/1714)) ([9b6301e](https://github.com/GetStream/stream-chat-react/commit/9b6301e9f7089560ba4cfe694583bd93c1aa10de))
+* **TypingIndicator:** add translations ([f079e26](https://github.com/GetStream/stream-chat-react/commit/f079e26a48942b1a945e2e00e09ae1f2810ae427))
+* update @stream-io/stream-chat-css to v3.0.0 ([c5e392c](https://github.com/GetStream/stream-chat-react/commit/c5e392c9f7daee2ad9467d79a32123f0b8e9c9ce))
+* update message componets with theme v2 designs ([e5192d5](https://github.com/GetStream/stream-chat-react/commit/e5192d59b29625a3b961b4a130f1368de0f8a5d7))
+* use FileIcon with version in UploadsPreview ([4d150b1](https://github.com/GetStream/stream-chat-react/commit/4d150b108ef8bc406800ad7bd7edc1c4f8afcc66))
+* wrap ThreadHead content in a div to enable styling for class str-chat__parent-message-li ([9323edb](https://github.com/GetStream/stream-chat-react/commit/9323edb46aa0bf0c83d23817698756d9cbdf2da4))
+
+
+### Reverts
+
+* fix: File attachment UI in theme-v1 ([789dd27](https://github.com/GetStream/stream-chat-react/commit/789dd273b016be42f72baeeb0423f79f380e05eb))
+
+
+### BREAKING CHANGES
+
+* ThemingV2 - user testing and adjustments
+* useMobilePress and useBreakpoint hooks are removed.
+
+useMobilePress:
+Historically, this hook programmatically handled the user interaction with Message components
+by toggling `mobile-press` class upon user interaction.
+The goal of this operation was to have the message actions displayed on the screen.
+Internally, we found a better solution by offloading this behavior to the browser and
+utilizing `:focus` and `:focus-within` CSS pseudo-selectors.
+
+useBreakpoint:
+This hook did hold the "programmatic" responsive UI breakpoints.
+We realized they aren't always in line with our stylesheet breakpoints and possibly with our
+customer's breakpoints. This misalignment was causing some inconsistencies and issues.
+We are removing this hook because we believe defining UI breakpoints should be
+responsibility of our customers.
+
+SearchResults:
+During the refactoring, we stumbled upon one side-effect where `popupResults` prop
+wasn't always respected. The fix of it could be a breaking change for a small percentage
+of our customers, but we believe this fix is the right thing to do.
+
+# [10.0.0-theming-v2.3](https://github.com/GetStream/stream-chat-react/compare/v10.0.0-theming-v2.2...v10.0.0-theming-v2.3) (2022-09-06)
+
+
+### Bug Fixes
+
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([#1703](https://github.com/GetStream/stream-chat-react/issues/1703)) ([8010889](https://github.com/GetStream/stream-chat-react/commit/801088972032dcfd0374b00aa424a5952b7e72ae)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+* prevent double submissions in korean ([#1720](https://github.com/GetStream/stream-chat-react/issues/1720)) ([5d781d8](https://github.com/GetStream/stream-chat-react/commit/5d781d896cb9153bcf3554d04714215c0bbf5c12))
+* ThemingV2 beta adjustments ([#1728](https://github.com/GetStream/stream-chat-react/issues/1728)) ([785ee11](https://github.com/GetStream/stream-chat-react/commit/785ee11f736ff1e8698e47c5f1ca3e2b8a222bae))
+* **ThemingV2:** MessageInputFlat missing lodash/zipObject ([#1721](https://github.com/GetStream/stream-chat-react/issues/1721)) ([dd8a457](https://github.com/GetStream/stream-chat-react/commit/dd8a4576483d114d1c8f0f6c9bb383896d926a97))
+* **Vite:** add emoji-mart (emoji, picker) re-export ([#1724](https://github.com/GetStream/stream-chat-react/issues/1724)) ([c90cf4b](https://github.com/GetStream/stream-chat-react/commit/c90cf4bfc6b6aa74233fd041200e8180a70604e4))
+
+
+### Features
+
+* increase and support overriding jump to message limit ([#1718](https://github.com/GetStream/stream-chat-react/issues/1718)) ([8c720f4](https://github.com/GetStream/stream-chat-react/commit/8c720f41e349f753a126ad5e062c1475e3893771))
+* **ThemingV2:** PopperTooltip component ([#1714](https://github.com/GetStream/stream-chat-react/issues/1714)) ([9b6301e](https://github.com/GetStream/stream-chat-react/commit/9b6301e9f7089560ba4cfe694583bd93c1aa10de))
+
+# [10.0.0-theming-v2.2](https://github.com/GetStream/stream-chat-react/compare/v10.0.0-theming-v2.1...v10.0.0-theming-v2.2) (2022-08-22)
+
+
+### Features
+
+* add svg image class to attachment ([3d0237d](https://github.com/GetStream/stream-chat-react/commit/3d0237d3dad20b4aeb605c8bf78c7165f7469fd8))
+
+# [10.0.0-theming-v2.1](https://github.com/GetStream/stream-chat-react/compare/v9.4.0...v10.0.0-theming-v2.1) (2022-08-18)
+
+
+### Bug Fixes
+
+* add str-chat__message--other class to MessageDeleted ([25f3190](https://github.com/GetStream/stream-chat-react/commit/25f3190cab15e190f13bcd67ad6b4776f5e5addc))
+* **Card:** prefer title_link over og_scrape_url ([843990e](https://github.com/GetStream/stream-chat-react/commit/843990e034a1dcccac0ed17a5f3c86ff73200301))
+* do not generate class names to contain string 'undefined', do not pass Media prop to Card ([40342fe](https://github.com/GetStream/stream-chat-react/commit/40342fe5ef4e78a228e653cda25a6cb08600ba7b))
+* **EditMessageForm:** remove circular dependency ([6218a65](https://github.com/GetStream/stream-chat-react/commit/6218a651cbcd5df0a8f10dbf7874ee1abe1c2278))
+* File attachment UI in theme-v1 ([0a80bef](https://github.com/GetStream/stream-chat-react/commit/0a80bef1948559ed10f1f7d2fa0bc542a727a4d9))
+* File attachment UI in theme-v1 ([9604ca6](https://github.com/GetStream/stream-chat-react/commit/9604ca6f79fcd74d87c019352c8e5a155b00ab59))
+* **FilePreviewItem:** add file type for correct file icons ([6e6fce5](https://github.com/GetStream/stream-chat-react/commit/6e6fce5cba110bcf92cc365219d038355879ce37))
+* improve scrollToBottom with image attachments ([be8bb7a](https://github.com/GetStream/stream-chat-react/commit/be8bb7ae4a986cb6556674c1bec896c5539bb822))
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([61c4eec](https://github.com/GetStream/stream-chat-react/commit/61c4eecf5c03ab36109a94b7afa5f678e99fcc8b)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+* **MessageInput:** add container className ([a5e7908](https://github.com/GetStream/stream-chat-react/commit/a5e7908e0e7d9e86cfa0d82b52b274ee75ac3d65))
+* **MessageInputFlat:** send button adjustments ([f456704](https://github.com/GetStream/stream-chat-react/commit/f456704a1b48a87612cc94b5bf0015a382e16783))
+* **MessageInput:** remove useId, add quotedMessage patch ([64e07d3](https://github.com/GetStream/stream-chat-react/commit/64e07d36a8589c2ceb5344b7c23b808808580a39))
+* **MessageInput:** update dropzone markup ([974802b](https://github.com/GetStream/stream-chat-react/commit/974802bebee8d0128772031e719868d9bfb4f797))
+* **MessageList:** prevent redundant calls to scroll to bottom, don't use ResizeObserver ([363676e](https://github.com/GetStream/stream-chat-react/commit/363676ea91a31da1991504233add53e05f500581))
+* **MessageStatus:** add V2 TooltipContainer component "shim" ([dcfbbfb](https://github.com/GetStream/stream-chat-react/commit/dcfbbfbc0d626df23f7e7cf8b53fab059fedbecd))
+* move card caption to card content and rename to source link ([c44bcd7](https://github.com/GetStream/stream-chat-react/commit/c44bcd771ce5fd677bf27fd3949c1d503941495f))
+* **QuotedMessagePreview:** use themingVersion instead of PreviewHeader property ([4f79b07](https://github.com/GetStream/stream-chat-react/commit/4f79b07d840c332ca14fc38fc5dd1dee43a4f1dd))
+* reduce mount/unmount of image attachments ([34082a4](https://github.com/GetStream/stream-chat-react/commit/34082a4600281a77c8792a1aad8a3c75b7bcd3c5))
+* replace FileReader with URL.createObjectURL ([#1701](https://github.com/GetStream/stream-chat-react/issues/1701)) ([c8a490e](https://github.com/GetStream/stream-chat-react/commit/c8a490ebc53da03c2b0f064de88c0cb634ed2a70))
+* Responsive layout ([7551650](https://github.com/GetStream/stream-chat-react/commit/7551650b3541d8dbd221659b0059cfd1e79c73c8))
+* **SuggestionList:** update trigger limits ([2e1f025](https://github.com/GetStream/stream-chat-react/commit/2e1f025e2261be1f1c22239a6f2d06584b767351))
+* sync event listener keyDown type btw the image attachment and gallery modal ([51e7c14](https://github.com/GetStream/stream-chat-react/commit/51e7c14183c08b07792f7afb15606ab9affe9c34))
+* **TypingIndicator:** adjust position of the indicator ([f5db199](https://github.com/GetStream/stream-chat-react/commit/f5db199593806e2f5ec46c742765d41f6c128547))
+* **TypingIndicator:** use MessageListMainPanel to position the indicator ([865cbc8](https://github.com/GetStream/stream-chat-react/commit/865cbc8f2e0e600307e912b8d888441de3f9a1ac))
+
+
+* Merge pull request #1697 from GetStream/theming-v2-user-testing ([2c133ad](https://github.com/GetStream/stream-chat-react/commit/2c133ad2a511773c0381d1edd9dbd7fe892e485e)), closes [#1697](https://github.com/GetStream/stream-chat-react/issues/1697)
+* Remove useMobilePress and useBreakpoint hooks (#1648) ([430bf24](https://github.com/GetStream/stream-chat-react/commit/430bf24db033c7a9010f259dc5fc326b1c768206)), closes [#1648](https://github.com/GetStream/stream-chat-react/issues/1648)
+
+
+### Features
+
+* adapt MessageOptions to theming v2 ([23c2d93](https://github.com/GetStream/stream-chat-react/commit/23c2d93cc2452f5711625a5a198d01d1a2d9d7c0))
+* adapt MessageStatus to theming v2 ([a5b0fae](https://github.com/GetStream/stream-chat-react/commit/a5b0fae589ae72eff24436ec06d49d16aad22106))
+* add "str-chat__message--error-message" class to message error div ([c4f7520](https://github.com/GetStream/stream-chat-react/commit/c4f7520aa0a113547a1f44834dcf9636df42fc00))
+* add Attachment icons for theming v2 ([97e8047](https://github.com/GetStream/stream-chat-react/commit/97e8047651b788d5eb588da99c9e7e0c67657873))
+* add Card component for theming v2 ([5f5341f](https://github.com/GetStream/stream-chat-react/commit/5f5341ff112658c75675cbf2a77b76aa80f330a3))
+* add class "str-chat__message-sender-avatar" to Avatar root to display it for sender only ([ecd0b4b](https://github.com/GetStream/stream-chat-react/commit/ecd0b4b255023d3f665dfebb651ea69e5b5885a2))
+* add class str-chat__message-list-scroll to virtuoso root element ([7d2284e](https://github.com/GetStream/stream-chat-react/commit/7d2284ea0dbc9342d1b98247980b23b83aa80472))
+* add common IconProps type ([3ff89bb](https://github.com/GetStream/stream-chat-react/commit/3ff89bb75a7204e0805e88ee61988a172932a394))
+* add FileAttachment component for theming v2 ([52acd80](https://github.com/GetStream/stream-chat-react/commit/52acd80b6b7ccd939aae357b0019f1b99975f585))
+* add group styles to virtualized message list items ([ff2044e](https://github.com/GetStream/stream-chat-react/commit/ff2044e7414bb57644767d3288d96cb76594646d))
+* add Message icons for theming v2 - MessageDeliveredIcon, MessageErrorIcon ([9ff9034](https://github.com/GetStream/stream-chat-react/commit/9ff9034aa036a382326bb737fc68cc28664ed856))
+* add ModalGallery to the ComponentContext ([27e149a](https://github.com/GetStream/stream-chat-react/commit/27e149a64ad0cbf05342e8a0132fb03c153da7eb))
+* add realistic giphy attachment generator ([e4c2a7b](https://github.com/GetStream/stream-chat-react/commit/e4c2a7bde291a9fdad51b336abadd233998558ec))
+* add str-chat__simple-message--error-failed class to str-chat__message-inner ([a5f8f94](https://github.com/GetStream/stream-chat-react/commit/a5f8f94a50239fbe8b3bc24c6cdb5c889d613193))
+* add str-chat-react__modal__inner class to str-chat__modal__inner ([0234522](https://github.com/GetStream/stream-chat-react/commit/0234522547d7d68754ae4cc7ba1e1bcfab509626))
+* add theme v2 class to CustomNotification ([037dc89](https://github.com/GetStream/stream-chat-react/commit/037dc89e7dd5035f162da610f02fbb575bd8efcb))
+* add theme v2 to Reaction components, extract shared logic ReactionList & SimpleReactionList ([f6a12d0](https://github.com/GetStream/stream-chat-react/commit/f6a12d0ca7b2fa939ba2a3f4319d2e02ff4daabe))
+* add themeVersion flag to ChatProps & ChatContext ([70cbfcb](https://github.com/GetStream/stream-chat-react/commit/70cbfcbce643b230d8f7c66f615b4cc9bde9b816))
+* add ThemeVersion type to ChatContext ([695f30a](https://github.com/GetStream/stream-chat-react/commit/695f30a0f6137c4c84f07ef8528e97f6666a40db))
+* add theming v2 changes for channel and channel header ([#1632](https://github.com/GetStream/stream-chat-react/issues/1632)) ([3f8fddb](https://github.com/GetStream/stream-chat-react/commit/3f8fddba0ad361fe00c39191324ec18de902ace5))
+* add theming v2 classes to MessageActions elements ([d62e04a](https://github.com/GetStream/stream-chat-react/commit/d62e04a8791338c5a4eef4b44a5a1e210bd6e2d7))
+* add theming v2 classes to QuotedMessage ([8c5d2ff](https://github.com/GetStream/stream-chat-react/commit/8c5d2ffd2517375dcad67a740207f0d76d720d4b))
+* add theming v2 classes to ReactionSelector & ReactionList ([fbedb42](https://github.com/GetStream/stream-chat-react/commit/fbedb42cf565922ac59b64779d70c64ecc074511))
+* add v2 classes to send and cancel button of EditMessageForm ([#1669](https://github.com/GetStream/stream-chat-react/issues/1669)) ([ab75c2c](https://github.com/GetStream/stream-chat-react/commit/ab75c2c8b51a54384d327fc97c0db3151ffaa10c))
+* adjust Audio widget for theming v2 ([f08c6f5](https://github.com/GetStream/stream-chat-react/commit/f08c6f5f3d06d856f2e0946a6fda8475c9c637c8))
+* adjust Gallery and Image widget for theming v2 ([de29a73](https://github.com/GetStream/stream-chat-react/commit/de29a7337d7472ac2a8541632a03f829beecee0c))
+* adjust MessageRepliesCountButton to theming v2, add classes ([5076fd5](https://github.com/GetStream/stream-chat-react/commit/5076fd5163e3394a0881b5fe7c1ac0f1252038fc))
+* adjust MessageSimple for theming v2 ([ebd4bd7](https://github.com/GetStream/stream-chat-react/commit/ebd4bd7758ae0afaf3547e281377f46b3b5dc6ab))
+* allow card image enlargement in modal ([47bf301](https://github.com/GetStream/stream-chat-react/commit/47bf301d75c4ad71bcbbc8f19f2dd28ecd136364))
+* apply theme-v2 to channel list and preview  ([#1603](https://github.com/GetStream/stream-chat-react/issues/1603)) ([cc88f1f](https://github.com/GetStream/stream-chat-react/commit/cc88f1fe5937fd837b70281d642db2c8af6e4159))
+* change the close icon for modal and remove Close text ([88a5f7c](https://github.com/GetStream/stream-chat-react/commit/88a5f7c6659e520b629bf735e3dba395c452ac5e))
+* compute the themeVersion value, remove themeVersion Chat prop ([3421087](https://github.com/GetStream/stream-chat-react/commit/34210879aaede5ecf63dc4c85da47440372af058))
+* convert attachment render functions into components, group attachments in order ([aeee078](https://github.com/GetStream/stream-chat-react/commit/aeee07884310043d08594a767b4a9c735bf2cfc6))
+* do not sanitize attachment scrape urls ([aa1624a](https://github.com/GetStream/stream-chat-react/commit/aa1624a619a89351217ad8e5512b4471512db4ba))
+* extract CardAudio and render only uploaded audio data in Audio component ([8027908](https://github.com/GetStream/stream-chat-react/commit/80279083cbd336cf3a8de2a5ce4658e1926aa838))
+* include the parent message in virtualized scrollable message list ([dd63427](https://github.com/GetStream/stream-chat-react/commit/dd63427376460ca964b8560fc6086adbe8049fa2))
+* message is considered top if it has reactions and bottom if the next message has reactions ([638aead](https://github.com/GetStream/stream-chat-react/commit/638aead0c3dd8202653d25351402f73c84f23909))
+* **MessageInput:** add drag & drop upload functionality ([e731b67](https://github.com/GetStream/stream-chat-react/commit/e731b676af8a9b9bfc81e87a0a3b5af506ab4ea0))
+* **ProgressBar:** add "seeking" feature to the progress bar ([0320864](https://github.com/GetStream/stream-chat-react/commit/032086456bb76a36f51fa701faf5f5fb60671548))
+* **ProgressBar:** add onClick property ([4d9d06c](https://github.com/GetStream/stream-chat-react/commit/4d9d06c9fa3aa2426fb61d78dc331856db6a02da))
+* remove avatar from the thread header ([dec0d8d](https://github.com/GetStream/stream-chat-react/commit/dec0d8ddaff5d87d130aa08e90f68b9270da145a))
+* remove deprecated components: MessageCommerce, MessageLivestream, MessageTeam ([9d75fb8](https://github.com/GetStream/stream-chat-react/commit/9d75fb892e20cbdfd705cc94210c2ae12a5f9650))
+* remove translations for deprecated components: MessageCommerce, MessageLivestream, MessageTeam ([e524d0a](https://github.com/GetStream/stream-chat-react/commit/e524d0a986c0f417d3a0c1106d1134856b32d5eb))
+* render cards for each attachment with scraped data ([0a59806](https://github.com/GetStream/stream-chat-react/commit/0a598067bf1dad6a8bb4451ba2338ec3ec0d5d9c))
+* show always ScrollToBottomButton on scroll up and show unread message count ([e554356](https://github.com/GetStream/stream-chat-react/commit/e5543560c8ae52c38980892cdc4bd86c201a9b58))
+* stop using FixedHeightMessage as default VirtualMessage component ([fc67915](https://github.com/GetStream/stream-chat-react/commit/fc67915f36c31c4302b325250376d8de8cb26eb2))
+* switch ladle to v2 ([ecd1cc6](https://github.com/GetStream/stream-chat-react/commit/ecd1cc6e2774ace8daed2e364a44db1d7ba48179))
+* **theming-v2:** add channel search for theme v2 ([#1685](https://github.com/GetStream/stream-chat-react/issues/1685)) ([b735c30](https://github.com/GetStream/stream-chat-react/commit/b735c30817e0113aec58761aa166351fae5691b9)), closes [#1669](https://github.com/GetStream/stream-chat-react/issues/1669)
+* **TypingIndicator:** add translations ([f079e26](https://github.com/GetStream/stream-chat-react/commit/f079e26a48942b1a945e2e00e09ae1f2810ae427))
+* update message componets with theme v2 designs ([e5192d5](https://github.com/GetStream/stream-chat-react/commit/e5192d59b29625a3b961b4a130f1368de0f8a5d7))
+* use FileIcon with version in UploadsPreview ([4d150b1](https://github.com/GetStream/stream-chat-react/commit/4d150b108ef8bc406800ad7bd7edc1c4f8afcc66))
+* wrap ThreadHead content in a div to enable styling for class str-chat__parent-message-li ([9323edb](https://github.com/GetStream/stream-chat-react/commit/9323edb46aa0bf0c83d23817698756d9cbdf2da4))
+
+
+### Reverts
+
+* fix: File attachment UI in theme-v1 ([789dd27](https://github.com/GetStream/stream-chat-react/commit/789dd273b016be42f72baeeb0423f79f380e05eb))
+
+
+### BREAKING CHANGES
+
+* ThemingV2 - user testing and adjustments
+* useMobilePress and useBreakpoint hooks are removed.
+
+useMobilePress:
+Historically, this hook programmatically handled the user interaction with Message components
+by toggling `mobile-press` class upon user interaction.
+The goal of this operation was to have the message actions displayed on the screen.
+Internally, we found a better solution by offloading this behavior to the browser and
+utilizing `:focus` and `:focus-within` CSS pseudo-selectors.
+
+useBreakpoint:
+This hook did hold the "programmatic" responsive UI breakpoints.
+We realized they aren't always in line with our stylesheet breakpoints and possibly with our
+customer's breakpoints. This misalignment was causing some inconsistencies and issues.
+We are removing this hook because we believe defining UI breakpoints should be
+responsibility of our customers.
+
+SearchResults:
+During the refactoring, we stumbled upon one side-effect where `popupResults` prop
+wasn't always respected. The fix of it could be a breaking change for a small percentage
+of our customers, but we believe this fix is the right thing to do.
+
+## [9.5.1](https://github.com/GetStream/stream-chat-react/compare/v9.5.0...v9.5.1) (2022-09-08)
+
+
+### Bug Fixes
+
+* avoid race condition crash in jumping ([488a1b1](https://github.com/GetStream/stream-chat-react/commit/488a1b1981eeecedb5d26b22dff581f6cf9a5338))
+
+# [9.5.0](https://github.com/GetStream/stream-chat-react/compare/v9.4.1...v9.5.0) (2022-08-29)
+
+
+### Bug Fixes
+
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([61c4eec](https://github.com/GetStream/stream-chat-react/commit/61c4eecf5c03ab36109a94b7afa5f678e99fcc8b)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+* prevent double submissions in korean ([#1720](https://github.com/GetStream/stream-chat-react/issues/1720)) ([5d781d8](https://github.com/GetStream/stream-chat-react/commit/5d781d896cb9153bcf3554d04714215c0bbf5c12))
+* replace FileReader with URL.createObjectURL ([#1701](https://github.com/GetStream/stream-chat-react/issues/1701)) ([c8a490e](https://github.com/GetStream/stream-chat-react/commit/c8a490ebc53da03c2b0f064de88c0cb634ed2a70))
+* **Vite:** add emoji-mart (emoji, picker) re-export ([#1724](https://github.com/GetStream/stream-chat-react/issues/1724)) ([c90cf4b](https://github.com/GetStream/stream-chat-react/commit/c90cf4bfc6b6aa74233fd041200e8180a70604e4))
+
+
+### Features
+
+* increase and support overriding jump to message limit ([#1718](https://github.com/GetStream/stream-chat-react/issues/1718)) ([8c720f4](https://github.com/GetStream/stream-chat-react/commit/8c720f41e349f753a126ad5e062c1475e3893771))
+
+## [9.4.1](https://github.com/GetStream/stream-chat-react/compare/v9.4.0...v9.4.1) (2022-08-04)
+
+
+### Bug Fixes
+
+* include mdast-util-find-and-replace into our CJS bundle ([#1702](https://github.com/GetStream/stream-chat-react/issues/1702)) ([#1703](https://github.com/GetStream/stream-chat-react/issues/1703)) ([8010889](https://github.com/GetStream/stream-chat-react/commit/801088972032dcfd0374b00aa424a5952b7e72ae)), closes [#1698](https://github.com/GetStream/stream-chat-react/issues/1698)
+
+# [9.4.0](https://github.com/GetStream/stream-chat-react/compare/v9.3.0...v9.4.0) (2022-08-03)
+
+
+### Bug Fixes
+
+* detect mentions of users who have email as their name ([#1698](https://github.com/GetStream/stream-chat-react/issues/1698)) ([367b7c4](https://github.com/GetStream/stream-chat-react/commit/367b7c4cb30454140ff113e2b0a2671a14d9d276))
+
+
+### Features
+
+* allow to send custom message data when editing a message ([#1696](https://github.com/GetStream/stream-chat-react/issues/1696)) ([05eae28](https://github.com/GetStream/stream-chat-react/commit/05eae28cd04f1605ae3fb1cd5767fa4bbbd067d3))
+
+# [9.3.0](https://github.com/GetStream/stream-chat-react/compare/v9.2.0...v9.3.0) (2022-07-29)
+
+
+### Bug Fixes
+
+* scroll to bottom on new message notification click after message list pagination ([#1689](https://github.com/GetStream/stream-chat-react/issues/1689)) ([d8f4bc5](https://github.com/GetStream/stream-chat-react/commit/d8f4bc57a602e5deeefeb0c8419658c61c7e695a))
+* update types for suggestions ([#1691](https://github.com/GetStream/stream-chat-react/issues/1691)) ([bb7442c](https://github.com/GetStream/stream-chat-react/commit/bb7442cbf4bb709ac477fc59f0ee35afb60888d5)), closes [#1659](https://github.com/GetStream/stream-chat-react/issues/1659)
+
+
+### Features
+
+* **message-status:** extendable user information in read-by tooltip ([#1670](https://github.com/GetStream/stream-chat-react/issues/1670)) ([902029a](https://github.com/GetStream/stream-chat-react/commit/902029a3c9f7a720d0265dcfeb1957b17b8bdc9a))
+
+# [9.2.0](https://github.com/GetStream/stream-chat-react/compare/v9.1.5...v9.2.0) (2022-07-26)
+
+
+### Features
+
+* add autoscrollToBottom to message context ([#1681](https://github.com/GetStream/stream-chat-react/issues/1681)) ([a616184](https://github.com/GetStream/stream-chat-react/commit/a6161843509c55e9b432f4f66dfb344f0faa8b18))
+
+## [9.1.5](https://github.com/GetStream/stream-chat-react/compare/v9.1.4...v9.1.5) (2022-07-15)
+
+
+### Bug Fixes
+
+* align user role checks with channel membership, deprecate isModerator, isAdmin, isOwner ([#1666](https://github.com/GetStream/stream-chat-react/issues/1666)) ([31f0916](https://github.com/GetStream/stream-chat-react/commit/31f09168fafe054c102ea85905243a1915fb957d))
+* allow quoting quoted messages ([#1662](https://github.com/GetStream/stream-chat-react/issues/1662)) ([36dbc82](https://github.com/GetStream/stream-chat-react/commit/36dbc82df0c17939f603f6f6c33acb472cd40f9b))
+* **Channel:** allow usage of custom message ID in sendMessage ([#1663](https://github.com/GetStream/stream-chat-react/issues/1663)) ([41bae84](https://github.com/GetStream/stream-chat-react/commit/41bae841568e661339277e0b241be4cbe83b2030))
+* initial load earlier in vml persists the position ([#1640](https://github.com/GetStream/stream-chat-react/issues/1640)) ([dd53d5c](https://github.com/GetStream/stream-chat-react/commit/dd53d5c1fe2707d8807cfec341fbbdd612ff7cfd)), closes [/github.com/petyosi/react-virtuoso/blob/master/e2e/prepend-items.test.ts#L27-L34](https://github.com//github.com/petyosi/react-virtuoso/blob/master/e2e/prepend-items.test.ts/issues/L27-L34)
+
+## [9.1.4](https://github.com/GetStream/stream-chat-react/compare/v9.1.3...v9.1.4) (2022-06-22)
+
+
+### Bug Fixes
+
+* respect updates to messageActions prop, support messageActions overrides in Thread ([#1634](https://github.com/GetStream/stream-chat-react/issues/1634)) ([aed8e01](https://github.com/GetStream/stream-chat-react/commit/aed8e0159b12f221d8a8716c1998ccff29f5cc73)), closes [#1627](https://github.com/GetStream/stream-chat-react/issues/1627)
+
+## [9.1.3](https://github.com/GetStream/stream-chat-react/compare/v9.1.2...v9.1.3) (2022-06-19)
+
+
+### Bug Fixes
+
+* correct calculation of scrollback with date separators ([#1628](https://github.com/GetStream/stream-chat-react/issues/1628)) ([88a4d64](https://github.com/GetStream/stream-chat-react/commit/88a4d6413c15b52d394ab338c8348664debfd1a2))
+* upgrade react-player to its latest version ([#1629](https://github.com/GetStream/stream-chat-react/issues/1629)) ([8848700](https://github.com/GetStream/stream-chat-react/commit/88487001de49dceded0bd950f35d527a0c2526e1))
+
+## [9.1.2](https://github.com/GetStream/stream-chat-react/compare/v9.1.1...v9.1.2) (2022-06-13)
+
+
+### Bug Fixes
+
+* add check if window is defined before using ResizeObserve ([f04e23e](https://github.com/GetStream/stream-chat-react/commit/f04e23e2f07edc2bba7bee85ac297e1a7b920c2b))
+
+## [9.1.1](https://github.com/GetStream/stream-chat-react/compare/v9.1.0...v9.1.1) (2022-06-10)
+
+
+### Bug Fixes
+
+* calculate jumped-to-message position correctly by keeping the loading indicator mounted ([671375a](https://github.com/GetStream/stream-chat-react/commit/671375ab3ad89b4a4bd011748264f00021fe144b))
+
+# [9.1.0](https://github.com/GetStream/stream-chat-react/compare/v9.0.0...v9.1.0) (2022-06-03)
+
+
+### Bug Fixes
+
+* filter out OG scraped images from attachments ([#1598](https://github.com/GetStream/stream-chat-react/issues/1598)) ([9d9c8b9](https://github.com/GetStream/stream-chat-react/commit/9d9c8b99339c58eb435dbe57703a991b8c671dd0))
+
+
+### Features
+
+* add optional renderChannels prop to ChannelList ([#1572](https://github.com/GetStream/stream-chat-react/issues/1572)) ([8edca9e](https://github.com/GetStream/stream-chat-react/commit/8edca9e64b7494d0900cafa5194186cf3c273cd1))
+* lift channels query state to chat context ([#1606](https://github.com/GetStream/stream-chat-react/issues/1606)) ([ed4febc](https://github.com/GetStream/stream-chat-react/commit/ed4febc864f9a5e476e13a4bbcf434c167f3e8d7))
+* use ResizeObserver to keep Channel scrolled to bottom on page load ([#1608](https://github.com/GetStream/stream-chat-react/issues/1608)) ([c33e155](https://github.com/GetStream/stream-chat-react/commit/c33e1552747ed8a60ffb7da1313451603db07d80))
+
+## [9.0.0](https://github.com/GetStream/stream-chat-react/compare/v8.2.0...v9.0.0) (2022-05-17)
+
+### Bug Fixes
+
+* display textarea defaultValue in MessageInput ([#1570](https://github.com/GetStream/stream-chat-react/issues/1570)) ([516a56b](https://github.com/GetStream/stream-chat-react/commit/516a56b8b8a24739f66c0d7b47c159d6bca7d3be))
+
+### Features
+
+* **MessageInput:** add shouldSubmit, remove keycodeSubmitKeys ([8e2cddd](https://github.com/GetStream/stream-chat-react/pull/1534/commits/8e2cdddddd256ec1ab77ba2bc7d59a40cfba7b11)), closes [#1530](https://github.com/GetStream/stream-chat-react/issues/1530)
+* add support for React 18 ([#1534](https://github.com/GetStream/stream-chat-react/issues/1534)) ([39cedcb](https://github.com/GetStream/stream-chat-react/commit/39cedcb8d0821e4bb6e8061349ae52132aa32c45))
+
+### BREAKING CHANGES
+
+* **MessageInput:** property  has been fully removed and replaced by the  property
+which should handle custom submit "trigger" functionality.
+Both `listener.js` and usage of key codes were outdated and caused unnecessary issues.
+
 # [8.2.0](https://github.com/GetStream/stream-chat-react/compare/v8.1.3...v8.2.0) (2022-05-17)
 
 
@@ -25,7 +631,6 @@
 
 * display overlay "X more" on Gallery only if more images uploaded than displayed ([#1526](https://github.com/GetStream/stream-chat-react/issues/1526)) ([ed47cd1](https://github.com/GetStream/stream-chat-react/commit/ed47cd1e0d2df6b2af72ae33e5c1b2efffec1591))
 
-# Changelog
 
 ## [8.1.1](https://github.com/GetStream/stream-chat-react/compare/v8.1.0...v8.1.1) (2022-04-18)
 
@@ -77,14 +682,14 @@
 * onBlur prop for ChatAutoComplete ([c9897f4](https://github.com/GetStream/stream-chat-react/commit/c9897f422d0d04d606f149965b510bee749e0151)), closes [#1345](https://github.com/GetStream/stream-chat-react/issues/1345)
 * support choosing a giphy version ([0d97fc6](https://github.com/GetStream/stream-chat-react/commit/0d97fc62d4e5f166162e1d375689196305fad420))
 
-### ⚠️ BREAKING CHANGES ⚠️  
+### ⚠️ BREAKING CHANGES ⚠️
 
 * All types now accept a single generic ([help article](https://getstream.io/chat/docs/sdk/react/customization/typescript_and_generics/))
 
 
 ## [7.0.0](https://github.com/GetStream/stream-chat-react/releases/tag/v7.0.0) 2022-02-10
 
-### ⚠️ BREAKING CHANGES ⚠️  
+### ⚠️ BREAKING CHANGES ⚠️
 
 - Replace stale `react-images` dependency with `react-image-gallery`, removed `ModalImage` [#1318](https://github.com/GetStream/stream-chat-react/pull/1318)
 - Add support for accessibility through the use of semantic HTML, ARIA attributes. Updates include changing HTML elements to different types as necessary [#1314](https://github.com/GetStream/stream-chat-react/pull/1314) and [#1294](https://github.com/GetStream/stream-chat-react/pull/1294)

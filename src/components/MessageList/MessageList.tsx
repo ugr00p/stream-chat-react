@@ -4,7 +4,6 @@ import { useEnrichedMessages } from './hooks/useEnrichedMessages';
 import { useMessageListElements } from './hooks/useMessageListElements';
 import { useScrollLocationLogic } from './hooks/useScrollLocationLogic';
 
-import { Center } from './Center';
 import { MessageNotification as DefaultMessageNotification } from './MessageNotification';
 import { MessageListNotifications as DefaultMessageListNotifications } from './MessageListNotifications';
 
@@ -23,6 +22,7 @@ import { InfiniteScroll, InfiniteScrollProps } from '../InfiniteScrollPaginator/
 import { LoadingIndicator as DefaultLoadingIndicator } from '../Loading';
 import { defaultPinPermissions, MESSAGE_ACTIONS } from '../Message/utils';
 import { TypingIndicator as DefaultTypingIndicator } from '../TypingIndicator';
+import { MessageListMainPanel } from './MessageListMainPanel';
 
 import type { GroupStyle } from './utils';
 
@@ -48,6 +48,7 @@ const MessageListWithContext = <
     groupStyles,
     hideDeletedMessages = false,
     hideNewMessageSeparator = false,
+    internalInfiniteScrollProps,
     messageActions = Object.keys(MESSAGE_ACTIONS),
     messages = [],
     notifications,
@@ -67,24 +68,31 @@ const MessageListWithContext = <
     jumpToLatestMessage = () => Promise.resolve(),
   } = props;
 
+  const [listElement, setListElement] = React.useState<HTMLDivElement | null>(null);
+  const [ulElement, setUlElement] = React.useState<HTMLUListElement | null>(null);
+
   const { customClasses } = useChatContext<StreamChatGenerics>('MessageList');
 
   const {
     EmptyStateIndicator = DefaultEmptyStateIndicator,
+    LoadingIndicator = DefaultLoadingIndicator,
     MessageListNotifications = DefaultMessageListNotifications,
     MessageNotification = DefaultMessageNotification,
     TypingIndicator = DefaultTypingIndicator,
   } = useComponentContext<StreamChatGenerics>('MessageList');
 
+  const loadMoreScrollThreshold = internalInfiniteScrollProps?.threshold || 250;
+
   const {
     hasNewMessages,
-    listRef,
-    onMessageLoadCaptured,
+    isMessageListScrolledToBottom,
     onScroll,
     scrollToBottom,
     wrapperRect,
   } = useScrollLocationLogic({
     hasMoreNewer,
+    listElement,
+    loadMoreScrollThreshold,
     messages,
     scrolledUpThreshold: props.scrolledUpThreshold,
     suppressAutoscroll,
@@ -130,18 +138,15 @@ const MessageListWithContext = <
       unsafeHTML,
     },
     messageGroupStyles,
-    onMessageLoadCaptured,
     read,
     returnAllReadData,
     threadList,
   });
 
-  const { LoadingIndicator = DefaultLoadingIndicator } = useComponentContext(
-    'useInternalInfiniteScrollProps',
-  );
-
   const messageListClass = customClasses?.messageList || 'str-chat__list';
-  const threadListClass = threadList ? customClasses?.threadList || 'str-chat__list--thread' : '';
+  const threadListClass = threadList
+    ? customClasses?.threadList || 'str-chat__list--thread str-chat__thread-list'
+    : '';
 
   const loadMore = React.useCallback(() => {
     if (loadMoreCallback) {
@@ -163,50 +168,65 @@ const MessageListWithContext = <
     }
   }, [scrollToBottom, hasMoreNewer]);
 
-  const ulRef = React.useRef<HTMLUListElement>(null);
-
   React.useLayoutEffect(() => {
     if (highlightedMessageId) {
-      const element = ulRef.current?.querySelector(`[data-message-id='${highlightedMessageId}']`);
+      const element = ulElement?.querySelector(`[data-message-id='${highlightedMessageId}']`);
       element?.scrollIntoView({ block: 'center' });
     }
   }, [highlightedMessageId]);
 
+  const showEmptyStateIndicator = elements.length === 0 && !threadList;
+
   return (
     <>
-      <div className={`${messageListClass} ${threadListClass}`} onScroll={onScroll} ref={listRef}>
-        {!elements.length ? (
-          <EmptyStateIndicator listType='message' />
-        ) : (
-          <InfiniteScroll
-            className='str-chat__reverse-infinite-scroll'
-            data-testid='reverse-infinite-scroll'
-            hasMore={props.hasMore}
-            hasMoreNewer={props.hasMoreNewer}
-            isLoading={props.loadingMore}
-            loader={
-              <Center key='loadingindicator'>
-                <LoadingIndicator size={20} />
-              </Center>
-            }
-            loadMore={loadMore}
-            loadMoreNewer={loadMoreNewer}
-            {...props.internalInfiniteScrollProps}
-          >
-            <ul className='str-chat__ul' ref={ulRef}>
-              {elements}
-            </ul>
-            <TypingIndicator threadList={threadList} />
-            <div key='bottom' />
-          </InfiniteScroll>
-        )}
-      </div>
+      <MessageListMainPanel>
+        <div
+          className={`${messageListClass} ${threadListClass}`}
+          onScroll={onScroll}
+          ref={setListElement}
+          tabIndex={0}
+        >
+          {showEmptyStateIndicator ? (
+            <EmptyStateIndicator
+              key={'empty-state-indicator'}
+              listType={threadList ? 'thread' : 'message'}
+            />
+          ) : (
+            <InfiniteScroll
+              className='str-chat__reverse-infinite-scroll  str-chat__message-list-scroll'
+              data-testid='reverse-infinite-scroll'
+              hasNextPage={props.hasMoreNewer}
+              hasPreviousPage={props.hasMore}
+              head={props.head}
+              isLoading={props.loadingMore}
+              loader={
+                <div className='str-chat__list__loading' key='loading-indicator'>
+                  {props.loadingMore && <LoadingIndicator size={20} />}
+                </div>
+              }
+              loadNextPage={loadMoreNewer}
+              loadPreviousPage={loadMore}
+              {...props.internalInfiniteScrollProps}
+              threshold={loadMoreScrollThreshold}
+            >
+              <ul className='str-chat__ul' ref={setUlElement}>
+                {elements}
+              </ul>
+              <TypingIndicator threadList={threadList} />
+
+              <div key='bottom' />
+            </InfiniteScroll>
+          )}
+        </div>
+      </MessageListMainPanel>
       <MessageListNotifications
         hasNewMessages={hasNewMessages}
+        isMessageListScrolledToBottom={isMessageListScrolledToBottom}
         isNotAtLatestMessageSet={hasMoreNewer}
         MessageNotification={MessageNotification}
         notifications={notifications}
         scrollToBottom={scrollToBottomFromNotification}
+        threadList={threadList}
       />
     </>
   );
@@ -249,8 +269,10 @@ export type MessageListProps<
     nextMessage: StreamMessage<StreamChatGenerics>,
     noGroupByUser: boolean,
   ) => GroupStyle;
-  /** Whether or not the list has more items to load */
+  /** Whether the list has more items to load */
   hasMore?: boolean;
+  /** Element to be rendered at the top of the thread message list. By default, these are the Message and ThreadStart components */
+  head?: React.ReactElement;
   /** Position to render HeaderComponent */
   headerPosition?: number;
   /** Hides the MessageDeleted components from the list, defaults to `false` */
@@ -277,10 +299,14 @@ export type MessageListProps<
   noGroupByUser?: boolean;
   /** If true, `readBy` data supplied to the `Message` components will include all user read states per sent message */
   returnAllReadData?: boolean;
-  /** The pixel threshold to determine whether or not the user is scrolled up in the list, defaults to 200px */
+  /**
+   * The pixel threshold under which the message list is considered to be so near to the bottom,
+   * so that if a new message is delivered, the list will be scrolled to the absolute bottom.
+   * Defaults to 200px
+   */
   scrolledUpThreshold?: number;
   /** If true, indicates the message list is a thread  */
-  threadList?: boolean;
+  threadList?: boolean; // todo: refactor needed - message list should have a state in which among others it would be optionally flagged as thread
 };
 
 /**

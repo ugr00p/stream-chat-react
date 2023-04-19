@@ -36,7 +36,6 @@ type UseMessageListElementsProps<
   enrichedMessages: StreamMessage<StreamChatGenerics>[];
   internalMessageProps: Omit<MessageProps<StreamChatGenerics>, MessagePropsToOmit>;
   messageGroupStyles: Record<string, GroupStyle>;
-  onMessageLoadCaptured: (event: React.SyntheticEvent<HTMLLIElement, Event>) => void;
   returnAllReadData: boolean;
   threadList: boolean;
   read?: Record<string, { last_read: Date; user: UserResponse<StreamChatGenerics> }>;
@@ -51,7 +50,6 @@ export const useMessageListElements = <
     enrichedMessages,
     internalMessageProps,
     messageGroupStyles,
-    onMessageLoadCaptured,
     read,
     returnAllReadData,
     threadList,
@@ -74,7 +72,7 @@ export const useMessageListElements = <
 
   const lastReceivedId = useMemo(() => getLastReceived(enrichedMessages), [enrichedMessages]);
 
-  return useMemo(
+  const elements: React.ReactNode[] = useMemo(
     () =>
       enrichedMessages.map((message) => {
         if (
@@ -103,13 +101,7 @@ export const useMessageListElements = <
 
         if (message.type === 'system') {
           return (
-            <li
-              key={
-                (message.event as { created_at: string })?.created_at ||
-                (message.created_at as string) ||
-                ''
-              }
-            >
+            <li key={message.id || (message.created_at as string)}>
               <MessageSystem message={message} />
             </li>
           );
@@ -124,7 +116,6 @@ export const useMessageListElements = <
             data-message-id={message.id}
             data-testid={messageClass}
             key={message.id || (message.created_at as string)}
-            onLoadCapture={onMessageLoadCaptured}
           >
             <Message
               groupStyles={[groupStyles]} /* TODO: convert to simple string */
@@ -142,9 +133,10 @@ export const useMessageListElements = <
       internalMessageProps,
       lastReceivedId,
       messageGroupStyles,
-      onMessageLoadCaptured,
       readData,
       threadList,
     ],
   );
+
+  return elements;
 };

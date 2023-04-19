@@ -67,7 +67,7 @@ async function renderMessageSimple(
   const client = await getTestClientWithUser(alice);
 
   return render(
-    <ChatProvider value={{ client }}>
+    <ChatProvider value={{ client, themeVersion: '1' }}>
       <ChannelStateProvider
         value={{ channel, channelCapabilities, channelConfig, emojiConfig: emojiDataMock }}
       >
@@ -448,7 +448,7 @@ describe('<MessageSimple />', () => {
 
   it('should display image attachments in gallery when message has image attachments', async () => {
     const attachment = {
-      image_url: 'image.jpg',
+      image_url: 'http://image.jpg',
       type: 'image',
     };
     const message = generateAliceMessage({

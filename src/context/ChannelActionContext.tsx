@@ -1,7 +1,9 @@
 import React, { PropsWithChildren, useContext } from 'react';
 
 import type {
+  APIErrorResponse,
   Attachment,
+  ErrorFromResponse,
   Message,
   UpdatedMessage,
   UpdateMessageAPIResponse,
@@ -23,6 +25,7 @@ export type MessageToSend<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = {
   attachments?: MessageAttachments<StreamChatGenerics>;
+  error?: ErrorFromResponse<APIErrorResponse>;
   errorStatusCode?: number;
   id?: string;
   mentioned_users?: UserResponse<StreamChatGenerics>[];
@@ -40,19 +43,22 @@ export type ChannelActionContextValue<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics
 > = {
   addNotification: (text: string, type: 'success' | 'error') => void;
-  closeThread: (event: React.BaseSyntheticEvent) => void;
+  closeThread: (event?: React.BaseSyntheticEvent) => void;
   dispatch: React.Dispatch<ChannelStateReducerAction<StreamChatGenerics>>;
   editMessage: (
     message: UpdatedMessage<StreamChatGenerics>,
   ) => Promise<UpdateMessageAPIResponse<StreamChatGenerics> | void>;
   jumpToLatestMessage: () => Promise<void>;
-  jumpToMessage: (messageId: string) => Promise<void>;
+  jumpToMessage: (messageId: string, limit?: number) => Promise<void>;
   loadMore: (limit?: number) => Promise<number>;
   loadMoreNewer: (limit?: number) => Promise<number>;
   loadMoreThread: () => Promise<void>;
   onMentionsClick: CustomMentionHandler<StreamChatGenerics>;
   onMentionsHover: CustomMentionHandler<StreamChatGenerics>;
-  openThread: (message: StreamMessage<StreamChatGenerics>, event: React.BaseSyntheticEvent) => void;
+  openThread: (
+    message: StreamMessage<StreamChatGenerics>,
+    event?: React.BaseSyntheticEvent,
+  ) => void;
   removeMessage: (message: StreamMessage<StreamChatGenerics>) => void;
   retrySendMessage: RetrySendMessage<StreamChatGenerics>;
   sendMessage: (
