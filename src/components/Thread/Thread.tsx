@@ -32,7 +32,7 @@ import type { CustomTrigger, DefaultStreamChatGenerics } from '../../types/types
 export type ThreadProps<
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
   V extends CustomTrigger = CustomTrigger
-> = {
+  > = {
   /** Additional props for `MessageInput` component: [available props](https://getstream.io/chat/docs/sdk/react/message-input-components/message_input/#props) */
   additionalMessageInputProps?: MessageInputProps<StreamChatGenerics, V>;
   /** Additional props for `MessageList` component: [available props](https://getstream.io/chat/docs/sdk/react/core-components/message_list/#props) */
@@ -55,6 +55,7 @@ export type ThreadProps<
   messageActions?: MessageActionsArray;
   /** If true, render the `VirtualizedMessageList` instead of the standard `MessageList` component */
   virtualized?: boolean;
+  ThreadStyle?: object;
 };
 
 /**
@@ -63,7 +64,7 @@ export type ThreadProps<
 export const Thread = <
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
   V extends CustomTrigger = CustomTrigger
->(
+  >(
   props: ThreadProps<StreamChatGenerics, V>,
 ) => {
   const { channel, channelConfig, thread } = useChannelStateContext<StreamChatGenerics>('Thread');
@@ -77,7 +78,7 @@ export const Thread = <
 const ThreadInner = <
   StreamChatGenerics extends DefaultStreamChatGenerics = DefaultStreamChatGenerics,
   V extends CustomTrigger = CustomTrigger
->(
+  >(
   props: ThreadProps<StreamChatGenerics, V> & { key: string },
 ) => {
   const {
@@ -92,6 +93,7 @@ const ThreadInner = <
     Message: PropMessage,
     messageActions = Object.keys(MESSAGE_ACTIONS),
     virtualized,
+    ThreadStyle,
   } = props;
 
   const {
@@ -148,7 +150,7 @@ const ThreadInner = <
   );
 
   return (
-    <div className={threadClass}>
+    <div className={threadClass} style={ ThreadStyle? ThreadStyle: {} }>
       <ThreadHeader closeThread={closeThread} thread={thread} />
       <ThreadMessageList
         disableDateSeparator={!enableDateSeparator}
